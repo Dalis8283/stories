@@ -1,7 +1,7 @@
 // let text="Bạn nghĩ bản thân mình có ngu không?";
 // let result=text.font("helvetica");
 // document.body.innerHTML=result;
-
+const name = window.prompt("Tên của bạn là gì?");
 
 let clicked=0;
 
@@ -12,10 +12,15 @@ function btn1onclick(){
 		document.getElementById("main-text").textContent="Có, chắc chắn";
 	}
 	if (clicked>1){
-		alert("Ok chúng tôi xác nhận điều đó!")
+		alert("Bạn nhận ra được điều này thì bạn còn khôn đấy bạn "+name+" !!!");
 	}
 }
 
 function btn2onclick(){
-	alert("Ừ tôi biết điều đó!");
+	if (confirm("Bạn có bộ não của thằn lằn à?")){
+		alert("Chúng tôi xác nhận điều này...");
+	}
+	else{
+		alert("Sao bạn lại phủ định điều này?");
+	}
 }
