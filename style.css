@@ -1,6 +1,9 @@
 p {
     display: inline;
 }
+.container{
+  align-items: center;
+}
 #text{
   font-size: 40px;
   font-family: "helvetica";
@@ -21,7 +24,7 @@ p {
   text-decoration: none;
   display: inline-block;
   font-size: 16px;
-  margin: 5px 50px 75px 100px;
+  margin: 50px 75px 100px;
   transition-duration: 0.4s;
   cursor: pointer;
 }
