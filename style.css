@@ -1,0 +1,12 @@
+#btn_1,#btn_2{
+  background-color: #33B4CE;
+  font-size: 150%;
+  border-width: 1px;
+  text-align: 50px;
+  border-color: #CC2424;
+  border-radius: 8px;
+}
+#btn_1:hover{
+  background-color: #E33E31;
+
+}
