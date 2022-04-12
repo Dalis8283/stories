@@ -1,7 +1,17 @@
+p {
+    display: inline-block;
+}
 #text{
   font-size: 40px;
   font-family: "helvetica";
 }
+#text_2{
+  font-size: 40px;
+  font-family: "helvetica";
+  margin: 8px;
+  cursor: pointer;
+}
+
 .button{
   background-color: #4CAF50; /* Green */
   border: none;

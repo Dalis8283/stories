@@ -24,3 +24,6 @@ function btn2onclick(){
 		alert("Sao bạn lại phủ định điều này?");
 	}
 }
+function txtclick(){
+	alert("OK được rồi, bạn hãy xuống phía dưới trang web đi!!!");
+}
