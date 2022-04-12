@@ -1,0 +1,1 @@
+document.body.innerHTML="Bạn nghĩ bản thân mình có nghu không?";
