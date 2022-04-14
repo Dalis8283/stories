@@ -1,8 +1,6 @@
-p {
-    display: inline;
-}
-.container{
-  align-items: center;
+p{
+  display: inline;
+  /*animation: myanim 2s linear infinite;*/
 }
 #text,#text_2{
   font-size: 40px;
@@ -12,7 +10,23 @@ p {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  animation: myanim 2s linear infinite;
 }
+@keyframes myanim{
+  0%{
+    opacity: 0;
+  }
+  50%{
+    opacity: 0.9;
+  }
+  100%{
+    opacity: 0;
+  }
+}
+.container{
+  align-items: center;
+}
+
 .answer-text{
   user-select: none;
 }
