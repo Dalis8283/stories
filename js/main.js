@@ -3,6 +3,13 @@
 // document.body.innerHTML=result;
 const name = window.prompt("Tên của bạn là gì?");
 
+const email = "quangdv8283@gmail.com";
+
+console.log(name.toUpperCase());
+if (name.toUpperCase()==="QUANG"){
+	confirm("Bạn nói thật chứ? Được đấy!!!");
+}
+
 let clicked=0;
 
 function btn1onclick(){
@@ -21,7 +28,7 @@ function btn2onclick(){
 		alert("Chúng tôi xác nhận điều này...");
 	}
 	else{
-		alert("Sao bạn lại phủ định điều này?");
+		alert("Sao bạn lại phủ định điều này? Không nên...");
 	}
 }
 function txtclick(){
