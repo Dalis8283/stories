@@ -3,6 +3,11 @@
 // document.body.innerHTML=result;
 // const name = window.prompt("Tên của bạn là gì?");
 
+let newTitle = "Stupidity Test";
+if (document.title)!=newTitle{
+	document.title = newTitle;
+}
+
 const email = "quangdv8283@gmail.com";
 
 console.log(name.toUpperCase());

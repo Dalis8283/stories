@@ -10,9 +10,9 @@ p{
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  animation: myanim 2s linear infinite;
+  /*animation: myanim 2s linear infinite;*/
 }
-@keyframes myanim{
+/*@keyframes myanim{
   0%{
     opacity: 0;
   }
@@ -22,7 +22,7 @@ p{
   100%{
     opacity: 0;
   }
-}
+}*/
 .container{
   align-items: center;
 }
