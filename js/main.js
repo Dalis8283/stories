@@ -9,11 +9,9 @@ const email = "quangdv8283@gmail.com";
 // if (name.toUpperCase()==="QUANG"){
 // 	confirm("Bạn nói thật chứ? Được đấy!!!");
 // }
-let newTitle = "Stupidity Test";
-if (document.title!=newTitle)
-{
-	document.title = newTitle;
-}
+const newTitle = "Stupidity Test";
+document.title = newTitle;
+
 let clicked=0;
 
 function btn1onclick(){
