@@ -94,7 +94,7 @@ p{
   /*fonr-weight*/
   /*transition: 0.5s;*/
   cursor: pointer;
-  display: block;
+  display: inline-block;
 
 }
 #btn_4{
