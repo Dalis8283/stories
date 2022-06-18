@@ -2,7 +2,7 @@ p{
   display: inline;
   /*animation: myanim 2s linear infinite;*/
 }
-#text,#text_2{
+#text,#text_2,#text_3{
   font-size: 40px;
   font-family: "helvetica";
   -webkit-user-select: none;
@@ -10,6 +10,7 @@ p{
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  text-transform: capitalize;
   /*animation: myanim 2s linear infinite;*/
 }
 /*@keyframes myanim{
@@ -64,4 +65,55 @@ p{
 }
 .btn_1:hover:before{
   content: "Có, chắc chắn";
+}
+
+
+
+/*Part 2th*/
+
+.container_2{
+  justify-content: center;
+  font-family: sans-serif;
+}
+#text_3{
+  font-size: 30px;
+}
+
+.link{
+  position: relative;
+  background: burlywood; /* Green */
+  /*border: none;*/
+  /*color: white;*/
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  /*display: inline-block;*/
+  letter-spacing: 0.1em;
+  font-size: 1em;
+  margin: 50px 25px 100px;
+  /*fonr-weight*/
+  /*transition: 0.5s;*/
+  cursor: pointer;
+
+}
+#btn_4{
+  transition: 0.5s;
+}
+
+.link:hover{
+  background: #1e9bff;
+  letter-spacing: 0.2em;
+  box-shadow: 0 0 15px;
+}
+#btn_3{
+  border: none;
+}
+
+.container_3{
+  align-items: center;
+  padding: 10px;
+}
+#trollLink{
+  text-decoration: underline;
+  color: #c460ba;
 }
