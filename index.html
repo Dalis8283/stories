@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Main Repository</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      font-size: 1.5em;
+    }
+
+    ul {
+      list-style-type: none;
+      padding-left: 20px;
+    }
+
+    .folder {
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .folder::before {
+      content: "📂 "; /* Folder icon */
+    }
+
+    .file::before {
+      content: "📄 "; /* File icon */
+    }
+
+    .files {
+      display: none; /* Hidden by default */
+    }
+
+    .folder.open + .files {
+      display: block; /* Show files when folder is open */
+    }
+
+    a {
+      text-decoration: none;
+      color: #E3E3E3;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body bgcolor="#212121" text="#ECECEC">
+  <h1>HTML Files in Repository</h1>
+  <ul id="file-list"></ul>
+
+  <script>
+    // Define the folder and file structure
+    const repository = {
+  "From Outside": ["Lady Kathering The Christmas Case.html", 
+    "Uniform Concerns.html", 
+    "The Theory of Nothing.html",
+    "Thief Story.html",
+    "The Lesson.html",
+    "A Mistress And a Little Slave.html",
+    "Strange Days.html",
+    "Dora's Naked Dare.html",
+    "Charmain, the Naked Maid.html",
+    "Monkey And The Princess.html",
+    "A Very Merry Mailgirls XMas.html",
+    "Jack The Stripper And The Wedding.html",
+    "Life Among the Mailgirls.html",
+    "Kelly the Servant.html",
+    "Penny - Her Bad Dream and What Followed.html",
+    "Zoe Naked In School.html",
+    "Rebekah the Helper's Union Member.html",
+    "Naked and Unafraid.html",
+    "The Rent.html",
+    "Princess Sara.html",
+    "Saving a Relic.html",
+    "KAT's Collection.html",
+    "Soccer Naked.html",
+    "Clementine Dejesus by Linda Bare.html",
+    "The New Regime.html",
+    "Sherlock Holmes.html",
+    "Innocent American Wife strip-searched in public in an African Airport.html",
+    "Power Divest Those  Who Do Not Have It.html",
+  ],
+  "Family_Traditional_Picture_Day": ["Family_Tradition_Picture_Day_02kto02l.html", 
+    "Family_Tradition_Picture_Day_02gto02j.html",
+    "Family_Tradition_Picture_Day_02d_to_2e.html",
+    "Family_Tradition_Picture_Day_01c_to_2c.html",
+    "Family_Tradition_Picture_Day_01.html",
+  ],
+  "Evacuees_Tale": ["Evacuees_Tale_01.html", "Evacuees_Tale_02.html", "Evacuees_Tale_03.html"],
+  "Collaege_Girl_Kate": ["College_Girl_Kate_01.html", "College_Girl_Kate_02.html", "College_Girl_Kate_03.html", "College_Girl_Kate_04.html","College_Girl_Kate_05.html", "College_Girl_Kate_06.html", "College_Girl_Kate_07.html"],
+  "Girls Don't Need Modesty": ["Girls_Dont_Need_Modesty_01.html", "Girls_Dont_Need_Modesty_02A.html", "Girls_Dont_Need_Modesty_02to03.html", "Girls_Dont_Need_Modesty_04.html", "Girls_Dont_Need_Modesty_05.html", "Lauren_Prentiss_Medical_Examination_01.html"],
+  "Hannas_Embarrassing_Accident": ["Hannas_Embarrassing_Accident_01to03.html", "Hannas_Embarrassing_Accident_04to07.html", "Hannas_Embarrassing_Accident_08to12.html", "Hannas_Embarrassing_Accident_13to17.html"],
+  "Laundry_Machine_Mishap": ["Laundry_Machine_Mishap_01.html", "Laundry_Machine_Mishap_02.html", "Laundry_Machine_Mishap_03.html", "Laundry_Machine_Mishap_04.html", "Laundry_Machine_Mishap_05.html", "Laundry_Machine_Mishap_06.html", "Laundry_Machine_Mishap_07.html", "Laundry_Machine_Mishap_08.html", "Laundry_Machine_Mishap_09.html", "Laundry_Machine_Mishap_10.html"],
+  "Lias_New_Reality": ["Lias_New_Reality_01to04.html", "Lias_New_Reality_05to07.html", "Lias_New_Reality_08.html", "Lias_New_Reality_09to10.html", "Lias_New_Reality_11.html", "Lias_New_Reality_12.html", "Lias_New_Reality_13.html", "Lias_New_Reality_14to15.html", "Lias_New_Reality_16.html"],
+  "NAKED_Naked_and_Abashed_Kids": ["NAKED_Naked_and_Abashed_Kids_01.html", "NAKED_Naked_and_Abashed_Kids_02.html", "NAKED_Naked_and_Abashed_Kids_03.html", "NAKED_Naked_and_Abashed_Kids_04.html", "NAKED_Naked_and_Abashed_Kids_05.html", "NAKED_Naked_and_Abashed_Kids_06.html", "NAKED_Naked_and_Abashed_Kids_07.html", "NAKED_Naked_and_Abashed_Kids_08.html", "NAKED_Naked_and_Abashed_Kids_09.html", "NAKED_Naked_and_Abashed_Kids_10.html", "NAKED_Naked_and_Abashed_Kids_11.html"],
+  "Old_Fashioned_Family": ["Old_Fashioned_Family_01to02.html", "Old_Fashioned_Family_03to04.html", "Old_Fashioned_Family_05to07.html"],
+  "Oneshot": ["Enjoying_View_01to02.html",
+    "Little_Susies_Suppository_Ordeal.html",
+    "Lilys_Embarrassing_Punishment.html",
+    "Lisa_On_the_Beach.html",
+    "Jackson_Three_Bares.html",
+    "Babysitting_Em_01.html",
+    "Child_Protective_Court.html",
+    "Failure_To_Communicate.html",
+    "Summer_That_Changed_Everything_01to07.html"],
+  "Playing_Doctor": ["Playing_Doctor_01to02.html", "Playing_Doctor_03to04.html", "Playing_Doctor_05.html"],
+  "Red_Fannie_Annie": ["Red_Fannie_Annie_1.html", "Red_Fannie_Annie_2.html"],
+  "The_Wrong_Slipper": ["The_Wrong_Slipper_01.html", "The_Wrong_Slipper_02.html", "The_Wrong_Slipper_03.html"]
+} ;
+        const baseFolder = "."; // Base folder path
+    const fileList = document.getElementById("file-list");
+
+    // Render the folder and file structure
+    Object.entries(repository).forEach(([folderName, files]) => {
+      // Create the folder element
+      const folderItem = document.createElement("li");
+      const folderNameElement = document.createElement("span");
+      folderNameElement.className = "folder";
+      folderNameElement.textContent = folderName;
+
+      // Add a click event to toggle file visibility
+      folderNameElement.addEventListener("click", () => {
+        folderNameElement.classList.toggle("open");
+      });
+
+      // Append the folder name
+      folderItem.appendChild(folderNameElement);
+
+      // Create the file list
+      const fileListForFolder = document.createElement("ul");
+      fileListForFolder.className = "files"; // Hidden initially
+
+      files.forEach((file) => {
+        const fileItem = document.createElement("li");
+        fileItem.className = "file";
+        fileItem.innerHTML = `<a href="${baseFolder}/${folderName}/${file}" target="_blank">${file}</a>`;
+        fileListForFolder.appendChild(fileItem);
+      });
+
+      // Append the file list to the folder
+      folderItem.appendChild(fileListForFolder);
+      fileList.appendChild(folderItem);
+    });
+  </script>
+</body>
+</html>
