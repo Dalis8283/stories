@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .login-box {
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        input {
+            padding: 10px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            background: #f4a261;
+            color: black;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #e76f51;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box" id="login-box">
+        <h2>Enter Password</h2>
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="checkPassword()">Login</button>
+        <p id="error" style="color: red; display: none;">Wrong password!</p>
+    </div>
+    <script>
+        const correctHash = "037f52a89602c9eec4e43de68ab4d5d2"; // MD5 hash of your password
+
+        function hash(input) {
+            return CryptoJS.MD5(input).toString();
+        }
+
+        function checkPassword() {
+            const inputPassword = document.getElementById("password").value;
+            if (hash(inputPassword) === correctHash) {
+                sessionStorage.setItem("loggedIn", true);
+                window.location.href = "index.html"; // Redirect to your main page
+            } else {
+                document.getElementById("error").style.display = "block";
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</body>
+</html>
