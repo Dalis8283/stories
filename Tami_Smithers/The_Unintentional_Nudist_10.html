@@ -3,20 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Red Fannie Annie - Part 1</title>
+  <title>Coming to the End</title>
   <style>
     body {
       font-family: 'Georgia', serif;
       margin: 0;
       padding: 0;
-      background: #FAF3DD;
-      color: #6D6875;
+      background: #faf3dd;
+      color: #6d6875;
       display: flex;
+      transition: background-color 0.5s ease, color 0.5s ease;
     }
     .sidebar {
       width: 250px;
-      background: #FFD3B5;
-      color: #6D6875;
+      background: #ffd3b5;
+      color: #6d6875;
       padding: 20px;
       height: 100vh;
       position: fixed;
@@ -26,7 +27,7 @@
       flex-direction: column;
       align-items: center;
       overflow-y: auto;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, background-color 0.5s ease, color 0.5s ease;
       box-sizing: border-box;
     }
     /* Hide scrollbar in Chrome, Safari, Opera */
@@ -41,10 +42,11 @@
     }
     .chapter-links a {
       display: block;
-      color: #6D6875;
+      color: #6d6875;
       text-decoration: none;
       margin: 10px 0;
       font-size: 1.2rem;
+      transition: color 0.5s ease;
     }
     .chapter-links a:hover {
       text-decoration: underline;
@@ -53,18 +55,20 @@
       margin-left: 270px;
       padding: 40px;
       max-width: 800px;
+      transition: background-color 0.5s ease, color 0.5s ease;
     }
     h1 {
       text-align: center;
       font-size: 2.5rem;
       color: #2c3e50;
+      transition: color 0.5s ease;
     }
     .synopsis {
-      display: none;
       background: #eaeaea;
       padding: 15px;
       border-left: 5px solid #2c3e50;
       margin-bottom: 30px;
+      transition: background-color 0.5s ease, border-left-color 0.5s ease;
     }
     .story-content {
       font-size: 1.3rem;
@@ -90,58 +94,91 @@
         top: 20px;
         left: 20px;
         z-index: 1000;
-        background: #e3772d;
+        background: #ffd3b5;
         border: none;
         padding: 10px;
         cursor: pointer;
       }
+    
+    }
+    #toggle-dark-theme {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: #ffd3b5;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+    }
+    /* Dark theme styles with transitions */
+    .dark-theme {
+      background: #2c2c2c;
+      color: #e0e0e0;
+    }
+    .dark-theme .sidebar {
+      background: #444;
+      color: #e0e0e0;
+    }
+    .dark-theme .chapter-links a {
+      color: #e0e0e0;
+    }
+    .dark-theme h1 {
+      color: #fff;
+    }
+    .dark-theme .synopsis {
+      background: #555;
+      border-left-color: #fff;
     }
   </style>
 </head>
 <body>
-  <!-- Toggle button visible on mobile devices -->
+  <!-- Toggle button for sidebar on mobile devices -->
   <button id="toggle-sidebar">☰</button>
+  <!-- Toggle button for dark theme -->
+  <button id="toggle-dark-theme">🌙</button>
+
   <div class="sidebar">
     <h2>Chapters</h2>
     <div class="chapter-links">
-      <a href="#" onclick="loadChapter(1)">Chapter 1</a>
-      <a href="#" onclick="loadChapter(2)">Chapter 2</a>
-      <a href="#" onclick="loadChapter(3)">Chapter 3</a>
-      <a href="#" onclick="loadChapter(4)">Chapter 4</a>
-      <a href="#" onclick="loadChapter(5)">Chapter 5</a>
-      <a href="#" onclick="loadChapter(6)">Chapter 6</a>
-      <a href="#" onclick="loadChapter(7)">Chapter 7</a>
-      <a href="#" onclick="loadChapter(8)">Chapter 8</a>
-      <a href="#" onclick="loadChapter(9)">Chapter 9</a>
-      <a href="#" onclick="loadChapter(10)">Chapter 10</a>
-      <a href="#" onclick="loadChapter(11)">Chapter 11</a>
-      <a href="#" onclick="loadChapter(12)">Chapter 12</a>
-      <a href="#" onclick="loadChapter(13)">Chapter 13</a>
-      <a href="#" onclick="loadChapter(14)">Chapter 14</a>
-      <a href="#" onclick="loadChapter(15)">Chapter 15</a>
-      <a href="#" onclick="loadChapter(16)">Chapter 16</a>
-      <a href="#" onclick="loadChapter(17)">Chapter 17</a>
-      <a href="#" onclick="loadChapter(18)">Chapter 18</a>
-      <a href="#" onclick="loadChapter(19)">Chapter 19</a>
-      <a href="#" onclick="loadChapter(20)">Chapter 20</a>
-      <a href="#" onclick="loadChapter(21)">Chapter 21</a>
-      <a href="#" onclick="loadChapter(22)">Chapter 22</a>
-      <a href="#" onclick="loadChapter(23)">Chapter 23</a>
-      <a href="#" onclick="loadChapter(24)">Chapter 24</a>
-      <a href="#" onclick="loadChapter(25)">Chapter 25</a>
-      <a href="#" onclick="loadChapter(26)">Chapter 26</a>
-      <a href="#" onclick="loadChapter(27)">Chapter 27</a>
-      <a href="#" onclick="loadChapter(28)">Chapter 28</a>
-      <a href="#" onclick="loadChapter(29)">Chapter 29</a>
-      <a href="#" onclick="loadChapter(30)">Chapter 30</a>
-      <a href="#" onclick="loadChapter(31)">Chapter 31</a>
-      <a href="#" onclick="loadChapter(32)">Chapter 32</a>
-      <a href="#" onclick="loadChapter(33)">Chapter 33</a>
-      <a href="#" onclick="loadChapter(34)">Chapter 34</a>
-      <a href="#" onclick="loadChapter(35)">Chapter 35</a>
-      <a href="#" onclick="loadChapter(36)">Chapter 36</a>
-      <a href="#" onclick="loadChapter(37)">Chapter 37</a>
-      <a href="#" onclick="loadChapter(38)">Chapter 38</a>
+      <a href="#1" onclick="loadChapter(1)">Chapter 1</a>
+      <a href="#2" onclick="loadChapter(2)">Chapter 2</a>
+      <a href="#3" onclick="loadChapter(3)">Chapter 3</a>
+      <a href="#4" onclick="loadChapter(4)">Chapter 4</a>
+      <a href="#5" onclick="loadChapter(5)">Chapter 5</a>
+      <a href="#6" onclick="loadChapter(6)">Chapter 6</a>
+      <a href="#7" onclick="loadChapter(7)">Chapter 7</a>
+      <a href="#8" onclick="loadChapter(8)">Chapter 8</a>
+      <a href="#9" onclick="loadChapter(9)">Chapter 9</a>
+      <a href="#10" onclick="loadChapter(10)">Chapter 10</a>
+      <a href="#11" onclick="loadChapter(11)">Chapter 11</a>
+      <a href="#12" onclick="loadChapter(12)">Chapter 12</a>
+      <a href="#13" onclick="loadChapter(13)">Chapter 13</a>
+      <a href="#14" onclick="loadChapter(14)">Chapter 14</a>
+      <a href="#15" onclick="loadChapter(15)">Chapter 15</a>
+      <a href="#16" onclick="loadChapter(16)">Chapter 16</a>
+      <a href="#17" onclick="loadChapter(17)">Chapter 17</a>
+      <a href="#18" onclick="loadChapter(18)">Chapter 18</a>
+      <a href="#19" onclick="loadChapter(19)">Chapter 19</a>
+      <a href="#20" onclick="loadChapter(20)">Chapter 20</a>
+      <a href="#21" onclick="loadChapter(21)">Chapter 21</a>
+      <a href="#22" onclick="loadChapter(22)">Chapter 22</a>
+      <a href="#23" onclick="loadChapter(23)">Chapter 23</a>
+      <a href="#24" onclick="loadChapter(24)">Chapter 24</a>
+      <a href="#25" onclick="loadChapter(25)">Chapter 25</a>
+      <a href="#26" onclick="loadChapter(26)">Chapter 26</a>
+      <a href="#27" onclick="loadChapter(27)">Chapter 27</a>
+      <a href="#28" onclick="loadChapter(28)">Chapter 28</a>
+      <a href="#29" onclick="loadChapter(29)">Chapter 29</a>
+      <a href="#30" onclick="loadChapter(30)">Chapter 30</a>
+      <a href="#31" onclick="loadChapter(31)">Chapter 31</a>
+      <a href="#32" onclick="loadChapter(32)">Chapter 32</a>
+      <a href="#33" onclick="loadChapter(33)">Chapter 33</a>
+      <a href="#34" onclick="loadChapter(34)">Chapter 34</a>
+      <a href="#35" onclick="loadChapter(35)">Chapter 35</a>
+      <a href="#36" onclick="loadChapter(36)">Chapter 36</a>
+      <a href="#37" onclick="loadChapter(37)">Chapter 37</a>
+      <a href="#38" onclick="loadChapter(38)">Chapter 38</a>
     </div>
   </div>
   <div class="content">
@@ -218,16 +255,31 @@
     // ];
     let currentChapter = 1;
     function loadChapter(chapterIndex) {
+      if (chapterIndex < 1 || chapterIndex > chapters.length) return;
       currentChapter = chapterIndex;
+      document.title = `Chapter ${chapterIndex} | Coming to the End`;
+      // Update the URL hash with the current chapter number
+      window.location.hash = chapterIndex;
+      
       document.getElementById("chapter-title").textContent = chapters[chapterIndex - 1].title;
-      document.getElementById("chapter-content").innerHTML = chapters[chapterIndex - 1].content.replaceAll('‶','"');
-      // document.getElementById("intro").textContent = synosips[chapterIndex - 1] + "...";
-      document.title = `Coming to the End chapter ${chapterIndex}`
-      // If on mobile, hide the sidebar after selecting a chapter.
+      document.getElementById("chapter-content").innerHTML = chapters[chapterIndex - 1].content;
+      document.getElementById("intro").textContent = synosips[chapterIndex - 1] + "...";
+       // Dynamically update the next-chapter link to reflect the next chapter
+      let nextChapterLink = document.getElementById("next-chapter");
+      if (currentChapter < chapters.length) {
+        nextChapterLink.setAttribute("href", "#" + (currentChapter + 1));
+      } else {
+        nextChapterLink.removeAttribute("href");
+        nextChapterLink.textContent = "No more chapters";
+      }
+      
+      // Hide the sidebar on mobile after selecting a chapter
       if (window.innerWidth <= 768) {
         document.querySelector('.sidebar').classList.remove('open');
       }
     }
+    
+    // Listen for clicks on the next-chapter link
     document.getElementById("next-chapter").addEventListener("click", function(event) {
       event.preventDefault();
       if (currentChapter < chapters.length) {
@@ -238,7 +290,31 @@
     document.getElementById('toggle-sidebar').addEventListener('click', function() {
       document.querySelector('.sidebar').classList.toggle('open');
     });
-    loadChapter(1);
+    // Toggle dark theme on click of the dark theme button
+    document.getElementById('toggle-dark-theme').addEventListener('click', function() {
+      document.body.classList.toggle('dark-theme');
+    });
+    // loadChapter(1);
+        // On page load, check the URL hash and load the corresponding chapter.
+    window.addEventListener("load", function() {
+      const hash = window.location.hash;
+      const chapterIndex = parseInt(hash.substring(1));
+      if (chapterIndex && chapterIndex >= 1 && chapterIndex <= chapters.length) {
+        loadChapter(chapterIndex);
+      } else {
+        loadChapter(1);
+      }
+    });
+
+    
+    // Optionally, listen for hash changes to support browser back/forward navigation.
+    window.addEventListener("hashchange", function() {
+      const hash = window.location.hash;
+      const chapterIndex = parseInt(hash.substring(1));
+      if (chapterIndex && chapterIndex >= 1 && chapterIndex <= chapters.length) {
+        loadChapter(chapterIndex);
+      }
+    });
   </script>
 </body>
 </html>
