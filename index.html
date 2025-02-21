@@ -65,7 +65,7 @@
     "Thief Story.html",
     "The Lesson.html",
     "A Mistress And a Little Slave.html",
-    "Strange Days.html",
+    "Strange_Days.html",
     "Dora's Naked Dare.html",
     "Charmain_the_Naked_Maid.html",
     "Monkey And The Princess.html",
@@ -79,7 +79,7 @@
     "Naked and Unafraid.html",
     "The_Rent.html",
     "Princess Sara.html",
-    "Saving a Relic.html",
+    "Saving_a_Relic.html",
     "KAT's Collection.html",
     "Soccer Naked.html",
     "Clementine Dejesus by Linda Bare.html",
@@ -94,6 +94,7 @@
     "The Princess Errant.html",
     "Red_Fannie_Annie.html",
     "A_Firebug_Gets_Punished.html",
+    "The_ENF_Catcher.html",
     "Laundry_Day.html",
     "Natural_Beauty.html",
     "SOMA_Vestiphobia_Attorney.html",
@@ -171,7 +172,7 @@
       const folderItem = document.createElement("li");
       const folderNameElement = document.createElement("span");
       folderNameElement.className = "folder";
-      folderNameElement.textContent = folderName;
+      folderNameElement.textContent = folderName.replaceAll('_',' ');
 
       // Add a click event to toggle file visibility
       folderNameElement.addEventListener("click", () => {
@@ -188,7 +189,7 @@
       files.forEach((file) => {
         const fileItem = document.createElement("li");
         fileItem.className = "file";
-        fileItem.innerHTML = `<a href="${baseFolder}/${folderName}/${file}" target="_blank">${file}</a>`;
+        fileItem.innerHTML = `<a href="${baseFolder}/${folderName}/${file}" target="_blank">${file.replaceAll('_',' ')}</a>`;
         fileListForFolder.appendChild(fileItem);
       });
 
