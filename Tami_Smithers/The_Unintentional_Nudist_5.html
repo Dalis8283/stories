@@ -193,9 +193,9 @@
       document.title = `chapter ${chapterIndex} | The Workshop `;
       // Update the URL hash with the current chapter number
       window.location.hash = chapterIndex;
-      
+      document.documentElement.scrollTop = 0;      
       document.getElementById("chapter-title").textContent = chapters[chapterIndex - 1].title;
-      document.getElementById("chapter-content").innerHTML = chapters[chapterIndex - 1].content;
+      document.getElementById("chapter-content").innerHTML = `<p>${chapters[chapterIndex - 1].content.replaceAll('‶','"')}</p>`;
       document.getElementById("intro").textContent = synosips[chapterIndex - 1] + "...";
        // Dynamically update the next-chapter link to reflect the next chapter
       let nextChapterLink = document.getElementById("next-chapter");
@@ -219,36 +219,42 @@
         loadChapter(currentChapter + 1);
       }
     });
-
     // Toggle sidebar on mobile devices
     document.getElementById('toggle-sidebar').addEventListener('click', function() {
       document.querySelector('.sidebar').classList.toggle('open');
     });
 
-    // Toggle dark theme on click of the dark theme button
-    document.getElementById('toggle-dark-theme').addEventListener('click', function() {
-      document.body.classList.toggle('dark-theme');
+    // Dark Mode Toggle with localStorage
+    document.getElementById("toggle-dark-theme").addEventListener("click", () => {
+      if (document.body.classList.contains("dark-theme")) {
+        document.body.classList.remove("dark-theme");
+        localStorage.setItem("theme", "light");
+      } else {
+        document.body.classList.add("dark-theme");
+        localStorage.setItem("theme", "dark-theme");
+      }
     });
-    
-    // loadChapter(1);
-        // On page load, check the URL hash and load the corresponding chapter.
-    window.addEventListener("load", function() {
-      const hash = window.location.hash;
-      const chapterIndex = parseInt(hash.substring(1));
-      if (chapterIndex && chapterIndex >= 1 && chapterIndex <= chapters.length) {
-        loadChapter(chapterIndex);
+    // On Page Load: Restore Theme & Chapter from localStorage/URL hash
+    window.addEventListener("load", () => {
+      // Restore saved theme
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark-theme") {
+        document.body.classList.add("dark-theme");
+      }
+      // Load chapter from URL hash if available
+      const hash = window.location.hash.substring(1);
+      const chapIndex = parseInt(hash);
+      if (chapIndex && chapIndex >= 1 && chapIndex <= chapters.length) {
+        loadChapter(chapIndex);
       } else {
         loadChapter(1);
       }
     });
-
-    
-    // Optionally, listen for hash changes to support browser back/forward navigation.
-    window.addEventListener("hashchange", function() {
-      const hash = window.location.hash;
-      const chapterIndex = parseInt(hash.substring(1));
-      if (chapterIndex && chapterIndex >= 1 && chapterIndex <= chapters.length) {
-        loadChapter(chapterIndex);
+    // Support back/forward navigation via URL hash change
+    window.addEventListener("hashchange", () => {
+      const chapIndex = parseInt(window.location.hash.substring(1));
+      if (chapIndex && chapIndex >= 1 && chapIndex <= chapters.length) {
+        loadChapter(chapIndex);
       }
     });
   </script>
