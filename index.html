@@ -194,7 +194,7 @@
         const fileItem = document.createElement("li");
         fileItem.className = "file";
         filename = file.replaceAll('_',' ');
-        filename = file.replaceAll('.html','');
+        filename = filename.replaceAll('.html','');
         fileItem.innerHTML = `<a href="${baseFolder}/${folderName}/${file}" target="_blank">${filename}</a>`;
         fileListForFolder.appendChild(fileItem);
       });
