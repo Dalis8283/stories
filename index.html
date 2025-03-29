@@ -193,9 +193,9 @@
       files.forEach((file) => {
         const fileItem = document.createElement("li");
         fileItem.className = "file";
-        file = file.replaceAll('_',' ');
-        file = file.replaceAll('.html','');
-        fileItem.innerHTML = `<a href="${baseFolder}/${folderName}/${file}" target="_blank">${file}</a>`;
+        filename = file.replaceAll('_',' ');
+        filename = file.replaceAll('.html','');
+        fileItem.innerHTML = `<a href="${baseFolder}/${folderName}/${file}" target="_blank">${filename}</a>`;
         fileListForFolder.appendChild(fileItem);
       });
 
