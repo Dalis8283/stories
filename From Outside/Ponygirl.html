@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Reader</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #121212;
+            color: #e0e0e0;
+            transition: background 0.3s ease-in-out;
+        }
+        header {
+            background: #1e1e1e;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #ffcc00;
+            font-size: 2.5em;
+            margin: 0;
+        }
+        h2 {
+            color: #e0e0e0;
+            font-size: 1.5em;
+            margin: 5px 0 0;
+            font-weight: 300;
+        }
+        #reader-container {
+            width: 90%;
+            max-width: 800px;
+            background: #1e1e1e;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            margin: 50px auto;
+        }
+        #story-content {
+            font-size: 1.2em;
+            line-height: 1.8;
+            background: #282828;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: justify;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        .toggle-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .dark-mode {
+            background: #ffffff;
+            color: #121212;
+        }
+        .dark-mode header {
+            background: #f5f5f5;
+            color: #121212;
+        }
+        .dark-mode #reader-container {
+            background: #f5f5f5;
+            color: #121212;
+        }
+        .dark-mode #story-content {
+            background: #e0e0e0;
+            color: #121212;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>The Convert</h1>
+        <h2>By <a href="https://www.deviantart.com/ironhawk-r" target="_BLANK" style="color: inherit; font-family: inherit;">IronHawk-R</a></h2>
+    </header>
+    <div id="reader-container">
+        <div id="story-content">
+            <p style="font-style: italic;">Amir set his jaw, his course decided. "I'm going to see what she can do."<br><br>"The crowds!" protested Safi, driving beside him, and between the shafts Elise grew anxious. This was supposed to be a routine conditioning jaunt for the novice ponygirls, not a race.<br><br>Safi's warnings fell on deaf ears as Amir thwacked Elise with his driving stick, and she heaved forward, accelerating the little sulky. Cursing shoppers had to dart aside, but the activity also drew positive attention as they hurtled precariously through the streets. Neophyte ponygirls on a training run were always a merry sight for the locals, but since that first mortifying trip out of the compound a month ago, Elise had realised that she was being singled out for particular celebration by many. It seemed the breaking of a foreign woman to ponygirl harness inspired a certain patriotic pride - a victory for their city and ways. Elise realised that she was rare, but not unique, and had begun to notice a scattering of other foreign-born ponies, the daughters of unsuspecting travellers too exotic for captors to pass up.<br><br>Once, Elise had caught a fleeting glimpse of a pale girl bounding along in the traces of a sulky from another training stable. Lanky and flat-chested, her milky hide, orange hair and great streaks of freckles must have seemed freakish to the locals. The gangly ginger had been moving at a decent ponygirl lick, but her wide, darting eyes and desperate posture were yet those of a horrified captive. Elise recognised that cocktail from her fellows - bidden enough to be controlled by her driver, but not yet accustomed, an aghast passenger in her own body on a knife-edge between obedience and panic. A panicking filly was bad news for ponygirl, driver, and anything breakable in the vicinity, and Elise knew from grudging experience that the young lad holding her reins had been showing some considerable skill in keeping control of her.<br><br>Another day she had seen a batch of three ponygirls, hanging by the ankles together like a bunch of bananas as they swayed and wriggled, and among them had been a young blonde. They were minded by a severe, heavily equipped man scanning the crowds - escapees, recaptured by a professional hunter. Should their owners fail to claim them or decline to pay his finder's fee within two days, they would become his legal property. Elise had shuddered at the reminder of the scale of the task awaiting her if she were to escape. <br><br>Elise ran on. Young women giggled and pointed. Men nodded sagely, encouraging Amir with a "that's the way!" or "give it to 'er, lad!" A group of boys looked on hopefully; Amir grinned and indulged them, giving Elise a heavy thwack of his cane with a flourish, and Elise endured the cheering of the boys as she grimaced and picked up her pace.<br><br>Though she was already no stranger to being driven in public, it was still more than just effort reddening Elise's face as they swept onward.</p>
+        </div>
+        <button class="toggle-button" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    </div>
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+    </script>
+</body>
+</html>
