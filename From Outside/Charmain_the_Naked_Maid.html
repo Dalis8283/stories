@@ -178,7 +178,6 @@
       <strong>Summary:</strong> Introduction to Chapter 1.
     </div>
     <div class="chapter-content" id="chapter-content">
-      <p>This is the content of Chapter 1. Immerse yourself in the narrative and enjoy the elegant reading experience.</p>
     </div>
     <div class="navigation">
       <button id="prev-chapter">← Prev</button>
@@ -213,7 +212,7 @@
       const chapter = chapters[index - 1];
       document.getElementById("chapter-title").textContent = chapter.title;
       document.getElementById("chapter-summary").innerHTML = `<strong>Summary:</strong> ${chapter.summary}`;
-      document.getElementById("chapter-content").innerHTML = chapter.content.replaceAll('‶','"');
+      document.getElementById("chapter-content").innerHTML = `<p style="text-align: justify;">${chapter.content.replaceAll('‶','"')}</p>`;
       window.location.hash = index;
       document.title = `Chapter ${index} | Charmain, the Naked Maid`
     }
