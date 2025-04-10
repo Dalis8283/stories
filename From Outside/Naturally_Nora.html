@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Wandering Pages</title>
+  
+  <link rel="icon" type="image/x-icon" href="book.png">
+
   <style>
     :root {
       --paper-light: #fdfaf3;
@@ -149,7 +152,7 @@
       if (index < 1 || index > chapters.length) return;
       currentChapter = index;
       document.getElementById('chapter-title').textContent = chapters[index - 1].title;
-      document.getElementById('chapter-content').innerHTML = `<p style="font-size: 1.2em;">${chapters[index - 1].content.replaceAll('‶', '"')}</p>`;
+      document.getElementById('chapter-content').innerHTML = `<p style="font-size: 1.2em; text-align: justify;">${chapters[index - 1].content.replaceAll('‶', '"')}</p>`;
       localStorage.setItem('currentChapter', index);
       location.hash = `#${index}`;
       window.scrollTo({ top: 0, behavior: 'smooth' });
