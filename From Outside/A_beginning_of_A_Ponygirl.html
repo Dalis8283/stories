@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Beginning of A Ponylife</title>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-light: #f9f6ef;
+      --bg-dark: #1e1e1e;
+      --text-light: #2e2e2e;
+      --text-dark: #efefef;
+      --green: #7fae7d;
+      --accent: #d8eacc;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-light);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: var(--green);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1rem;
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .sidebar h2 {
+      font-family: 'Merriweather', serif;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .chapters button {
+      background: transparent;
+      border: none;
+      color: white;
+      text-align: left;
+      padding: 0.5rem 0;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .chapters button:hover {
+      text-decoration: underline;
+    }
+
+    .toggle-dark {
+      margin-top: auto;
+      background: white;
+      color: var(--green);
+      padding: 0.5rem;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+      font-family: 'Merriweather', serif;
+    }
+
+    .chapter {
+      max-width: 800px;
+      margin: auto;
+      line-height: 1.75;
+      font-size: 1.2rem;
+      text-align: justify;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 2rem;
+      margin: 2rem 0 1rem;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        flex-direction: column;
+        overflow-x: auto;
+        padding: 1rem;
+      }
+      .chapters {
+        display: flex;
+        gap: 1rem;
+        flex: 1;
+      }
+      .toggle-dark {
+        margin-top: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>A Beginning of A Ponylife</h2>
+    <div class="chapters">
+      <button onclick="loadChapter(1)">Author's words</button><br>
+      <button onclick="loadChapter(2)">Main Story</button>
+    </div>
+    <button class="toggle-dark" onclick="toggleTheme()">🌓 Theme</button>
+  </div>
+  <div class="main">
+    <div class="chapter" id="story">
+      <h1>The Verdant Chapters</h1>
+      <p>Select a chapter to begin your journey.</p>
+    </div>
+  </div>
+
+  <script>
+    const chapters = {
+      1: ` This little piece of fiction is entirely inspired by IronHawk's wonderful, amazing illustrations: the best ponygirl illustrator bar none! To my delight, he even put my pony, Elisa, into his visions. He placed her in this picture, calling it the  "Birth Of A Ponygirl", and THIS is the story that Elisa would have had, had she been broken in as one of the goblins' fine riding animals.`,
+      2: `"They had been working that morning as they had been every day for two cycles of the Moon, from her Full bright to another, and tonight she would be Full again. This was a good omen, a good sign that there would be a successful finish to the training, and a good start for her in her new life. Over this time, they had become master and servant, master and pupil, master and pet: him teaching, ordering, coaxing, compelling: she resisting, understanding, learning, obeying. Now, in the late afternoon sunlight she stood quietly at his heel, her slender body glowing with vigour and life. He put his hand on her hip, and gently stroked this girl-animal with whom he had spent so much time. She shivered delicately under his caress, and she smiled her appreciation around her ironwood bitgag. He stroked her flank again, then  handed her girlreins to his Assistant who had been waiting for them.<br><br>“Well, Fai, here she is: she is quite the beauty!”<br><br>The female goblin grinned as she gazed up at the blonde girl: “Yes, Teacher, she is. I’ve enjoyed breaking this one a great deal more than any of the others”<br><br>“That is your skills improving, Fai: your enjoyment of the training grows with them. If the girl is true, and becomes fully ours, I shall give you the honour of presenting her to the King”<br><br>Fai the assistant blushed with pleasure and pride, and stammered<br><br>“Teacher: I thank you!”<br><br>The Girlwrangler nodded,<br><br>“It does depend on this colt here, doesn’t it? She’s learned well, both her work and her pleasures, haven’t you, girl?”<br><br>He patted the girl on the hip and on her flat belly, causing her to widen her eyes as she also parted her legs a little more. He always found these involuntary openings endearing, and he rewarded her with a soft touch on her  ponynose, as the goblins named their animals’ most sensitive intimate parts. The girl, like all of the ponies, was kept excited as a matter of discipline, of conditioning, of good husbandry. The constant throb of arousal in her mind and body kept her alert, kept her occupied, kept her eager to please, and to fear being ignored.<br><br>“She is a well-mannered creature, too. I hope we have a fine addition to the herd, but has she truely learned she belongs to us? Even the great Gert Girlbreaker could find no better way than the Trail Trial.”<br><br>The girl could not understand the goblin speech, but she recognised that she was being praised as well as being given a tactile treat. She began to sink downwards, in her need and in an attempt to satisfy it. However, the Girlbreaker pressed his thumb firmly into her now-stiffly swollen ponynose, to both discourage her, and to add yet another reminder that she was controlled by him, could do nothing without him, that even her most intimate desires were owned and used by him.. The girl realised what she was doing, and pulled herself erect and correctly submissive once more.<br><br>The ‘breaker was pleased that he so easily demonstrated the power and conrol he had over the white colt, and took it as another proof that she also knew, after their weeks of work, that she accepted him as her Master. The girl would, of course, be pleasured, brought to shattering climax again and again...but not until the Trial was over:.  <br><br>He felt very proud of the blonde, and decided that there was no point waiting any longer<br><br>“Fai, my pupil, take this colt to her stall, and let us see if she deserves to be a pony”<br><br>-----------------------------------------------------------.<br><br>The girl was amazed: not only had the day’s training ended early, but, after her grooming and cleaning, her ankle-hobble had not been replaced! That was astonishing! Nothing like this had happened before, she thought, and spent time sitting on her bottom, waggling her slender legs in the air, revelling in their movements. She was very proud of her legs: while she loved their shape, their strength, and their smoothness, it was their long length that made them exceptional, that set them, and her, apart. She folded her knees up to her chin, then lowered them till they were parallel to the ground. Feeling very bold, very naughty, and very playful, she splayed them wide, exposing  herself to the the world. She wished she could place her hand in her own soft space, but while her hobble was mysteriously gone, the armbindings that kept her arms firmly restrained were definitely present. She adjusted her position until she was kneeling on the floor; but try as she might, she could not use her toes in the way she wanted to use her fingers.<br><br>She experimented for a few minutes more, but happily stopped as she was  called to her evening meal. The smell of the mash was tantalising, and she was thrilled when she recognised the aroma of cinnamon. She had always adored the spice, and was salivating heavily when her bitgag was removed. She had to kneel to eat her mash out of a trough-like tray, and unlike her gag, her armbindings remained firmly in place. She could now use just her her lips and tongue to pick up andon the ickly as she could. In addition to everything else she had learned,. She now knew how to use her lips and tongue when picking up her food, and did so as easily as she had once used fingers, hands, and utensils..<br><br>(...the thought of using using her arms rang a faint memory in her mind... what was it? ...she tried to focus, but it was impossible to find again...)<br><br>While chewing her mash, she wondered if there was some reason for the cinnamon twist: had she been especially good, obedient, or clever? While she was sure she was passing every test set for her, she couldn’t think of a specially tricky lesson that she had accomplished today.<br><br>(..was this all she was going to do? To be? ... this thought, oddly disturbing, caught her by surprise, but it disappeared as quickly as it had arrived, and she decided it must have been unimportant...)<br><br>She finished her meal, was given a long drink of water, and her keeper brushed out her fine blonde hair before she settled. She was already dozing as all the other girls returned,  other thoughts forgoptten in the contented haze she lived in these days. By the time the other girls were brought noisily in, she was dozing, almost asleep, and she stayed snoozing through all of their washing and eating ...<br><br>It was quiet after a while. She moved deeper into sleep, and if any were watching her, they would have seen her twitch, and shake, and gasp for breath as the strangest dreams took her...<br><br>(...being smaller, playing with other small creatures, living in odd structures where bigger creatures ruled...being surrounded by these bizarre...people? And none of them were bare...they wore coverings on their torsos and on their legs, things that wrapped up and concealed their bodies...and they made sounds that made sense: they were using speech! Just like the goblins, but she remembered understanding the meanings of the sounds...)<br><br>The Girlwrangler waited now with both assistants, and was glad to induct them deeper into the mysteries of ponygirl-taming. They always enjoyed hearing the stories of Gert the first Ponygirl Breaker, of the passion he showed for bringing these new steeds to the People, and of his successful adventures. But this was the first time the lesser Assistant had heard that the ponies were as susceptible to the magic of the medicine men as any of the goblin People. At first stunned, then excited and exhilarated, he heard how the medicine mens’ wisdom, spells, potions and powders had steadily improved both the breaking and the keeping of the Peoples’ ponies. The lesser Assistant’s gaping jaw was nudged closed by the Senior assistant, not once but twice during the lesson. She was quietly amused, remembering that she felt just as excited when she was the Lesser....<br><br>------------------------------------------------------------<br><br>The Full Moon did not sail high into the ngith sky: she slid along the Southern horizon, as the Hunter’s Moon. Prey would show on any ridgeline, any crest, and the night was bright enough that the goblin Hunters were able to take their favourite steeds out with them. Goblins, unusually for any of the Little People tribes, are not nocturnal: they live in the daylight. They utilised ponygirls for many reasons, but a major cause was the girls’ sharp daytime vision: both rider and steed were alert to their surroundings, two minds focusing on potential threats.<br><br>-----------------------------------------------------------  <br><br>In the barn, the blonde girl jerked awake. The visions in her dreams! The things she had remembered! She used to be called “Lisl”, and she used to be a person, not kept as an animal! She remembered the town she lived in, wearing dresses and doing chores, remembered friends ... family ...<br><br>She had to run away from this place, this den of monsters and monstrous things! Was it still night? She peered over her stall’s wall, and could see ther sky beginning to blush pink and red. Quickly! She then recalled that while her arms were still denied to her, her legs had been left unbound : if she went now, she could run away! The thought of returning home, being a girl again, with her family, had her moving into action. Her legs felt good, wonderful, and she knew she could run forever.<br><br>The stall was secured by a low gate, which had been impassable to her before, but now with her long legs unhindered she was easily able to make a leap, a jump that got her safely and quietly into the central aisle. She could hear sounds of the other girls sleeping, and beyond the chatter of the camp waking up, but there was nothing, nobody, too close: nothing to alert  or alarm her. She crouched low, and crept up the aisle to the rear of the stables, where she knew there was a door.<br><br>She saw her own pair of moccasins resting on the bench next to the rear door, and slipped them onto her bare feet. The door was only latched shut, and she found it easy to open just with her foot. She lifted the wooden bar, and tapped the door open. She kept low in a crouch as she departed the stables.<br><br>[...a vague sense of uncertainty swept over her as she passed under the lintle>Was this the right thing to be doing?)<br><br>The chill of the morning air felt invigorating on her bare skin, and she was suddenly very aware of her nudity. She hadn’t given much thought to it at all while in training: when she had considered it, her emotions were comforting: it was natural to both girls and ponies to be nude, normal to be comfortable in her skin. Yet here and now she felt exposed, vulnerable, and determined to be cautious. She crept along the outer wall of the stables, feeling the tall grass brushing her skin with their night’s weight of dew. When she gained the corner of the building, she was able to peek out, and she saw what she had hoped to see: thirty paces away the camp clearing ended at a wall of trees, and just over there was the start of the track that she knew, was sure, went away from this madness, back to civilisation, and back home...<br><br>[...doubt: not quite sure what home was, or what it meant, or even why she wanted to be there...]<br><br>She shook her head to clear away her worries, and after taking several deep breaths she sprinted for the trailhead... used to having her arms pinioned, and grateful for her fortune in so easily finding her moccasins, she ran as she never had...<br><br>She flashed across the open ground, in between the first of the trees and into the gloom of the forest.....<br><br>..and in the sudden darkness, she didn't see the three goblins, nor the rope that they jerked taut into her path. Her world upended, she tripped stumbled sprawled: and unable to catch herself she hit the ground hard, and lay briefly dazed, before staggering to her feet again...<br><br>...then there was a weight on her shoulders that she had never felt there before...<br><br>...and there was a sudden sharp, familiar jerk of the ironwood bit, and she knew her flight was not just in vain, but pointless. She had been so swiftly, so easily, brought back under control...<br><br>...on the deepest level, she knew she belonged to the goblin People, that she was an animal, broken and tamed and trained, and that knowledge swept all of her memories and her yearnings for her past life out of her. At that moment, bearing a rider on her back, she fully accepted her new life, her new status. She was always and forever to be a naked, obedient pet, a dumb animal, part of a herd of similarly domesticated animals...and it would be good to be so. She made her first loud whinny, as a true Ponygirl, a steed of the Goblin People..<br><br>Sitting with his knees firmly locked over the pony's shoulders, and her bit secured to his reins again, the Girlbreaker understood what the new Ponygirl’s cry meant. Proud that he had brought another mount successfully into the Peoples’ herd, he pulled tightly on her reins. The blonde ponygirl spun around in a circle, completely submissive to his first command to her, and they both heard the applause of the assistants.<br><br>The 'breaker and his ponygirl steed were alike in their happiness" `
+    };
+
+    function loadChapter(num) {
+      document.getElementById("story").innerHTML = chapters[num] || '<p>Chapter not found.</p>';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      location.hash = `#${num}`;
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    window.onload = () => {
+      const saved = localStorage.getItem("theme");
+      if (saved === "dark") document.body.classList.add("dark");
+      const chapter = location.hash.replace("#", "") || "1";
+      loadChapter(chapter);
+    };
+  </script>
+</body>
+</html>
