@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Princess Errant</title>
+  <title>Trisha the Terrible</title>
+  <link rel="icon" type="image/x-icon" href="book.png">
   <style>
     /* Reset & Base Styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -62,6 +63,7 @@
       transition: background 0.5s, color 0.5s;
       overflow-y: auto;
       max-height: 80vh;
+      text-align: justify;
     }
     body.dark .reading-container {
       background: rgba(40,40,60,0.9);
@@ -74,7 +76,7 @@
     /* Floating Navigation Buttons */
     .nav-button {
       position: fixed;
-      top: 50%;
+      top: 90%;
       transform: translateY(-50%);
       padding: 12px;
       font-size: 1.5em;
@@ -94,8 +96,8 @@
   <!-- Header -->
   <header>
     <button id="toggle-dark">🌙</button>
-    <h1>The Princess Errant</h1>
-    <button id="toggle-chapters">📖</button>
+    <h1>Trisha the Terrible</h1>
+    <button id="toggle-chapters"></button>
   </header>
   <!-- Reading Content -->
   <div class="reading-container">

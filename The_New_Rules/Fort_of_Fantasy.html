@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fort of Fantasy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --light-bg: #f4f1ea;
+      --dark-bg: #1e1e1e;
+      --light-text: #2b2b2b;
+      --dark-text: #f1f1f1;
+      --accent: #f0c86c;
+      --dark-accent: #360f4d;
+      --highlight: #E53E30;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: var(--light-bg);
+      color: var(--light-text);
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    body.dark {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    header.dark {
+      background: var(--dark-accent);
+      color: var(--dark-text);
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+    }
+
+    nav {
+      display: flex;
+      gap: 1rem;
+    }
+
+    nav button {
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: var(--highlight);
+      z-index: 1001;
+      transition: width 0.2s ease-out;
+    }
+
+    main {
+      padding: 7rem 1.5rem 2rem;
+      max-width: 800px;
+      margin: auto;
+      line-height: 1.8;
+      font-size: 1.1rem;
+      transition: transform 0.5s ease;
+      text-align: justify;
+    }
+
+    .note {
+      background: var(--highlight);
+      color: #333;
+      padding: 0.5rem;
+      border-left: 4px solid var(--accent);
+      margin: 1rem 0;
+      display: none;
+    }
+
+    .floating-notes {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.7rem 1rem;
+      border-radius: 25px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    .toggle-theme {
+      background: white;
+      color: var(--accent);
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.3rem;
+      }
+
+      main {
+        padding: 5rem 1rem 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="progress-bar"></div>
+  <header>
+    <h1>Fort of Fantasy</h1>
+    <nav><!-- 
+      <button onclick="loadChapter(1)">Mon</button>
+      <button onclick="loadChapter(2)">Tue</button>
+      <button onclick="loadChapter(3)">Wed</button>
+      <button onclick="loadChapter(4)">Thu</button>
+      <button onclick="loadChapter(5)">Fri</button> -->
+      <button class="toggle-theme" onclick="toggleTheme()">🌓</button>
+    </nav>
+  </header>
+  <main id="story">
+    <h2>Welcome</h2>
+    <p>Select a chapter to begin reading your adventure through the week.</p>
+  </main>
+
+  <button class="floating-notes" onclick="toggleNotes()">📝 Notes</button>
+
+  <script>
+    const chapters = {
+      1: `"This is gonna suck…" I said to Jeremy as he sat down next to me on the bus.<br><br>"Tell me about it!" He said with a sneering laugh.<br><br>One of our fellow classmates, a girl with auburn color hair must have overhead us, because she turned backwards in her seat and said, "Come on, Daniel. Guys. How often do you get a chance to visit an actual fort used during the Civil War? The place we're going to is of such historical significance. We're going to learn so much!" She gave us an annoying cheerful smile.<br><br>"We're gonna learn so much!" I mocked her to Jeremy, after the girl had turned back around. I don't think she heard me.<br><br>With a sigh, I complained, "I can't believe we're missing out on Fantasy Land." Ok, I was probably whining a little. But every year the school had a field trip to a local amusement park. At least, they did for the students that had high enough grades. I had failed one stupid little history test, and now I couldn't go! It wasn't fair!<br><br>Normally the students that couldn't go had to stay behind at school, and have a miserable day. My history teacher, Mrs. Johnson, had offered me another option though. Besides being the history teacher, she also ran some kind of historical society for the school. Somehow, it was only girls that ever signed up to be a part of the club. I always thought they just sat in there and gossiped all day.<br><br>No, apparently they went on field trips to historical sights together too. A long time ago, a very long time ago, when I was young and not so cool, I had been a part of the AV club. Well, Mrs. Johnson offered to give me extra credit, to at least bring my grade up to passing, if I came along and filmed the trip for the girls. My friend Jeremy was in the same boat as me. He hadn't ever been in the AV club, but he was going to act as my gofer and hand me tapes and batteries and anything else I needed.<br><br>Yeah I said tapes. We went to a public school, so the equipment wasn't always the newest. The highest resolution this camera could do was only 720i. If you've heard of 720p, think of that, but only half the frames. The cameras had a flash card option too, but those filled up so quickly they were hardly of use.<br><br>After a grueling, and mind-numbingly boring hour-long bus ride, we could finally see this fort on the horizon. Did I mention we had to cross the border into Mexico to get here? Apparently they weren't so strict about their borders back in the day. Or maybe no one noticed when they were building?<br><br>After we arrived, this little funny looking guy came out of this modern looking building in front of the fort, and said he was the caretaker. He invited us into the building, and the dozen or so girls, me and Jeremy, and Mrs. Johnson all filed in. At least the building was air conditioned. The bus had become stifling hot about half way into the trip.<br><br>There was a gift shop to one side, roped off, and a couple other doors, one that looked like it headed out to the fort, but the room was pretty small for the amount of people trying to squeeze in. The guy started explaining the history of the fort. He said something about some Count that ended up owning it after the war, but I wasn't really paying attention. All of this was so boring.<br><br>"There is a tradition the Count put in place that we continue to this very day." The guy droned on. "But I think it will be best if my wife explains. She will be giving you the tour today. Let me retrieve her." He said, then opened the door on the side of the room, beckoning someone to come in.<br><br>All of a sudden the entire mood of the room changed as this guy's wife walked through the door. So many of the girls gasped. I'm sure Jeremy and my jaws fell completely open. This guy's wife was totally stark spanking naked! And she was absolutely breathtaking! I almost dropped the bag holding the camera, she was so beautiful!<br><br>She cleared her throat, giving everyone a blushing smile as she spoke. "Yes, hello everyone! My name is Lorita, and I will be your guide today. I know you are probably pretty surprised to see that I am not dressed. I will address this right now. The Count had some, how do you say, eccentric thoughts in regards towards women. He believed that it is better for a woman to know her place and be nude so she can remember. He requested that any woman who was of age, meaning they had started their menstrual cycle, be nude while in the fort. Obviously some outdated ideas of his, but we continue to honor the tradition despite that."<br><br>There was a bit of an uproar from the girls. Obviously they were not happy to hear about this rule. I know I was grinning like a mad man. I took a quick look over at Jeremy, and he had the same expression. I also felt some tightness in my pants, as my erection tried to push its way out.<br><br>"Girls! Girls! Quiet down please!" Mrs. Johnson was trying to stop the girls' uproar. "Now I know this might not be quite what we were expecting, but this is a perfect opportunity for you all to experience something of historical significance. This will give you a chance to feel and know what it was like to be a woman back in this time period."<br><br>"Yes, please. If you girls will follow me." The nude woman started speaking again. "There is a place in this room for you to store your belongings securely." She gestured at the half open doorway she had just come from, ushering all the girls through. Our teacher went along with them.<br><br>After all the girls had gone inside, the guy came over to say something to us with a creepy looking grin on his face. "You boys are going to enjoy your experience with the girls at the fort today. Splendid! Splendid!" He said, then headed out the other door. The one that looked like it headed towards the fort.<br><br>I just looked at Jeremy, and he just stared back at me, for about a minute. I think both of us were trying to ask each other if this was actually happening, or if we were dreaming. After that, he finally broke the silence. "Holy shit, dude!"<br><br>"I know! Holy shit!" I added. Neither of us were the most articulate at the moment. Then I realized I was standing there with a camera, and there was about to be a large group of naked girls that were going to be pouring out of that door any second. It was perfect! I was supposed to film their trip anyway!<br><br>I set down the bag, and quickly pulled out the video camera. "What are you doing!?" Jeremy asked me in surprise.<br><br>"We're here to film their trip." I said with a large smirk. "The moment they come through that door is something they're never going to want to forget. I know I don't want to forget it." He nodded at me with his own gigantic grin.<br><br>I already had the camera prepared with a fresh battery and tape before we left. So all I needed to do was turn it on and aim it at the door. I did one little thing and quickly popped in a flash card. This camera did have one nice feature. It could record to both mediums at once. I hoped I could sneak the flash card with me later, and have my own secret memory of this little field trip forever.<br><br>The door started to crack open, so I hit the record button, not wanting to miss a second of the reveal. Mrs. Johnson came out first, blushing and looking very flustered. This was only the second woman I had ever seen in the nude, and I had to admit, for a teacher, she was pretty nice looking. She saw me holding the camera, and got a surprised, angry look on her face, marching right towards us.<br><br>"Just what do you think you are doing!?" She said in a hushed tone, part angry, and part embarrassed.<br><br>"You made me come here to record the trip." I said, trying to justify my actions. "I think that women having to be nude is of historical significance."<br><br>She let out a sigh, and her anger seemed to disappear. "Yes, you are right. Carry on." She said, seemingly resigned.<br><br>I had been filming her the entire time, and since she had come closer to speak with us, I could now capture her nude body in a close-up. She hugged herself around her midsection, making me realize just how embarrassed she must feel about this whole thing. To be naked in front of two of her male students. She was just trying to put on a brave front.<br><br>The door the girls were behind made a creak again, and I quickly panned the camera back over. The girl with the auburn hair poked her head out, obviously trying to keep the rest of herself hidden. “Mrs. Johnson, I think we are ready, but some of the girls are concerned about Jeremy and Daniel.” I definitely noticed her shoulder was now bare, instead of covered by the blouse she had been wearing before. I slowly zoomed the camera in on her, watching everything through the view screen that popped out from the side, hoping to catch a peak at a bit more.<br><br>“I know, Julie, but the boys are here to simply do a job. See, Daniel has already begun filming.” Our teacher pointed towards me. “Hang on. I’ll come talk to everyone.” She said, heading back inside the other room.<br><br>“Damn, you think they’re gonna chicken out?” Jeremy asked me, looking quite disappointed.<br><br>“Don’t say that, dude.” I frowned at him. “You’ll jinx it!”<br><br>It took another minute, but once again the door separating us from the naked girls opened, and this time Mrs. Johnson led the way, but was followed by 12 more, very attractive, and very naked school girls. Well, I guess they weren't totally naked, as they all had sandals on their feet. Something the fort must provide? Most of them had come in sneakers.<br><br>These girls were always so stuffy and proper, but damn did they look good all naked like that. It was interesting to see, there was an obvious contrast between the skin they allowed to show that was much more tan, and the skin they normally kept covered. For a lot of them, it almost looked like they were wearing flesh colored bikinis, with the lighter skin tone in the more interesting areas. The majority of them were blushing too, and it was fairly noticeable that most of them were trying to keep at least some of their privates concealed from view. Some of them held their boobs, one in each hand. Some of them instead used both hands to cover up the treasure that lay down below. And a few were trying their best to cover everything they could.<br><br>There was one girl I knew from my chemistry class last year. Her name was Lisa, and she had short blonde hair, and quite the body to go along with her cute pixie face. She was the only girl in the entire bunch not trying to cover up, and also had no tan lines. In fact she was the only one smiling as she came through the door. As I panned the camera around, and captured her image, she blew a little kiss towards me and the camera, and giggled.<br><br>The wife of the little creepy guy came back in too, and she was trying to get everyone's attention again. Mrs. Johnson was the one who had to speak up, however. “Girls! Listen to Lorita!”<br><br>“Thank you miss.” She said when everyone quieted down. “I will now begin to show you the grounds of the fort. Please, everyone, follow me.” She said, opening the same door her husband had gone through earlier.<br><br>Myself and Jeremy were the last two out the door, and we felt the blast of the sweltering heat as we came through. The tour guide noticed the heat too, as she tried to make a joke for the girls, “It is of mighty benefit to be naked on a day like today, don’t you think girls? Your poor boys will be melted by the end.” Some of the girls tried to laugh out of politeness, but I think they didn’t like that a joke was being made of them being naked.<br><br>She led us all through the entrance of the fort, and then off to one side to start pointing out historical facts. Honestly it sounded about as boring as any time I had been to the museum. The only thing keeping my interest in her at this point was that she was stark naked.<br><br>Jeremy patted me on the shoulder a couple times to get my attention. "Hey, what if the girls burn up in this hot sun?" He asked. He did have a point. It was very bright out, with hardly any clouds in the sky.<br><br>"I don't know? Why don't you ask one of the girls?" I whispered back to him, not wanting the tour lady to be interrupted.<br><br>He took a few steps forward, tapping one of the bare naked babes on her shoulder. She turned to face him, looking quite sheepishly at me holding the camera too. He whispered something to her, which I did not hear, but I could just barely make out her reply. "They offered us sunscreen when we got undress--" She stopped herself, blushing. "When we were in that room."<br><br>Jeremy came back over to me after that. "They're covered."<br><br>"I heard." I said with a chuckle.<br><br>This procedure carried on for a while. We'd move, probably about 10 to 20 paces, and then stop to listen to Lorita talk about whatever it was we were now standing in front of. I was getting great footage of her, but all I was getting of the rest of the girls was their backsides.<br><br>I was strategic the next time we moved. Instead of following along directly, I moved to the side and up. That got me into a slightly skewed angle, but it also gave me a vantage point of the girls' fronts. We stopped again, and for the next twenty minutes I was able to capture each girl's full frontal glory.<br><br>I think some of them noticed the position I had moved into, as some girls went back to trying to be modest. A few of them even scowled at me, which meant I’d probably have to go and edit that part out later. But a few girls also smiled, and giggled. Lisa in particular of course, but also the girl with the auburn colored hair, that I remembered was named Julie.<br><br>I thought we were about to move again, but Lorita announced that it was lunch time, instead. Mrs. Johnson came back over to us, looking a little flummoxed. "Boys, would you be helpful and go grab the two coolers that we left on the bus? I would normally come with you, but… Well…"<br><br>You're naked, I finished in my head, but said, "Sure, you got it, Mrs. Johnson." I quickly slipped the camera back into it's bag, before the two of us headed back. Instead of going through the building and wasting time, we just went around the side. The bus driver let us in, no problem when we knocked at the door. Poor guy. I wonder if he knows what he's missing? Then, with the two coolers full of lunches we had packed before the trip, Jeremy and I headed back for the naked girls.<br><br>There were a few picnic tables, spread out in what I think is called the courtyard. I don't know, I'm not good at history, remember. Most of the girls were seated, but Lisa waved to me and Jeremy, calling us over. "Come sit with us!"<br><br>We set the coolers down in the ground near everyone, then headed for Lisa. Mrs. Johnson got up, and started going through the lunches, calling everyone's name as they were labeled. Jeremy ended up taking the spot next to Lisa, but it turned out Julie was also at this table, so I went around to sit next to her instead.<br><br>"Learn anything interesting?" I asked her slyly once seated.<br><br>"I don't know? Have you?" She asked with a smirk in return. I hadn't noticed before, just how beautiful this girl was. The way her auburn hair fell down just past her shoulders. Damn.<br><br>Eventually I just had to look, and there they were, the two most gorgeous, proudest looking boobs you might ever see. With those cute erect nipples poking out of the ends. Crap, she just caught me looking. "My eyes are up here." She almost sang.<br><br>I was tongue tied, and all the intelligence in my brain had abandoned me, so my reply was, "I know, but your boobs are down here." and I pointed. I was trying to be funny, but I think I just came off as crass.<br><br>I think she took it in stride, because she just said, "Well, don't hurt your neck looking." And gave an incredulous laugh.<br><br>I realized what I was doing, and blushed profusely at her. "Sorry."<br><br>"It's alright. This is all new for me too." She gave me a cute smile.<br><br>“I think these guys are having some fun with us.” Lisa said from across the table, with a coy little smirk.<br><br>“Oh, you know we’re just enjoying this educational trip, baby.” Jeremy said, doing his best to flirt with her.<br><br>“I’d say both you guys should think about getting the right sized pants.” She fired back at him. “Both of you seem to be wearing pants that are way too tight for you today.” She gave him her pixie smile.<br><br>“You guys aren’t going to say anything about this. Right?” The girl sitting to Lisa’s right asked, looking very much concerned.<br><br>“Oh no. Jeremy and I, we would never. Mum’s the word.” I made a zipper motion across my lips. “The two of us are just here to do a job.”<br><br>“Huh… Right…” Julie gave me a skeptical look.<br><br>“Lisa! Jeremy!” Mrs. Johnson called from the cooler, and the two of them got up to retrieve their lunch.<br><br>“I’m serious Julie. I won’t say anything about this trip to anyone. Now Jeremy and I, we’re gonna be talking about this with each other until the end of our days.” I said, laughing. She pushed me on the shoulder, and rolled her eyes at me.<br><br>Julie and my name were called next, along with the other girl seated at our table, who turned out to be called Denise. After we got our lunches, all of us sat back down together at the table again. Our table was a little farther away from the two other tables the rest of the girls were sitting at, so we couldn’t really hear their conversation, and they couldn’t hear ours. It turned out the three girls, Julie, Lisa, and Denise were all best friends, and had wanted an after school activity to do together, and that is why they had joined Mrs. Johnson’s historical society.<br><br>“I never could have imagined joining an after school club would involve being naked.” Julie blushed, and the other two girls nodded their heads in agreement with her.<br><br>“I think it’s pretty exhilarating though.” Lisa smiled. She was distinct from the other girls, in that she was not really embarrassed to be naked. “You guys want to know a secret?” She asked.<br><br>“Sure.” I said, cracking open my can of coke.<br><br>“What is it?” Julie asked curiously.<br><br>Lisa leaned forward, lowering her voice almost to a whisper. “When I was young, my cousins and I all used to go down to this watering hole near their house in the summers. We would all skinny dip in the little pond for hours. There were young kids, older kids, boys, girls, everyone there went nude while swimming.” She gave a little giggle.<br><br>“No wonder it’s been so easy for you to be naked now.” Denise commented.<br><br>“How long did this go on for? How old were you when you stopped going skinny dipping?” Jeremy asked her.<br><br>“Who says I stopped?” Lisa gave him a flirtatious smile.<br><br>The rest of us all had a laugh at that. After lunch, Lorita started up the tour again, and we were back to wandering around for a while. Eventually, she led our group to an entrance that went into the outer wall.<br><br>As we came in, it took a bit for our eyes to adjust. It was very dim inside, and I could only see about three feet in front of me. We all had to shuffle in, almost single file; the space was very cramped. I accidentally bumped into Julie on numerous occasions, as she was directly in front of me, but I can’t say that I minded much. One time I even took the chance to let my palm linger a little on her cute, plump little butt, and when she looked back at me with open mouthed shock, I pretended to be focused on somewhere else.<br><br>I do have to say that the part about the cannons was pretty cool. Lorita spent about twenty minutes on those. I knew it was too dark for the camera to see anything, but I still turned it on, hoping that I could use the audio at least.<br><br>It turned out that the tour was over after that. Lorita thanked us for being such a good group, and hoped we would recommend the tour to others. She said she was sad that not many people would visit, just because of the rule for women. We headed back out through the gate, and to the more modern building again. As we went, I got some B footage of the fort to hopefully use with the voice over about the cannons.<br><br>When we got back inside, the little weird guy invited us all to check out the gift shop, but most of the girls headed the opposite way, and straight for their clothes.<br><br>Jeremy and I just stood there, but surprisingly, Julie and Lisa came over and took our hands, leading us to the gift shop. “Let's see what they have for sale.” Julie said with a smile. I noticed Denise was also begrudgingly following us. All three girls were still nude.<br><br>They had a bunch of little trinkets. Some had to do with Mexican culture. Some with the Civil War. The little guy even pointed out we could buy a replica of the count’s portrait. I didn’t really want anything, but Julie liked this little stuffed chihuahua she found, so I offered to buy it for her. “Thanks. All my cash is in my clothes.” She laughed, and gave me a wink.<br><br>Disappointingly, even Julie, Lisa, and Denise had to go get dressed eventually, as Mrs. Johnson said it was almost time to go. They were the only three, out of the entire bunch of girls, that had not gotten dressed yet, including Mrs. Johnson. She and the rest of the girls all seemed to be relieved to have their clothes back on.<br><br>I was not looking forward to the return trip when we got back on the bus. The driver had the AC going full blast, but it didn’t seem to be doing a bit of good. Our little five-tet all headed for the very back of the bus. Julie and I sat in one seat, and Denise sat across from us, while Lisa and Jeremy took the one in front of her. With only a dozen girls in total, there was plenty of space for everyone to spread out.<br><br>About twenty minutes into the return trip, Lisa started grumbling. “My god, we are going to melt!” She said, almost panting.<br><br>“Why don’t you take your clothes off again?” Jeremy said, being cheeky.<br><br>She looked at him with a big smile. “You know what, I think I will!” She stood up from her seat, and in one fluid motion pulled the sun dress she was wearing up and over her head. Then she sat back down, but not before pulling her panties to her knees so she could slip them the rest of the way off while seated. Apparently she wasn’t wearing a bra.<br><br>“Oh my god, Lisa! You’re sucha..!” Denise said, blushing and laughing.<br><br>“Such a what!” She demanded.<br><br>“Such a wild girl!” Julie finished, with her own laugh.<br><br>“I don’t know what you guys are talking about. This is the only way to beat the heat!” She folded her arms, pouting. Then she looked at us like she got the brightest idea in the world as she said, “You four should join me!”<br><br>“Oh, uh, I don’t know about that, Lisa.” Denise said. Obviously she was hoping her time being nude was over for the day.<br><br>“It’ll be fun.” Lisa encouraged us. “Besides, the boys haven’t gotten a chance to air out yet today.”<br><br>Julie turned to me with a little smirk. “What do you say? Need to air out your bits for a bit?”<br><br>I was a little embarrassed to be put on the spot like that, and couldn’t stop myself from blushing, but I gave her a smile and said, “Sure. I’ll do it if you do.”<br><br>The second the words left my mouth, Julie was undoing the buttons to her blouse. I knew it would take her a bit longer than me to get undressed, but I didn’t care. As soon as I saw she was doing it, I pulled my t-shirt off, and started undoing my belt. I stood up, and pushed my shorts and boxers down to my ankles, letting my cock spring free from it’s restraints.<br><br>“Dude!” Jeremy cringed, looking away from my privates.<br><br>“Don’t be mean!” Lisa scolded him. “I think Daniel has a nice dick.” She gave me her cute pixie smile, before turning back to him. “You should get undressed too. Or you’re gonna end up with heat stroke.”<br><br>“Alright, alright.” He said, like it was the biggest burden in the world, but then he had his clothes off in moments, and scooted very close to Lisa.<br><br>Julie now had all of her clothes off too, so the only one of our little group left wearing anything was Denise. “Come on, Denise. Join us!” Julie tried to spur her on.<br><br>“Yeah, Denise, join us!” Lisa giggled her own encouragement out. “Everyone has already seen you naked.”<br><br>I guess the peer pressure was too much for her, because she also got up, and took off her clothes.<br><br>I’ve got to say, it did feel a lot cooler with my clothes off. It was a lot more relaxing too. Julie was leaning into me now, and our bare shoulders were touching. The way the bus was humming and rocking back and forth was very comfortable.<br><br>The next thing I remember was Mrs. Johnson standing next to me, clearing her throat. I opened my eyes, and realized we were back at the school. I looked up at her with a sheepish blush, as she was staring directly down at my lap.<br><br>“We’re here.” She said with a bit of a stifled laugh. “You can wake the others up on your own, Daniel.” She took a couple steps like she was about to leave, then turned back to me and said, “Nice cock, by the way.” and she winked at me and headed off the bus.<br><br>Apparently all five of us had fallen asleep. Julie was curled up next to me, hugging my arm and resting her head on my shoulder. I thought it was a shame that I had to wake her from such a peaceful looking sleep, but I knew I couldn’t move otherwise. Shaking her gently, she eventually came back to life.<br><br>“What happened?” She asked with a little yawn.<br><br>“We all fell asleep. We’re at school now.” I informed her. I stood up, checking on Lisa and Jeremy in front of me. Lisa basically had her head in his lap. I shook Jeremy’s shoulder to wake them, then reached across the isle to do the same with Denise. I then explained to them too that we were back at school.<br><br>Once the five of us were properly dressed again, we all exited the bus and went our separate ways for the day. School was long over by this point in the afternoon.<br><br>I did manage to sneak that memory card off the bus with me as I left. It ended up being about an hour of footage in total. I made a copy for myself, and then snuck the card back to school the next day so it wouldn’t be missed. The video you may ask? I never shared my copy, but I think I forgot to delete the file off the card, and someone else from school must have found it and leaked it. If you’re familiar with the more dark recesses of the Internet, then you can find it out there. As for my own copy, every once in a while I’ll put it on, just to tease Julie. We’ve been together officially since about a week after the trip. I’m thinking about asking her to marry me.`,
+      2: `<h2>Tuesday</h2><p>The village was still as whispers of the past stirred the wind...</p>`,
+      3: `<h2>Wednesday</h2><p>Footsteps echoed through the hills as stories untold grew louder...</p>`,
+      4: `<h2>Thursday</h2><p>A promise was made, sealed by the morning mist...</p>`,
+      5: `<h2>Friday</h2><p>Every journey ends with a whisper — and a new beginning...</p>`
+    };
+
+    function loadChapter(num) {
+      const content = chapters[1] || '<p>Chapter not found.</p>';
+      const story = document.getElementById("story");
+      story.style.transform = "translateY(20px)";
+      setTimeout(() => {
+        story.innerHTML = `<div class='note'>Because I failed a history test, I wasn’t allowed to go on the annual trip to Fantasy Land, our local amusement park. Instead, my teacher, Mrs. Johnson, gave me the option of making up the credit by acting as the videographer for the history club’s field trip. Along with my friend and fellow senior from school, Jeremy, we both learn that the Civil War fort that is the destination of our trip has a very eccentric rule regarding girls and their dress code.</div>${content}`;
+        story.style.transform = "translateY(0)";
+        localStorage.setItem("chapter", num);
+        location.hash = `#${num}`;
+      }, 150);
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function toggleNotes() {
+      document.querySelectorAll(".note").forEach(note => {
+        note.style.display = note.style.display === "block" ? "none" : "block";
+      });
+    
+      // const note = document.querySelector(".note");
+      // if (note.style.display == "none") {
+      //   note.style.display = "block";
+      // }
+      // else if (note.style.display == "block") {
+      //   note.style.display = "none";
+      // }
+    }
+    window.onscroll = () => {
+      const doc = document.documentElement;
+      const scrolled = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+      document.getElementById("progress-bar").style.width = `${scrolled}%`;
+    }
+
+    window.onload = () => {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") document.body.classList.add("dark");
+      const savedChapter = localStorage.getItem("chapter") || location.hash.replace("#", "") || "1";
+      loadChapter(savedChapter);
+    };
+  </script>
+</body>
+</html>
