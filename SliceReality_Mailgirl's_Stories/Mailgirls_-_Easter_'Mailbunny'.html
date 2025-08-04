@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Easter 'Mailbunny'</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Source+Sans+Pro&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-bg: url('https://www.transparenttextures.com/patterns/paper-fibers.png'), linear-gradient(to right, #f6f8f9, #eef2f3);
+      --dark-bg: url('https://www.transparenttextures.com/patterns/dark-mosaic.png'), linear-gradient(to right, #1a1a1a, #2b2b2b);
+      --main-text: #2a2a2a;
+      --dark-text: #f1f1f1;
+      --accent: #356859;
+      --note-bg: #fff6db;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Source Sans Pro', sans-serif;
+      background: var(--main-bg);
+      color: var(--main-text);
+      transition: all 0.3s ease;
+      background-repeat: repeat;
+    }
+
+    body.dark {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    .reader-shell {
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+    }
+
+    .header-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header-box h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-box .meta {
+      font-size: 0.95rem;
+      color: #777;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .toolbar select,
+    .toolbar button {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: white;
+      color: #333;
+    }
+
+    main {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark main,
+    body.dark .header-box {
+      background: #333;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      text-align: justify;
+    }
+
+    .note {
+      background: var(--note-bg);
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem;
+      margin: 1rem 0;
+      display: none;
+      font-size: 0.95rem;
+      border-radius: 6px;
+    }
+
+    .float-btn {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    @media (max-width: 720px) {
+      .reader-shell {
+        padding: 2rem 1rem;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .toolbar select,
+      .toolbar button {
+        width: 100%;
+      }
+
+      .header-box h1 {
+        font-size: 1.6rem;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="reader-shell">
+    <div class="toolbar">
+      <div>
+        <!-- <select id="chapter-select">
+          <option disabled selected>Choose Chapter</option>
+        </select>
+        <button onclick="loadSelectedChapter()">Go</button> -->
+      </div>
+      <button onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+
+    <div class="header-box">
+      <h1>DALISS8283</h1>
+      <div class="meta">An immersive web fiction experience by <strong>Leora Quinn</strong></div>
+    </div>
+
+    <main id="story">
+      <h2>Mailgirls - Easter 'Mailbunny'</h2>
+      <div class='note'>Happy Easter!<br><br>A non-canon fan-fiction scene imagined for the ‘Confessions of a Mailgirl’ story universe by Seahawk, with an ‘Easter twist’. I’ve been busy with a number of projects lately that have meant not being able to dedicate much time to getting new images finished, which, combined with a catastrophic computer failure, have put me out of action for a couple of weeks.<br><br>I can only apologise that it isn’t necessarily up to my usual standard, only a quick piece to get the idea out of my head! All characters taken from Seahawk’s universe and I in no way claim any rights over any of them! I hope you can enjoy anyway!</div>
+      <p>At the end of their shifts on Thursday every Mailgirl’s MMU alerted her to report to a mailgirls meeting in one of the conference rooms on the fourth floor of the tower, though none of them had any idea what it was about or why, the assembled naked messengers knelt around the room and openly speculated as to what was happening.<br><br>They were kept waiting for over an hour beyond the end of their shifts before Barbara Anderson strode confidently into the office and dropped a small box onto the desk at the far end of the room; turning to her assembled nude audience she explained they would be making some themed alterations to the mailgirls uniform over Easter…<br><br>“What better way to boost corporate moral than with some theming” Barbara said with a bright smile. … Plus we’ve been doing this for a couple of months and employees are getting used to us, she wants to draw that attention all over again… Danica thought, mentally rolling her eyes.<br><br> “With all due respect ma’am, you can’t be serious…”<br><br>There was a collective tensing from all the other girls when Six spoke up, though Barbara’s steely gaze didn’t falter as it whipped round to glare directly at the mailgirl that had expressed such dissent.<br><br>“I believe… Number Six… that I have already more than demonstrated that I absolutely can control what any of you do or do not get to wear in this complex…” Barbara’s gaze flicked meaningfully to Danica before she continued, “… 5 demerits for questioning my authority though… anyone else?”<br><br>There was a, mumbled, collective “No Ma’am” that slowly rippled around the rest of the assembled girls.<br><br>“Good! I’ll make a deal with all of you,” Barbara started with false brightness, “You obediently comply with this temporary uniform change and I don’t terminate any of your contracts…”<br><br>She paused to let her words sink in before she continued, “You’ll each collect a pair of ears and an adhesive tail from this box, and for the next 2 weeks any mailgirl seen in uniform without these additions will be issued 100 demerits on the spot… Oh and before I forget, each of you will be reporting for work on Sunday to serve at the company picnic... Happy Easter my Mail-Bunnies!”</p>
+    </main>
+  </div>
+
+  <button class="float-btn" onclick="toggleNotes()">📝 Notes</button>
+
+  <script>
+    const chapters = {
+      1: `<h2>Mailgirls - Easter 'Mailbunny'</h2><p>At the end of their shifts on Thursday every Mailgirl’s MMU alerted her to report to a mailgirls meeting in one of the conference rooms on the fourth floor of the tower, though none of them had any idea what it was about or why, the assembled naked messengers knelt around the room and openly speculated as to what was happening.<br><br>They were kept waiting for over an hour beyond the end of their shifts before Barbara Anderson strode confidently into the office and dropped a small box onto the desk at the far end of the room; turning to her assembled nude audience she explained they would be making some themed alterations to the mailgirls uniform over Easter…<br><br>“What better way to boost corporate moral than with some theming” Barbara said with a bright smile. … Plus we’ve been doing this for a couple of months and employees are getting used to us, she wants to draw that attention all over again… Danica thought, mentally rolling her eyes.<br><br> “With all due respect ma’am, you can’t be serious…”<br><br>There was a collective tensing from all the other girls when Six spoke up, though Barbara’s steely gaze didn’t falter as it whipped round to glare directly at the mailgirl that had expressed such dissent.<br><br>“I believe… Number Six… that I have already more than demonstrated that I absolutely can control what any of you do or do not get to wear in this complex…” Barbara’s gaze flicked meaningfully to Danica before she continued, “… 5 demerits for questioning my authority though… anyone else?”<br><br>There was a, mumbled, collective “No Ma’am” that slowly rippled around the rest of the assembled girls.<br><br>“Good! I’ll make a deal with all of you,” Barbara started with false brightness, “You obediently comply with this temporary uniform change and I don’t terminate any of your contracts…”<br><br>She paused to let her words sink in before she continued, “You’ll each collect a pair of ears and an adhesive tail from this box, and for the next 2 weeks any mailgirl seen in uniform without these additions will be issued 100 demerits on the spot… Oh and before I forget, each of you will be reporting for work on Sunday to serve at the company picnic... Happy Easter my Mail-Bunnies!”</p>`
+    };
+
+    const chapterSelect = document.getElementById("chapter-select");
+    for (let i = 1; i <= 20; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Chapter ${i}`;
+      chapterSelect.appendChild(opt);
+    }
+
+    function loadSelectedChapter() {
+      const val = chapterSelect.value;
+      if (val) loadChapter(val);
+    }
+
+    function loadChapter(num) {
+      const story = document.getElementById("story");
+      story.innerHTML = chapters[num] || `<h2>Chapter ${num}</h2><p>This chapter is still being written...</p>`;
+      localStorage.setItem("chapter", num);
+      location.hash = `#${num}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // loadChapter(1);
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function toggleNotes() {
+      document.querySelectorAll(".note").forEach(note => {
+        note.style.display = note.style.display === "block" ? "none" : "block";
+      });
+    }
+
+    window.onload = () => {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.body.classList.add("dark");
+      else if (!theme) {
+        const hour = new Date().getHours();
+        if (hour < 6 || hour > 18) document.body.classList.add("dark");
+      }
+      const savedChapter = localStorage.getItem("chapter") || location.hash.replace("#", "") || "1";
+      loadChapter(0);
+    };
+  </script>
+</body>
+</html>

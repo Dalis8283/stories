@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Working Late for Christmas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Source+Sans+Pro&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-bg: url('https://www.transparenttextures.com/patterns/paper-fibers.png'), linear-gradient(to right, #f6f8f9, #eef2f3);
+      --dark-bg: url('https://www.transparenttextures.com/patterns/dark-mosaic.png'), linear-gradient(to right, #1a1a1a, #2b2b2b);
+      --main-text: #2a2a2a;
+      --dark-text: #f1f1f1;
+      --accent: #356859;
+      --note-bg: #fff6db;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Source Sans Pro', sans-serif;
+      background: var(--main-bg);
+      color: var(--main-text);
+      transition: all 0.3s ease;
+      background-repeat: repeat;
+    }
+
+    body.dark {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    .reader-shell {
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+    }
+
+    .header-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header-box h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-box .meta {
+      font-size: 0.95rem;
+      color: #777;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .toolbar select,
+    .toolbar button {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: white;
+      color: #333;
+    }
+
+    main {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark main,
+    body.dark .header-box {
+      background: #333;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      text-align: justify;
+    }
+
+    .note {
+      background: var(--note-bg);
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem;
+      margin: 1rem 0;
+      display: none;
+      font-size: 0.95rem;
+      border-radius: 6px;
+    }
+
+    .float-btn {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    @media (max-width: 720px) {
+      .reader-shell {
+        padding: 2rem 1rem;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .toolbar select,
+      .toolbar button {
+        width: 100%;
+      }
+
+      .header-box h1 {
+        font-size: 1.6rem;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="reader-shell">
+    <div class="toolbar">
+      <div>
+        <!-- <select id="chapter-select">
+          <option disabled selected>Choose Chapter</option>
+        </select>
+        <button onclick="loadSelectedChapter()">Go</button> -->
+      </div>
+      <button onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+
+    <div class="header-box">
+      <h1>DALISS8283</h1>
+      <div class="meta">An immersive web fiction experience by <strong>Leora Quinn</strong></div>
+    </div>
+
+    <main id="story">
+      <h2>Mailgirls - Working Late for Christmas</h2>
+
+      <div class='note'>Merry Christmas! I recently checked and apparently my Deviations have clocked a combined views total of over 100,000 and i'm approaching 30,000 page views; Which is completely crazy to me, I am humbled that people continue to check my stuff out and I hope, enjoy it.<br><br>I started working on this image last Christmas, but didn't get around to finishing it, and, with having produced the mailgirls expansion document and wanting to explore a quick representation of 'Custodian' duty mailgirls, it seemed right to finally get it done. This is the result, I promised more mailgirls stuff, and my posting schedule is a little protracted right now, but I hope you can enjoy this nonetheless.<br><br>Comments always welcome, happy holidays!</div>
+
+      <p>Tess, Mailgirl 7, stood anxiously at the anonymous abandoned desk the receiver pressed to her ear; she kept glancing around the deserted office, hyper aware of how much trouble she would be in if she was caught using one of the desk phones.<br><br>It was 9:00PM on Christmas Eve, the DDE office had been closed all day for the holidays, but the mailgirls were still expected to work, just like every day; it was becoming an increasingly accepted truth that the mailgirls weren’t really employees, they were more like equipment in a ‘vital system’.<br><br>“I know Mom, I wish I could’ve travelled home too… I just couldn’t get the time off work…”<br><br>A half-truth. She’d never told her parents she was a mailgirl, they thought she was still in middle management…<br><br>“…uh huh…… mmhmm…”<br><br>She half-listened to her Mom’s stories of what her family were doing that evening, only finding herself blushing with shame as she glanced down at her nakedness under the harsh office lights. The constant wobbling of the damn Santa hat they'd been forced to wear the last few weeks didn't make it any easier, the mailgirls were increasingly having to get used to being 'dressed up' for holiday themes. The bunny ears at Easter had been humiliating, but the santa hats constantly bouncing as they ran were maddening.<br><br>“Me? …I’m at home… Just… relaxing in front of the TV” Tess lied, her heart pounding, she felt like any moment her Mom would somehow sense her lies and the truth would come tumbling out unstoppably.<br><br>Tess glanced over at Jessica, Mailgirl 8, and caught her scornful look. Tess was meant to be helping her clean and the other girl had only reluctantly agreed to let her take 5 minutes to phone her family.<br><br>“…Tomorrow?” Tess asked, trying to fathom some lie of what she had planned, instead of the truth… that she’d spend Christmas day running naked around an empty office, making sure everything was ready for when the ‘norms’ came back.<br><br>“… Just … I’ll spend it with friends… you know… yeah… uh huh…”<br><br>Another half-truth, she'd at least be with some of the other mailgirls.<br><br>Tess curled her bare toes into the carpet and leant against the desk partition for a moment, she'd picked this spot specifically because she could hide from the security cameras behind a pillar but she knew staying here too long would likely raise suspicion. Tess felt like she hadn't had a break in days, which was partly true, mandatory weekend shifts had been given to all the mailgirls for the last 3 weekends; first so they could put up the multitude of Christmas decorations around the complex and then so they could serve as waitresses at the company Christmas party. Of course the party had gone until after midnight, and the mailgirls were needed back in bright and early on the Sunday to clean up. Come January they were all scheduled in for another weekend to dismantle the Christmas decorations again and haul everything back to the basement, something none of the girls were looking forward to.<br><br>When her Mom asked about the Christmas sweater she’d sent her in the mail, Tess bit her lip, mortified. Her contract forbid her clothing, and ever since the program was expanded that meant 24/7… she’d be naked, on and off duty, every day for 2 years… the sweater had been confiscated before it even reached her mailbox.<br><br>“I… I love it mom… thank you… Merry Christmas…”</p>
+    </main>
+  </div>
+
+  <button class="float-btn" onclick="toggleNotes()">📝 Notes</button>
+
+  <script>
+    const chapters = {
+      1: ``
+    };
+
+    const chapterSelect = document.getElementById("chapter-select");
+    for (let i = 1; i <= 20; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Chapter ${i}`;
+      chapterSelect.appendChild(opt);
+    }
+
+    function loadSelectedChapter() {
+      const val = chapterSelect.value;
+      if (val) loadChapter(val);
+    }
+
+    function loadChapter(num) {
+      const story = document.getElementById("story");
+      story.innerHTML = chapters[num] || `<h2>Chapter ${num}</h2><p>This chapter is still being written...</p>`;
+      localStorage.setItem("chapter", num);
+      location.hash = `#${num}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // loadChapter(1);
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function toggleNotes() {
+      document.querySelectorAll(".note").forEach(note => {
+        note.style.display = note.style.display === "block" ? "none" : "block";
+      });
+    }
+
+    window.onload = () => {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.body.classList.add("dark");
+      else if (!theme) {
+        const hour = new Date().getHours();
+        if (hour < 6 || hour > 18) document.body.classList.add("dark");
+      }
+      const savedChapter = localStorage.getItem("chapter") || location.hash.replace("#", "") || "1";
+      loadChapter(0);
+    };
+  </script>
+</body>
+</html>

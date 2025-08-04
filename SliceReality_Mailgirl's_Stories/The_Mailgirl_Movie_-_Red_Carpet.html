@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Red Carpet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Source+Sans+Pro&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-bg: url('https://www.transparenttextures.com/patterns/paper-fibers.png'), linear-gradient(to right, #f6f8f9, #eef2f3);
+      --dark-bg: url('https://www.transparenttextures.com/patterns/dark-mosaic.png'), linear-gradient(to right, #1a1a1a, #2b2b2b);
+      --main-text: #2a2a2a;
+      --dark-text: #f1f1f1;
+      --accent: #356859;
+      --note-bg: #fff6db;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Source Sans Pro', sans-serif;
+      background: var(--main-bg);
+      color: var(--main-text);
+      transition: all 0.3s ease;
+      background-repeat: repeat;
+    }
+
+    body.dark {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    .reader-shell {
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+    }
+
+    .header-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header-box h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-box .meta {
+      font-size: 0.95rem;
+      color: #777;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .toolbar select,
+    .toolbar button {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: white;
+      color: #333;
+    }
+
+    main {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark main,
+    body.dark .header-box {
+      background: #333;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      text-align: justify;
+    }
+
+    .note {
+      background: var(--note-bg);
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem;
+      margin: 1rem 0;
+      display: none;
+      font-size: 0.95rem;
+      border-radius: 6px;
+    }
+
+    .float-btn {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    @media (max-width: 720px) {
+      .reader-shell {
+        padding: 2rem 1rem;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .toolbar select,
+      .toolbar button {
+        width: 100%;
+      }
+
+      .header-box h1 {
+        font-size: 1.6rem;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="reader-shell">
+    <div class="toolbar">
+      <div>
+        <!-- <select id="chapter-select">
+          <option disabled selected>Choose Chapter</option>
+        </select>
+        <button onclick="loadSelectedChapter()">Go</button> -->
+      </div>
+      <button onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+
+    <div class="header-box">
+      <h1>DALISS8283</h1>
+      <div class="meta">An immersive web fiction experience by <strong>Leora Quinn</strong></div>
+    </div>
+
+    <main id="story">
+      <h2>The Mailgirl Movie - Red Carpet</h2>
+
+      <div class='note'>Another Mailgirls image, I could've written more story to accompany it, going right up to the red carpet itself, but I haven't had the time to do so.<br><br>In Seahawk's recent chapters of the incredible 'Confessions of a Mailgirl' he introduced the character of Diana Clarkson, an ex child star that had decided to re-invigorate her acting career in the most extreme way possible; taking the lead role in 'The Mailgirl'. A romance movie about a mailgirl and an executive, Diana found herself required to sign on as a mailgirl in order to experience their lives as authentically as possible. I extrapolated this idea slightly to lead her into a bit of a rabbit hole of becoming more and more a tool for the studio executives to push PR for the movie into a frenzy, and obviously appearing on the red carpet at the movie's premiere 'in uniform' is the most appropriate thing for a mailgirl anyway.<br><br>I like to imagine the theatre has a special mailgirl mat in the front row waiting just for her.<br><br>Comments welcome as always, and i'll post the actual movie poster seen in the background here soon.<br><br>... Alternatively it's just a woman naked on a red carpet, and the rest is open to your imagination!</div>
+
+      <p>Diana Clarkson, appearing in role as ‘mailgirl 33’, ran amongst the cubicles of the harshly lit office environment. The entire wall at the end of the office was missing, disappearing into blackness behind bright spotlights, the uncaring black lenses of cameras followed the naked actresses every move.<br><br>Diana sprinted round a corner and then dropped to her knees on a mailgirl mat, spreading her thighs and taking up the most perfect mailgirls ‘kneel’ position she could. All around her were the buzz of extras working away at fake desks…<br><br>“Cut! That’s a wrap everyone!”<br><br>The atmosphere on the set changed immediately into one of wild celebration, the crew and all the extras in the cubicles started clapping and high fiving each other as equipment and rigs were put down in relief.<br><br>After 8 weeks of filming, they were finally finished.<br><br>Diana, mailgirl 33, stayed kneeling and naked on the mailgirls mat in the middle of the commotion; the dead black camera lenses pointed at her. Ignored by the crew and forgotten she sat frozen in relief as she got her breath back, this was it, she was finally done! She could get dressed again!<br><br>Amongst the group and emerging from between the cameras the director, Darren Lewis, called out over the noise to make a quick speech,<br><br>“Congratulations everyone! With this, principal photography on ‘The Mailgirl’ is now complete! I can only thank you all for your hard-work and dedication these last few weeks. I know this project has had its ups and downs but without your belief and enthusiasm we never would have made it this far, I thank you all for putting in the hours on this one. See you all at the wrap party!”<br><br>With another great cheer the crew started to clear the set, lights and camera rigging started to be dismantled, extras were slowly ushered back downstairs and the director and producer went back to discussing the contents of the last pages of notes.<br><br>Diana, the only one naked amongst the chaos, knelt submissively on the floor, not quite finding the strength to move. No one had told her what to do now, was her contract over now? Should she get up and go and find clothes? Her mind continued to whirr endlessly as she tried to suppress the constant humiliating knowledge that all of these people had seen every private detail of her naked body over the last few weeks and months, or how uncontrollably horny that still made her.<br><br>The truth was to even land the role, Diana had has to sign a contract of intent that she would prescribe to ‘method acting’ and sign a mailgirls contract for the duration of the production. And after initially spending time amongst DDEs mailgirls, learning exactly what it meant to be a real mailgirl, she had moved back to the set to start filming… all in, she had been naked for 4 months… Worse, the contract had stipulated that ‘to maintain realism and get into the submissive mind-set of a mailgirl’ she was to respectfully refer to everyone else on set as ‘Sir’ or ‘Ma’am’.<br><br>To even think about what was going to happen once the movie was released… it was already one of the most hotly anticipated movies of the year and they hadn’t even released a trailer yet. The press were having a field day, calling Darren Lewis a ‘creative genius’, calling the entire production ‘brave’ and ‘revolutionary’, the very idea of having the movie’s female lead, Diana herself, naked for 99% of the movie had set Hollywood into a spin, and the producers had made sure everyone knew they didn’t plan on censoring any part of her.<br><br>“Diana!”<br><br>The director’s voice calling her name snapped the naked actress from her reverie and she sheepishly stood and approached him, her naked breasts heaving as she felt a flush spread over her body under his gaze. It didn’t matter how many times she talked to him like this, his stare made her feel more naked than she ever thought possible. She couldn’t help but get a little excited he was about to tell her ‘congratulations’ and ‘you can get dressed now’…<br><br>“Sir?” The naked brunette asked timidly as he snapped his fingers and had her follow him without a word. The crew leered at her as much as they always did as she navigated the chaotic set and followed Darren back towards a small office set into the back of the set, when he opened the door Diana couldn’t help but gasp when she saw the room was filled with studio executives, the other stars of the movie, representatives from Seahawk productions and Barbara Anderson from DDE. Everyone but her was dressed in finely tailored expensive suits, only highlighting just how naked she was.<br><br>Every head in the room turned to face her when she walked in and Diana baulked a little under the oppressive gaze drinking in every inch of her nudity. She had to desperately fight the roaring in her ears that was telling her to cover herself… of play with herself… or something! Doing nothing was unbearable; she could feel the energy overwhelming her.<br><br>She was handed a glass of champagne which she took in silence, trying to understand what was going on.<br><br>It was Micah, her male co-star, who stepped forward first and gave her a quick hug. Though their on-screen chemistry had been palpable, behind the scenes they had maintained a relatively cold relationship, Micah had treated her just like a mailgirl and seemed to enjoy having that power over her. She felt his hand creep down her naked back to her ass and give it a small squeeze before her whispered, “kneel thirty-three” in her ear and then walked away.<br><br>Without giving it a thought, and trembling slightly in a daze, Diana knelt obediently on the rough carpeted floor of the room, now surrounded by powerful corporate executives on all sides. It was apparent they had been having a discussion before she had entered, one that continued above her… about her…<br><br>“So we’re agreed then, for marketing purposes we maintain the contract. Her uniform will drive more controversy, which will drive more hype, more attention and increase our box-office”<br><br>Diana’s heart raced; what?! They couldn’t do that to her, could they? Danica, Mailgirl 9 at DDE, had encouraged her to read the small print on her contract… were they serious? The editing process would take months, and then a world-wide press tour several months more… she couldn’t stay naked all that time!<br><br>“Absolutely, we keep Diana here in uniform beyond the premiere date, she can attend the premiere in uniform, imagine the red-carpet attention we’ll draw. Everyone is clamouring for mailgirls this year, this could be huge for us.”<br><br>Diana started to feel woozy… she nervously took a sip of the champagne, not daring to speak up…<br><br>“There won’t be any legal problems, as long as she’s a legitimately registered mailgirl, she can go anywhere in uniform in 44 states now, 45 next month after the vote in Nebraska goes through. Her image can also be broadcast uncensored in those states too, which will help with marketing…”<br><br>The collar around her neck felt ever heavier now…</p>
+    </main>
+  </div>
+
+  <button class="float-btn" onclick="toggleNotes()">📝 Notes</button>
+
+  <script>
+    const chapters = {
+      1: ``
+    };
+
+    const chapterSelect = document.getElementById("chapter-select");
+    for (let i = 1; i <= 20; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Chapter ${i}`;
+      chapterSelect.appendChild(opt);
+    }
+
+    function loadSelectedChapter() {
+      const val = chapterSelect.value;
+      if (val) loadChapter(val);
+    }
+
+    function loadChapter(num) {
+      const story = document.getElementById("story");
+      story.innerHTML = chapters[num] || `<h2>Chapter ${num}</h2><p>This chapter is still being written...</p>`;
+      localStorage.setItem("chapter", num);
+      location.hash = `#${num}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // loadChapter(1);
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function toggleNotes() {
+      document.querySelectorAll(".note").forEach(note => {
+        note.style.display = note.style.display === "block" ? "none" : "block";
+      });
+    }
+
+    window.onload = () => {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.body.classList.add("dark");
+      else if (!theme) {
+        const hour = new Date().getHours();
+        if (hour < 6 || hour > 18) document.body.classList.add("dark");
+      }
+      const savedChapter = localStorage.getItem("chapter") || location.hash.replace("#", "") || "1";
+      loadChapter(0);
+    };
+  </script>
+</body>
+</html>

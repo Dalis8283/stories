@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trip</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Source+Sans+Pro&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-bg: url('https://www.transparenttextures.com/patterns/paper-fibers.png'), linear-gradient(to right, #f6f8f9, #eef2f3);
+      --dark-bg: url('https://www.transparenttextures.com/patterns/dark-mosaic.png'), linear-gradient(to right, #1a1a1a, #2b2b2b);
+      --main-text: #2a2a2a;
+      --dark-text: #f1f1f1;
+      --accent: #356859;
+      --note-bg: #fff6db;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Source Sans Pro', sans-serif;
+      background: var(--main-bg);
+      color: var(--main-text);
+      transition: all 0.3s ease;
+      background-repeat: repeat;
+    }
+
+    body.dark {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    .reader-shell {
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+    }
+
+    .header-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header-box h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-box .meta {
+      font-size: 0.95rem;
+      color: #777;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .toolbar select,
+    .toolbar button {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: white;
+      color: #333;
+    }
+
+    main {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark main,
+    body.dark .header-box {
+      background: #333;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      text-align: justify;
+    }
+
+    .note {
+      background: var(--note-bg);
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem;
+      margin: 1rem 0;
+      display: none;
+      font-size: 0.95rem;
+      border-radius: 6px;
+    }
+
+    .float-btn {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    @media (max-width: 720px) {
+      .reader-shell {
+        padding: 2rem 1rem;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .toolbar select,
+      .toolbar button {
+        width: 100%;
+      }
+
+      .header-box h1 {
+        font-size: 1.6rem;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+    li::marker {
+      color: #00E59B;
+    }
+  </style>
+</head>
+<body>
+  <div class="reader-shell">
+    <div class="toolbar">
+      <div>
+        <!-- <select id="chapter-select">
+          <option disabled selected>Choose Chapter</option>
+        </select>
+        <button onclick="loadSelectedChapter()">Go</button> -->
+      </div>
+      <button onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+
+    <div class="header-box">
+      <h1>DALISS8283</h1>
+      <div class="meta">An immersive web fiction experience by <strong>Leora Quinn</strong></div>
+    </div>
+
+    <main id="story">
+      <h2>Mailgirls - Trip (Demerits Explained)</h2>
+
+      <div class='note'>So this image really came about because I wanted an excuse to post the memo and explore the nitty-gritty of the demerits system!<br><br>I’d been thinking about the demerits for a while, and how they string together in a practical sense. What exactly do they do? How exactly does each one work when tallied? The topic is, I believe, left deliberately vague in Seahawks story, which I think was an astute decision to put some distance between it and the more BDSM heavy elements of the very early mailgirl stories.<br><br>Seahawk outlined in some of the more recent chapters in ‘Confessions of a Mailgirl’, that the girls are expected to work 1 extra hour of unpaid overtime for every 10 demerits earned. I wanted to take that a step further and try to use the demerits as a way of unifying DDEs statements about how ‘generously’ the mailgirls are paid with the reality in which they’re not.<br><br>Simply enough I decided each single demerit earns a girl a -$5 penalty from her wages, and every 10 accumulated demerits earns a mailgirl 1 additional hour of unpaid overtime. After doing some very crude math, I got what came out in Don’s memo above, I hope it makes sense! I’m sure if anyone is especially excited by this information, you could do your own calculations to work out how different numbers of demerits affect the girl’s hours and earnings.<br><br>Just remember that it isn’t canon unless Seahawk says it is, so, this is just an idea.<br><br>Let me know what you think, is $5 too much?<br><br>(It seems with the holidays approaching I’ve managed to find pockets of time to post like crazy, things might slow down a little soon though, so I hope these can tide you guys over for a while!)</div>
+
+      <p>22 was running late… she knew if she just upped the pace a little more she might make it there only a few seconds overdue…<br><br>WHAM!<br><br>Carrie fell so suddenly she wasn’t at first sure what had happened.<br><br>“Holy shit!” Someone from one of the nearby desks stood up and immediately started laughing. The sight of a naked mailgirl running the mail didn’t draw much attention now… but one falling flat on her face was a very different matter…<br><br>The laughter started to ripple out in waves, Carrie lay there and felt her skin start to prickle and heat up from the shame.<br><br>A woman, now looming high above her in her expensive suit and heels stepped back in alarm, “Hey! Watch it mailgirl!”<br><br>“S-sorry ma’am…” Carrie stuttered, trying to pull herself up while having to fight her own instinctual desire to cover her modesty, knowing to do so would only leave her in more trouble. The MMU on her arm started buzzing constantly… she’d missed her deadline… her demerit total started its automated increase…<br><br>“Useless sluts…” the woman muttered under her breath, though loud enough for 22 to hear, even over the crowd of laughing, commenting norms that were watching her.<br><br>The hard rough carpet against her bare breasts and knees made Carrie squeak out, drawing even more attention to the spectacle of her nakedness sprawled out across the floor. The papers she’d been carrying were scattered around her and the mailgirl hurriedly tried to bundle them all together again, her eyes flicking over the documents desperately trying to find page numbers to re-order them.<br><br>She caught sight of words on one page that made her stop, ‘mailgirls’, ‘demerits’, ‘penalties’ … she hadn’t read the whole thing but those words stood out to her… she knew she’d get in trouble but she couldn’t help it, she had to read it… even just to glance it over… but not here…<br><br>“Enjoy your trip 22?” An executive walking past laughed, taunting her. Carrie whimpered, feeling her skin flush with hot shame as she caught sight of her naked reflection in his perfectly polished shoes.<br><br>“T-thank you Sir…” she stammered meekly, still gathering up the papers, her MMU continuing it’s angry buzzing to let her know she had missed her deadline. Her cheeks were red with a blush more intense than she had felt for a while; the erotic, humiliating, tension erupting through her body in electric tremors that jolted at her nipples and sex.<br><br>The laughter, comments and whistling didn’t stop when she stood, and the humiliated mailgirl found herself submissively giving a little apologetic nod to the assembled norms before she scurried away, bolting for the nearest set of doors into the stairwell.<br><br>Once inside, she paused, panting, and with her MMU still buzzing angrily on her arm, 22 grabbed the sheet of paper that had caught her eye and rapidly started reading…<br><br>---------------------------------------------------------------------------------------<br><br>
+---[SECURITY WARNING – Following a number of high profile hacking events on other companies, this memo, and any responses to it, should be dispatched by mailgirl only]---<br><br>To: DDE Board of Executives Dispatch List<br><br>Subject: Mailgirl Demerits – Company Finances<br><br>-----<br><br>As requested by the board I have investigated points 8, 9 and 11 from last week’s meeting, re: mailgirl demerits and financial correctness.<br><br>I have come to the following findings, for interest of the board,<br><br>
+<ul style="list-style-type:disc;">
+  <li>Legal agree that we are entirely truthful in stating that mailgirl wages are $60,000 a year and their contact completion bonus is $250,000 after 2 years. For all public purposes, including media distribution, advertisement and job postings; mailgirls earn $4,615 per month, $1,153 per 40-hour week, or $30 per hour. This remains true if a mailgirl earns 0 demerits.</li>
+  <li>As stated in all mailgirl contracts, each demerit earned on duty results in a -$5 penalty to their pay. In addition, 1 hour of unpaid overtime work is added to a mailgirls schedule for every 10 demerits earned.</li>
+  <li>To avoid confusing the mailgirls, the demerits total displayed on their MMU is a daily tally, though a cumulative total is logged against their account separately.</li>
+  <li>My team have calculated, based on a mailgirl earning an average of 20 demerits per 8 hour shift 5 days a week, that we would expect a mailgirl to earn 100 demerits from her usual 40 hours. She is then required to work an additional 10 unpaid hours for that week, again likely earning an average of 25 additional demerits, resulting in an additional 2 ½ hours of additional unpaid overtime. In these 2 ½ additional hours, we would anticipate the mailgirl again, earning 5 demerits, resulting in 1 final additional hour of unpaid work for that week.<br><br>We therefore believe that, in practical reality, the average mailgirl is expected to work for roughly 53 hours per week, and will total 137 demerits across those hours. The total of the penalty to her pay is expected to be -$685, lowering her weekly income from $1,153 to $468, before taxation. Adjusted for the 53 hours worked, this results in an hourly rate of $8.83, rather than the advertised $30.<br><br>The annual cost to the company for employing the average mailgirl is therefore: $24,336 per annum, plus bonus pay outs on contract completion.</li>
+  <li>I had Linda draw up a projection for a mailgirl with poor performance, earning 40 demerits per 8 hour shift, instead of our projected 20. In this instance, with all additional weekly hours, demerits and further hours totalled, we anticipate that the mailgirl would be required to work 78.5 hours for that week, and would have earned a total of 387 demerits, resulting in a penalty of -$1,935.<br><br>In this instance, the penalty of -$1,935 exceeds the $1,153 wages of the girl, eliminating them entirely, and resulting in a -$782 shortfall to be subtracted from her end of contract bonus.</li>
+  <li>By this measure, if a mailgirl somehow managed to earn 79,000 demerits (at a rate of roughly 151 per shift) over the course of her 2 year contract; her entire bonus would be eliminated. At that point, upon contract completion, the girl would be expected to make up any shortfall now owed to the company herself. If unable to do so, a further 2 year mailgirl contract will be offered as means of financial assistance, without a completion bonus. At the completion of this contract, should the girl’s debt to the company not have been erased, and if she has no independent means with which to settle said debt, additional contracts will be offered until one reaches completion with no debt to be settled.</li>
+  <li>Brian asked for us to look into the mailgirl with the current worst record, which is #39, by a considerable margin. 3 months ago #39 received a 1000 demerit penalty for attempting to artificially modify her demerit total, resulting in 100 hours of unpaid overtime and the associated financial penalties. As of today, #39 has worked an additional 102 hours of unpaid overtime, and, having earned demerits in these hours, continues to owe 86 hours of unpaid overtime. Her end of contract bonus currently stands at a reduced $108,209.</li>
+</ul>
+<br><br>
+I hope this clarifies the points made in last week’s meeting, if any member of the board wishes for us to extrapolate or model additional scenarios, dispatch a mailgirl with the request back to me.<br><br>
+Don Lock<br><br>Chief Financial Officer<br><br>Accounts Management Executive<br><br>DumpsterDawg Enterprises<br><br>D.Lock@DDE.com<br><br>P.S – A memo dispatched last week referred to ‘real employees’ in a paragraph discussing the mailgirls program. This should be corrected to match ongoing PR strategy. For clarification, all of our employees are ‘real’ employees; mailgirls are not considered employees so there is no need for further delineation.</p>
+    </main>
+  </div>
+
+  <button class="float-btn" onclick="toggleNotes()">📝 Notes</button>
+
+  <script>
+    const chapters = {
+      1: ``
+    };
+
+    const chapterSelect = document.getElementById("chapter-select");
+    for (let i = 1; i <= 20; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Chapter ${i}`;
+      chapterSelect.appendChild(opt);
+    }
+
+    function loadSelectedChapter() {
+      const val = chapterSelect.value;
+      if (val) loadChapter(val);
+    }
+
+    function loadChapter(num) {
+      const story = document.getElementById("story");
+      story.innerHTML = chapters[num] || `<h2>Chapter ${num}</h2><p>This chapter is still being written...</p>`;
+      localStorage.setItem("chapter", num);
+      location.hash = `#${num}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // loadChapter(1);
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function toggleNotes() {
+      document.querySelectorAll(".note").forEach(note => {
+        note.style.display = note.style.display === "block" ? "none" : "block";
+      });
+    }
+
+    window.onload = () => {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.body.classList.add("dark");
+      else if (!theme) {
+        const hour = new Date().getHours();
+        if (hour < 6 || hour > 18) document.body.classList.add("dark");
+      }
+      const savedChapter = localStorage.getItem("chapter") || location.hash.replace("#", "") || "1";
+      loadChapter(0);
+    };
+  </script>
+</body>
+</html>

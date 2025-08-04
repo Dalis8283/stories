@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Basement Dorm</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Source+Sans+Pro&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-bg: url('https://www.transparenttextures.com/patterns/paper-fibers.png'), linear-gradient(to right, #f6f8f9, #eef2f3);
+      --dark-bg: url('https://www.transparenttextures.com/patterns/dark-mosaic.png'), linear-gradient(to right, #1a1a1a, #2b2b2b);
+      --main-text: #2a2a2a;
+      --dark-text: #f1f1f1;
+      --accent: #356859;
+      --note-bg: #fff6db;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Source Sans Pro', sans-serif;
+      background: var(--main-bg);
+      color: var(--main-text);
+      transition: all 0.3s ease;
+      background-repeat: repeat;
+    }
+
+    body.dark {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    .reader-shell {
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+    }
+
+    .header-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header-box h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-box .meta {
+      font-size: 0.95rem;
+      color: #777;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .toolbar select,
+    .toolbar button {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: white;
+      color: #333;
+    }
+
+    main {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark main,
+    body.dark .header-box {
+      background: #333;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      text-align: justify;
+    }
+
+    .note {
+      background: var(--note-bg);
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem;
+      margin: 1rem 0;
+      display: none;
+      font-size: 0.95rem;
+      border-radius: 6px;
+    }
+
+    .float-btn {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    @media (max-width: 720px) {
+      .reader-shell {
+        padding: 2rem 1rem;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .toolbar select,
+      .toolbar button {
+        width: 100%;
+      }
+
+      .header-box h1 {
+        font-size: 1.6rem;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="reader-shell">
+    <div class="toolbar">
+      <div>
+        <!-- <select id="chapter-select">
+          <option disabled selected>Choose Chapter</option>
+        </select>
+        <button onclick="loadSelectedChapter()">Go</button> -->
+      </div>
+      <button onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+
+    <div class="header-box">
+      <h1>DALISS8283</h1>
+      <div class="meta">An immersive web fiction experience by <strong>Leora Quinn</strong></div>
+    </div>
+
+    <main id="story">
+      <h2>Mailgirls - Basement Dorm</h2>
+
+      <div class='note'>This occurs after a heavy time jump, something I consider to be in the mailgirls future for now. I consider this to be several years after the start of the program and isn’t a phase of the program I will necessarily explore more right now.<br><br>It’s certainly not canon as far as Seahawk’s original story is concerned, but I’d consider it to be an eventual part of my own expansion. I got a spark of inspiration for the idea of a mailgirls dorm room and wanted to explore how exactly events might unfold to see that happen.<br><br>The more I thought about it, the more the idea seemed to make sense to me in the universe; centralising the mailgirls increases their efficiency, frees up parking and allows DDE to keep control of their monopoly of the service comfortably to the DDE facility.<br><br>I thought it would also be interesting to have the dorms built in the same place the very first mailgirls locker room was, heeding back to the very first days of the program, and demonstrating just how far it had grown since then.<br><br>Ultimately, I wanted to show how I imagine the lives of 'off-duty' mailgirls would be. Being kept naked and collared 24/7, and the way the program had re-branded itself in a legal sense to be a 'lifestyle choice' for the girls, building a sense of comraderie amongst them but separating them from normal people to the point that the girls start to subconsciously internalise this notion that they're not really 'real' people anymore... they're mailgirls.<br><br>With the holiday season in full swing, I seem to find these pockets of time to post images I wouldn't have thought I'd ever finish. I hope you enjoy!<br><br>houghts and comments welcome, and please remember to check out and support Seahawk’s fantastic ‘Confessions of a Mailgirl’.</div>
+
+      <p>Carrie, Mailgirl 22, hurried down the last flight of stairs into the basement of the DDE complex. The MMU on her arm continued to flash the word STORAGE, urgently buzzing and driving her to hurry down the stairs. She’d been told that a few years ago, when the program first started, the basement had housed a single make-shift locker room for the girls… she found it hard to believe looking at it now…<br><br>6 months ago DDE had unveiled the basement conversion; a veritable warren of mailgirl dormitories beneath the complex. The success of the program had led to a surge of investment in the city and with the money came the people and the housing market had exploded overnight.<br><br>On their salary, mailgirls had quickly been priced from the market.<br><br>Banks refused to lend to them. Carrie remembered a particularly humiliating visit to her local bank, naked and collared though off duty, she had tried to get a meeting with the manager to arrange a loan. He had insisted she spend the entire meeting in the inspection position, while he lectured her about how the risk of her not finishing her contract and owing such a huge amount to DDE was too much of a risk and the bank simply didn’t want anything to do with providing financial assistance to mailgirls.<br><br>Unable to afford rents, some of the girls started moving in together in an attempt to ease the financial burden, but as that became unsustainable, DDE acted to produce what they called ‘Phase 3’ of the mailgirls expansion; building dorm rooms and providing accommodation for the girls on site.<br><br>Centralising the mailgirls accommodation was seen as a masterstroke. It meant the program could start efficiency savings for food, batch cooking meals for all the girls saved money overall, and let the company ensure they always received healthy, nutritious, foods to help them run.<br><br>The fact that all the girls now no longer needed to commute meant their shift lengths could be gently extended, car parking spaces were freed-up for the ‘real’ employees and DDE could guarantee the mailgirls service would always have girls available at zero notice because they wouldn’t have to wait for a girl to commute from home.<br><br>Carrie had held onto her own apartment for as long as possible, DDE had insisted that taking a bed in the company dorms wasn’t mandatory for anyone but new mailgirls, but as the finances become impossible to cope with, she had found herself with no choice but to give up her home, to give up all her possessions and move into the basement.<br><br>The MMU continued to buzz angrily as the naked blonde moved down the harshly lit corridor towards her dorm room. She knew the word ‘Storage’ on the screen meant the MMU needed to go into storage, to charge for the night now that her shift was over… but she couldn’t help but think it was an instruction for her as well…<br><br>Carrie skidded into her dorm and hurriedly scrambled to unstrap the still buzzing MMU from her arm; bending down to drop it into one of the drawers beneath the sleeping pods she sighed in relief. Mercifully, her MMU immediately stopped buzzing the moment it entered the drawer, the screen changing to a dull black and the wireless charging symbol lit up.<br><br>The room was filled with 5 other mailgirls, each as collared and naked as the last, their skin adorned with the numbers that seemed to be indelibly inked to their skin from the constant applying and re-applying. To Carrie it looked like #8 and #5 were both hunkered down in their bunks already, and #18 was in their little bathroom. #4 and #16 had been deep in conversation when she’d skidded in, interrupting them.<br><br>“Cut it close two-two?” April, mailgirl 16, said playfully as Carrie stood up and stretched. Most of the girls were either known by their names, or their numbers but somewhere along the line Carrie had found herself being called ‘two-two’ instead… it didn’t bother her any more than she supposed the others might be upset by their names being so easily replaced, she still longed to hear her own name, but had long since given up trying to convince any of the other girls to use it. She was ‘two-two’… along with her clothes, her name was just another thing the norms had taken from her.<br><br>“My last delivery was on floor 4 of the North wing…” Carrie panted slightly as she composed herself, “Then I get the storage instruction… getting from there to here… God it was like premium-rush extreme or something”<br><br>In their dorms they were ‘off-duty’ (or as ‘off-duty’ as a mailgirl could be), and with the most privacy they ever got, the naked women were able to relax a little. Entertainment was limited but they spent most of their time gossiping about the ‘norms’ above them, or enjoying more ‘physical’ entertainments… there were only so many ways a group of always naked mailgirls could relax on their downtime…<br><br>A pair of bare feet swinging into view caused Carrie to step back and she smiled up at Tara, Mailgirl 4, perched on the edge of her bunk. “That sucks… I was just saying, do you know Belle? Number 41? She got a cross-town premium rush this morning… 4 miles in half an hour… poor girl was right on the edge… I think she’s out like a light in her dorm”<br><br>Carrie winced just thinking about it, absentmindedly running a finger over the flexible watch-strap like band around her neck, the number ‘22’ displayed on the front. They were officially ‘mailgirl identification necklaces’, but considering they were locked on for the duration of their contract, the girls knew they were collars in all but name.<br><br>Carefully she started to get herself ready to climb into her little cubby-bed. The girls didn’t have sheets, or any storage for personal items at all and Carrie was once again struck with the humiliating realisation that she had no possessions at all… no pictures of her family… no phone… no purse… no car… no house… no clothes!<br><br>She missed her apartment… she missed clothes... she missed being a norm! But for the next 4 years at least, she was stuck, collared and naked, living in a little bunk in the basement of the DDE complex, her life governed by the MMU she dutifully strapped to her arm every day, she was totally at the mercy of the norms.</p>
+    </main>
+  </div>
+
+  <button class="float-btn" onclick="toggleNotes()">📝 Notes</button>
+
+  <script>
+    const chapters = {
+      1: ``
+    };
+
+    const chapterSelect = document.getElementById("chapter-select");
+    for (let i = 1; i <= 20; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Chapter ${i}`;
+      chapterSelect.appendChild(opt);
+    }
+
+    function loadSelectedChapter() {
+      const val = chapterSelect.value;
+      if (val) loadChapter(val);
+    }
+
+    function loadChapter(num) {
+      const story = document.getElementById("story");
+      story.innerHTML = chapters[num] || `<h2>Chapter ${num}</h2><p>This chapter is still being written...</p>`;
+      localStorage.setItem("chapter", num);
+      location.hash = `#${num}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // loadChapter(1);
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function toggleNotes() {
+      document.querySelectorAll(".note").forEach(note => {
+        note.style.display = note.style.display === "block" ? "none" : "block";
+      });
+    }
+
+    window.onload = () => {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.body.classList.add("dark");
+      else if (!theme) {
+        const hour = new Date().getHours();
+        if (hour < 6 || hour > 18) document.body.classList.add("dark");
+      }
+      const savedChapter = localStorage.getItem("chapter") || location.hash.replace("#", "") || "1";
+      loadChapter(0);
+    };
+  </script>
+</body>
+</html>

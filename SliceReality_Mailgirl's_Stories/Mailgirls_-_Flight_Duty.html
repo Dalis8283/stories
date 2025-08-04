@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flight Duty</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Source+Sans+Pro&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-bg: url('https://www.transparenttextures.com/patterns/paper-fibers.png'), linear-gradient(to right, #f6f8f9, #eef2f3);
+      --dark-bg: url('https://www.transparenttextures.com/patterns/dark-mosaic.png'), linear-gradient(to right, #1a1a1a, #2b2b2b);
+      --main-text: #2a2a2a;
+      --dark-text: #f1f1f1;
+      --accent: #356859;
+      --note-bg: #fff6db;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Source Sans Pro', sans-serif;
+      background: var(--main-bg);
+      color: var(--main-text);
+      transition: all 0.3s ease;
+      background-repeat: repeat;
+    }
+
+    body.dark {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    .reader-shell {
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+    }
+
+    .header-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header-box h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-box .meta {
+      font-size: 0.95rem;
+      color: #777;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .toolbar select,
+    .toolbar button {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: white;
+      color: #333;
+    }
+
+    main {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark main,
+    body.dark .header-box {
+      background: #333;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      text-align: justify;
+    }
+
+    .note {
+      background: var(--note-bg);
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem;
+      margin: 1rem 0;
+      display: none;
+      font-size: 0.95rem;
+      border-radius: 6px;
+    }
+
+    .float-btn {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    @media (max-width: 720px) {
+      .reader-shell {
+        padding: 2rem 1rem;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .toolbar select,
+      .toolbar button {
+        width: 100%;
+      }
+
+      .header-box h1 {
+        font-size: 1.6rem;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="reader-shell">
+    <div class="toolbar">
+      <div>
+        <!-- <select id="chapter-select">
+          <option disabled selected>Choose Chapter</option>
+        </select>
+        <button onclick="loadSelectedChapter()">Go</button> -->
+      </div>
+      <button onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+
+    <div class="header-box">
+      <h1>DALISS8283</h1>
+      <div class="meta">An immersive web fiction experience by <strong>Leora Quinn</strong></div>
+    </div>
+
+    <main id="story">
+      <h2>Flight Duty</h2>
+
+      <div class='note'>It’s been far, far too long since I last got the opportunity to post anything, and far longer since I released a new ‘Mailgirls’ piece.<br><br>This is an expansion of the mailgirls universe as imagined by Seahawk, though I have taken it in a slightly more sinister and BDSM oriented direction here, leaning heavily on the indentured servitude aspects of the mailgirls universe.<br><br>I wanted to expand the mailgirl’s concept a little, moving them beyond simple messengers to fulfilling more and more servitude roles, which I believe is Barbara’s vision. In this ‘timeline’, for lack of a better word, the term ‘mailgirl’ is slowly changing in definition from ‘naked messenger’ to ‘naked servant’, the ‘mail’ part of the name is simply a hangover from their origins.<br><br>As always, praise to Seahawk for all his work on ‘Confessions of a Mailgirl’, which you can and should go read: <a style="font-weight: bold; font-family: inherit; font-style: italic; color: inherit;" href="https://www.literotica.com/authors/Seahawk76/works/stories" target="_BLANK">https://www.literotica.com/stories/memberpage.php?uid=648616&page=submissions</a><br><br>I may attempt a few other mailgirl images like these soon, let me know what you think of the image or the concept!</div>
+
+      <p>Ellie, mailgirl number 77, sighed and curled her bare toes against the hard-wearing carpet of the DDE corporate jet. She felt like her life was a constant struggle to find a comfortable temperature on board; the air conditioning was too cold on her naked skin but the bright sunshine streaming through the windows at their 25,000ft cruising altitude was too hot. The small jet was luxurious, fast and carried every comfort for DDE executives and their guests, including full ‘mailgirl’ service.<br><br>77 shuffled on her knees and thought back to how she’d ended up seemingly permanently on flight duty. The mailgirl’s called it ‘M-day’, the day when they were summoned, one-by-one, their MMUs buzzing, into Barbara Anderson’s office. Each mailgirl knew something monumental was happening when new contracts had been placed in front of them. The new contracts set out a timetable that put the mailgirl’s on 168 hour work weeks, permanently, meaning the girl’s would always be considered ‘on-call’. Barbara assured each of them that the ‘on-call’ status meant their actual work hours wouldn’t change, but just give them more flexibility in how and when to assign shifts for a more 24/7 mailgirl service at DDE.<br><br>Some mailgirl’s, thinking this meant they could get to take night shifts where the office would be mostly deserted, signed up quickly. Others saw the danger and took more convincing. In the end, the choice had been simple, sign the new deal or stick to their current contract, with a clause activating a financial penalty, effectively wiping out the bonus they had all thought they’d receive when their contracts ended.<br><br>Of course that was when everything started to snowball on the girls, and fast. They quickly found out that being ‘on-call’ meant far more than just being available 24/7, it meant staying ‘in uniform’… all day, every day. Worse, demerits could be issued to them at any time, by anyone with access to the MMU network, which left the girls, who mostly lived in areas with other DDE employees finding themselves having to permanently adopt their mailgirl submissiveness wherever they went.<br><br>It quickly emerged thereafter that Barbara’s intention for the girl’s extended far beyond just running the mail, and new duties and ‘shifts’ were added to the mailgirl’s rota’s. First, waitresses in the DDE corporate bar and lounge on the top floor of the tower, then custodial duties started being assigned to mailgirls and eventually they found themselves on ‘flight duty’.<br><br>77 felt like she lived her life on this plane now, being carelessly commanded by whoever boarded the flight and doing everything she could to make their life as comfortable as possible. She figured it must’ve been weeks since she had last been allowed off the jet, she definitely had lost all track of where they were or even what time zone they were in. Each time the jet landed it was quickly maintained, refuelled, resupplied and the flight crew changed over, but the Mailgirl’s were never relieved of their duty.<br><br>There were three of them, mailgirl numbers 29, 30 and 77 and while two worked, the other rested. There was a small bathroom and shower on board, as well as a tiny storage area in the rear, crudely adapted to form a single bunk the girls could use to sleep. Their MMUs kept them in a rota, 6 hours off-duty, 12 hours on, working in pairs and resting alone. There 168 hour a week contracts meant there was no legal reason DDE would ever need to relieve them.<br><br>77 glanced down at her hip as the women opposite continued to talk and laugh as though she wasn’t there, cursing her number assignment. She had found out the only reason she was on flight duty was a superstitious member of the DDE board, afraid of flying, had wanted the mailgirl with the luckiest number on board to keep them safe.<br><br>The intercom above crackled into life; “Ladies and gentlemen this is your captain speaking. We’ve reached our cruising altitude of 25,000 feet and our flight time to New York is approximately 5 hours, so please sit back and relax and let our expertly trained flight crew of mailgirls tend to your every wish, simply press the button on your armrest to summon one and we hope that you have a pleasant flight”<br><br>77 hated to admit it but she knew she was getting conditioned to her life on board the jet now, after so many weeks in their same fixed routine, there was a level of comradery she shared with the other two Mailgirl’s on board. She’d started to forget what it felt like to wear clothes, even as the deep humiliation she felt always being naked and on display in front of the well-dressed executives never seemed to reduce. She supposed it was like doing a tour of duty, in a strange way… and as the jet sped on to its next destination, the kneeling naked mailgirl found herself once again enviously eyeing the clothes of the passengers all around her…</p>
+    </main>
+  </div>
+
+  <button class="float-btn" onclick="toggleNotes()">📝 Notes</button>
+
+  <script>
+    const chapters = {
+      1: ``
+    };
+
+    const chapterSelect = document.getElementById("chapter-select");
+    for (let i = 1; i <= 20; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Chapter ${i}`;
+      chapterSelect.appendChild(opt);
+    }
+
+    function loadSelectedChapter() {
+      const val = chapterSelect.value;
+      if (val) loadChapter(val);
+    }
+
+    function loadChapter(num) {
+      const story = document.getElementById("story");
+      story.innerHTML = chapters[num] || `<h2>Chapter ${num}</h2><p>This chapter is still being written...</p>`;
+      localStorage.setItem("chapter", num);
+      location.hash = `#${num}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // loadChapter(1);
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function toggleNotes() {
+      document.querySelectorAll(".note").forEach(note => {
+        note.style.display = note.style.display === "block" ? "none" : "block";
+      });
+    }
+
+    window.onload = () => {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.body.classList.add("dark");
+      else if (!theme) {
+        const hour = new Date().getHours();
+        if (hour < 6 || hour > 18) document.body.classList.add("dark");
+      }
+      const savedChapter = localStorage.getItem("chapter") || location.hash.replace("#", "") || "1";
+      loadChapter(0);
+    };
+  </script>
+</body>
+</html>

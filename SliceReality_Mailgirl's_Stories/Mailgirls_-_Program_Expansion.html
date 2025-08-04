@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Program Expansion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Source+Sans+Pro&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-bg: url('https://www.transparenttextures.com/patterns/paper-fibers.png'), linear-gradient(to right, #f6f8f9, #eef2f3);
+      --dark-bg: url('https://www.transparenttextures.com/patterns/dark-mosaic.png'), linear-gradient(to right, #1a1a1a, #2b2b2b);
+      --main-text: #2a2a2a;
+      --dark-text: #f1f1f1;
+      --accent: #356859;
+      --note-bg: #fff6db;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Source Sans Pro', sans-serif;
+      background: var(--main-bg);
+      color: var(--main-text);
+      transition: all 0.3s ease;
+      background-repeat: repeat;
+    }
+
+    body.dark {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    .reader-shell {
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+    }
+
+    .header-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header-box h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-box .meta {
+      font-size: 0.95rem;
+      color: #777;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .toolbar select,
+    .toolbar button {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: white;
+      color: #333;
+    }
+
+    main {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark main,
+    body.dark .header-box {
+      background: #333;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      text-align: justify;
+    }
+
+    .note {
+      background: var(--note-bg);
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem;
+      margin: 1rem 0;
+      display: none;
+      font-size: 0.95rem;
+      border-radius: 6px;
+    }
+
+    .float-btn {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    @media (max-width: 720px) {
+      .reader-shell {
+        padding: 2rem 1rem;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .toolbar select,
+      .toolbar button {
+        width: 100%;
+      }
+
+      .header-box h1 {
+        font-size: 1.6rem;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="reader-shell">
+    <div class="toolbar">
+      <div>
+        <!-- <select id="chapter-select">
+          <option disabled selected>Choose Chapter</option>
+        </select>
+        <button onclick="loadSelectedChapter()">Go</button> -->
+      </div>
+      <button onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+
+    <div class="header-box">
+      <h1>DALISS8283</h1>
+      <div class="meta">An immersive web fiction experience by <strong>Leora Quinn</strong></div>
+    </div>
+
+    <main id="story">
+      <h2>Mailgirls - Program Expansion</h2>
+
+      <div class='note'>Happy Easter!<br><br>I wanted to create something broad and inspired by the idea of the mailgirls program being expanded into new industry sectors. Obviously the number of applications you could use naked serving girls with an MMU for is vast and though I left out ‘flight duty’ (thinking it an internal posting at DDE only) I’m sure there would be many many others.<br><br>I put together this, imagining it to be a kind of citizen’s information poster that would warn of / explain the changes coming to the mailgirls program. I wanted to keep it neutral in tone and kept references to the girls’ new collars as necklaces instead.<br><br>The scene above and the concept behind the program being expanded here is an extrapolation of Seahawk’s world with my own ideas and is not an official part of it.<br><br>Let me know what you think!<br><br>(Again, this image is really big so I’d recommend downloading it if you wanted to be able to read it as legibly as possible!)<br><br>Edit: I'd used the term 'custodial' to refer to the tasks undertaken by the 'cleaning' mailgirls, this caused a bit of confusion with the implication being these were somehow criminals sentenced into mailgirl duty. I meant to infer simply their assignment was as custodians, so I've amended the original image to get rid of the confusion!</div>
+
+      <p>Clara Lane had known Barbara Anderson since college, and though their jointly busy professional careers kept them often unable to see each other, the old friends had made a special effort for a meeting considering the developments at DDE over the last few months...<br><br>The pair sat in Barbara’s office, drinking coffee that had been served to them both by a naked mailgirl, now kneeling obediently and ignored in the corner of the room, her MMU glowing blue to signal she was ‘reserved’ to attend to Barbara’s needs exclusively for now.<br><br>“You’ve expanded it to the entire city?!” Clara asked in giddy disbelief.<br><br>Barbara returned her look with a sly, satisfied, smile, “We have, MMU monitoring points are being installed across the city. It’s a joint venture, DDE helps pay some of the cost for the city’s new broadband infrastructure and in exchange our engineers can prioritise mailgirl equipment installation at the same time. It’s a win win.”<br><br>Clara was stunned just how much power Barbara had managed to wield in such a short amount of time, and how much change she was responsible for. What was even more incredible was how easily she had done it; manipulating every legal avenue she had to suit her vision for the growth of the Mailgirl’s program…<br><br>She glanced over her shoulder at the naked girl kneeling in the corner, “You’re going to have them going out like that?” Clara asked, gesturing to the girls bared breasts.<br><br>Barbara nodded, “Of course... they’re mailgirls… mailgirls work naked”<br><br>“How the hell did you manage that one?”<br><br>Barbara laughed, “A little bit of politics and a little bit of law” She said, pulling out a bound file and putting it onto her desk. “This,” she started, opening the folder and turning it to Clara, “is a typical mailgirls contract. Would you believe me if I told you every clause they agree to was always legal?”<br><br>Clara frowned, confused, “There’s no way that’s true…”<br><br>“All we had to do was borrow clauses from other contracts,” Barbara explained, “Sports teams have the power to sell their athletes contracts on… they can even dictate what activities their employees are allowed to partake in outside of ‘work’ time. There is no statutory requirement for vacation or maximum contracted hours in a week for anyone that works in an ‘on-call’ industry, so we simply have our girls ‘on call’ 24/7. The only new law we needed was a simple adjustment to the public nudity laws to make an exception for mailgirls, which the mayor was very happy to accommodate for us… The rest, well, it’s a voluntary signing and in the eyes of the law if you agree freely to a contract, it’s binding”<br><br>Clara eyed the contract in silence for a while, processing what Barbara was telling her. She didn’t know if she should be excited, amazed, terrified or something in between.<br><br>“The truth is, we’re planning on expanding the mailgirls program in a big big way, and diversifying way beyond simply delivering mail. The number of tasks these girls can do is enormous and we want to take advantage of their versatility, that’s why we’re branching into other services. Soon there’ll be mailgirl dog walking services, mailgirl waitresses, mailgirl maids, mailgirl valets and air hostesses and the list goes on!” Barbara said with a smile, picking up her phone and tapping on the screen a few times.<br><br>The MMU of the mailgirl in the corner buzzed a split second later and she stood up and started cleaning away their cups. Clara’s eyes grew wide, stunned, realising that Barbara hadn’t even bothered to speak to the girl; instead she had chosen to issue her commands through the app like a remote control…<br><br>Clara’s eyes caught sight of the shiny silver choker around the girls neck, emblazoned with the number ‘9’. “And the collars?” She asked sceptically which prompted Barbara to laugh.<br><br>“Personal identification and licensing necklaces,” she corrected, “Obviously the city need a way to identify licensed mailgirls for the public nudity laws, and they don’t have pockets to keep any documentation in… the necklaces contain little RFID chips which the MMU stations can pick up around town, all a cop has to do is point a phone with the app on it at the girl to know if she’s genuine or not.”<br><br>“You’ve thought of everything…”</p>
+    </main>
+  </div>
+
+  <button class="float-btn" onclick="toggleNotes()">📝 Notes</button>
+
+  <script>
+    const chapters = {
+      1: ``
+    };
+
+    const chapterSelect = document.getElementById("chapter-select");
+    for (let i = 1; i <= 20; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Chapter ${i}`;
+      chapterSelect.appendChild(opt);
+    }
+
+    function loadSelectedChapter() {
+      const val = chapterSelect.value;
+      if (val) loadChapter(val);
+    }
+
+    function loadChapter(num) {
+      const story = document.getElementById("story");
+      story.innerHTML = chapters[num] || `<h2>Chapter ${num}</h2><p>This chapter is still being written...</p>`;
+      localStorage.setItem("chapter", num);
+      location.hash = `#${num}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // loadChapter(1);
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function toggleNotes() {
+      document.querySelectorAll(".note").forEach(note => {
+        note.style.display = note.style.display === "block" ? "none" : "block";
+      });
+    }
+
+    window.onload = () => {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.body.classList.add("dark");
+      else if (!theme) {
+        const hour = new Date().getHours();
+        if (hour < 6 || hour > 18) document.body.classList.add("dark");
+      }
+      const savedChapter = localStorage.getItem("chapter") || location.hash.replace("#", "") || "1";
+      loadChapter(0);
+    };
+  </script>
+</body>
+</html>
