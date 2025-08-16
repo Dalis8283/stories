@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Working Flip-Book Reader</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --desk:#f5f2ee;
+    --book:#ffffff;
+    --ink:#2c2c2c;
+    --accent:#8b5cf6;
+    --muted:#6b7280;
+    --shadow:rgba(0,0,0,0.1);
+  }
+  
+  body.dark { 
+    --desk:#1a1a1a; 
+    --book:#2d2d2d; 
+    --ink:#f1f5f9; 
+    --muted:#94a3b8; 
+    --accent:#a78bfa;
+    --shadow:rgba(0,0,0,0.3);
+  }
+  
+  * { box-sizing: border-box; }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    background: var(--desk);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .container {
+    max-width: 800px;
+    width: 100%;
+    padding: 20px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .title {
+    font-family: Cinzel, serif;
+    font-size: 28px;
+    color: var(--accent);
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .book-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    perspective: 1000px;
+  }
+
+  .book {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    margin: 20px auto;
+    transform-style: preserve-3d;
+  }
+
+  .page-flipper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.23, 1, 0.320, 1);
+  }
+
+  .page {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--book);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px var(--shadow);
+    padding: 30px;
+    overflow-y: auto;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+  }
+
+  .page.front {
+    transform: rotateY(0deg);
+  }
+
+  .page.back {
+    transform: rotateY(180deg);
+  }
+
+  .page-flipper.flip-next {
+    transform: rotateY(-180deg);
+  }
+
+  .page-flipper.flip-prev {
+    transform: rotateY(180deg);
+  }
+
+  .chapter-title {
+    font-family: Cinzel, serif;
+    font-size: 24px;
+    color: var(--accent);
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+  }
+
+  .chapter-subtitle {
+    font-style: italic;
+    color: var(--muted);
+    font-size: 16px;
+    margin: 0 0 20px 0;
+  }
+
+  .chapter-content {
+    line-height: 1.7;
+    font-size: 16px;
+    color: var(--ink);
+  }
+
+  .chapter-content p {
+    margin: 0 0 16px 0;
+    text-align: justify;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+    align-items: center;
+  }
+
+  .btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 2px solid var(--muted);
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .page-info {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 15px;
+    font-weight: 600;
+  }
+
+  .progress-bar {
+    width: 100%;
+    max-width: 400px;
+    height: 4px;
+    background: rgba(139, 92, 246, 0.2);
+    border-radius: 2px;
+    margin: 20px auto;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  @media (max-width: 768px) {
+    .book {
+      height: 350px;
+    }
+    
+    .page {
+      padding: 20px;
+    }
+    
+    .chapter-title {
+      font-size: 20px;
+    }
+    
+    .chapter-content {
+      font-size: 15px;
+    }
+    
+    .controls {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1 class="title">The Little Story Book</h1>
+  </div>
+
+  <div class="book-container">
+    <div class="book">
+      <div class="page-flipper" id="pageFlipper">
+        <!-- Front page -->
+        <div class="page front" id="frontPage">
+          <div class="chapter-title" id="frontTitle">Loading...</div>
+          <div class="chapter-subtitle" id="frontSubtitle"></div>
+          <div class="chapter-content" id="frontContent">
+            <p>Please wait while the story loads...</p>
+          </div>
+        </div>
+        <!-- Back page -->
+        <div class="page back" id="backPage">
+          <div class="chapter-title" id="backTitle"></div>
+          <div class="chapter-subtitle" id="backSubtitle"></div>
+          <div class="chapter-content" id="backContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-secondary" id="prevBtn">← Previous</button>
+    <div class="page-info">
+      <span id="currentPageNum">1</span> of <span id="totalPages">8</span>
+    </div>
+    <button class="btn btn-primary" id="nextBtn">Next →</button>
+    <button class="btn btn-secondary" id="themeBtn">🌙</button>
+  </div>
+</div>
+
+<script>
+// Story content
+const stories = {
+  1: {
+    title: "Chapter 1",
+    subtitle: "A mysterious beginning",
+    content: `
+      Caroline Bingham's mother and father had died when she was still very young and she had been brought up, thereafter, by her grandfather, a man she had seen only during school holidays, for the old gentleman had sent his granddaughter away to boarding school soon after her bereavement.<br><br>He had always been a kindly, if somewhat distant old gentleman, scrupulously careful to see to it that all her material needs were met. Her times during the holidays in his big London town house had always been happy ones. The old man had possessed a large and interesting collection of friends, all of whom had been kind to the girl, never failing to make a fuss of her when she was in residence.<br><br>She had greatly enjoyed her time at school, after a difficult first few months. When she was having a particularly bad time at the hands of a bullying pair of classmates, a more senior girl had seen her distress and taken her under her wing, leaving the two bullies somewhat the worse for wear and much too scared to bother Caroline again. The same older girl had also encouraged the shy young Caroline to come out of her shell and attend an optional class in self-defence as part of a drive to boost her self-esteem.<br><br>By the time this protectress had left, Caroline had become a strong and self-confident girl, well able to hold her own against anybody.<br><br>One day in July, when she was nearing eighteen and on the point of taking her leave of the school for good, she was called into the Principal's office.<br><br>"Sit down, Caroline" said this worthy lady. "I'm afraid I have some terrible news for you. Your Grandfather died suddenly at home last night. A Mr. Ferguson, his solicitor, is on his way here to talk to you about the future. I'm so terribly sorry for you, my dear. I understand this leaves you alone in the world"<br><br>Caroline was too numbed with the shock of this unexpected news - her grandfather had been an apparently healthy seventy-four year old - to cry at first. It was several minutes before her sense of loss hit home and then the tears started to flow. The Principal came from behind her desk and put her arm around the weeping girl's shoulders. By the time she had at least partly composed herself, Mr. Ferguson, the family lawyer, arrived.<br><br>He expressed his sympathy, in a kindly voice, as of a man well used to situations like this, and explained to her, firstly, that she was the old man's sole relative and also that he had made a Will several years ago, naming her his sole legatee. She was now an extremely wealthy young woman. He further said that he wished Caroline to come straight up to London with him, as there were arrangements to make which would her sole responsibility - starting with her late grandfather's funeral.
+    `
+  },
+  2: {
+    title: "Chapter 2",
+    subtitle: "Following ancient paths",
+    content: `
+      <p>Caroline hardly had time to feel the full extent of her loss in the days that followed and it was not until the day after the funeral (a Friday), that she felt at her lowest and most desolate. She had just returned to her grandfather's home - now hers - after a talk with her accountant - a Miss Fortescue.<br><br>Janet Fortescue was a pleasant youngish woman who had got to know a lot about the old man in the last ten years and formed a deep regard for him. As Caroline left to go back to her now empty home, Janet wished her a pleasant weekend and arranged to meet her again on Monday afternoon.<br><br>She was just settling down into her favourite easy chair, becoming all too aware of her loneliness and total inner desolation, when the phone rang. At the other end of the line was the voice of a very young woman, sensuous, lilting and with a curiously hypnotic quality.<br><br>"Hello Caroline. I'm Grace Barlow, one of your grandfather's tenants, and now yours. I think I know how you must be feeling and I'd like to help."<br><br>There was a whole world of warmth and comfort in that beautiful voice. Caroline felt at once that she must meet its owner and as soon as possible. Grace continued.<br><br>"I live on a farm in Derbyshire. Get the train to Derby, and then take a local train from there to Fordham Magna. There'll be someone to meet you there. I do look forward to seeing you. We'll have so much to talk about."<br><br>The more that amazing voice continued, the more Caroline fell under its spell. She must meet this Grace Barlow, whoever she was. Strange that nobody had mentioned her grandfather having property in that part of the country. She would certainly mention this to Janet when she met her on Monday.<br><br>"Can I come and see you tonight?"<br><br>"Please do. I'm so very glad you're coming, Caroline."<br><br>She put a few things into an overnight bag and phoned for a cab to take her to Euston. Derby station was almost deserted when she arrived there and a two carriage train was waiting in a side platform. She asked a porter if this train were going to Fordham Magna and he said that it was.<br><br>She boarded the train and fell asleep soon after it drew away. She dimly thought she heard the sound of a steam locomotive pulling the train and fell deeply asleep before the absurdity of this struck home. When she woke up they were at a standstill in a station. Caroline looked out of the window and saw that she was at Fordham Magna. She pushed open the door and carried her bag out into the forecourt. A solitary car was outside and she walked across to it.<br><br>"I'm Caroline Bingham. Are you here to meet me.?"<br><br>The driver nodded and Caroline got into the back of the old car, which immediately drove away. She was still unaccountably tired and fell asleep again. Waking up, she found that the car had stopped at a gateway. The driver turned around. She could not make out his features.<br><br>"The house is down the drive. You are expected"<br><br>This uncommunicative individual, whose face she had still not seen, then left Caroline standing at the roadside and feeling a little apprehensive. She walked through the gate, which was open, and found herself in a short, gravelled drive. The front door of the house was ajar and, after receving no reply, Caroline pushed her way inside. On the hall table was an envelope with CAROLINE written on it in large letters.<br><br>She opened the envelope and read the message inside. ' Sorry not to be here to meet you. Your room is straight ahead at the top of the stairs. See you early in the morning. Help yourself to supper. The kitchen is straight through. Grace'<br><br>Caroline found the kitchen, poured herself a glass of milk and ate a couple of bread rolls, which tasted delicious. Like nothing she had ever tasted before. Grace must bake her own bread and there was nothing processed about the milk!</p>
+    `
+  },
+  3: {
+    title: "Chapter 3",
+    subtitle: "Where time stands still",
+    content: `
+      <p>Caroline slipped between the sheets, after leaving her clothes folded on a bedside chair, and soon fell asleep. When she awoke, the July sun was streaming through the windows. She looked around her and took in the details of the room. There were two pictures on the wall, not reproductions, she was sure. They were paintings of woodland scenes, almost fairy tale like in their evocation of mystery. The wallpaper was a floral design, which made her feel immediately at home, since it was very similar to that in her room in her grandfather's house.<br><br>She slipped out of bed and looked around for her dressing gown. It was nowhere to be seen and neither were any of her other clothes! Since she always slept naked, she did not even have a nightgown to wear. Having established that her clothing was not in the room, she went to the bathroom and showered, in the hope that this would wake her up and clear her rather confused mind.<br><br>The next surprise was the absence of towels. Nothing to wrap around herself whatever. She began to be afraid that she had been the victim of some wicked practical joke. She was half angry and half apprehensive, but the memory of that seductive and oddly reassuring voice on the phone yesterday, calmed her fears. She knew instinctively that the owner of such a lovely voice was a person to be trusted. It was a warm morning and she decided, for the time being, against taking off one of the bed sheets to cover herself.<br><br>The house was still empty, but a meal had been laid out on the dining room table. Once again the ingredients were simple, but wholesome and strangely delicious. She decided after waiting an hour for someone to come, that she had better look around outside.<br><br>From yesterday evening, she remembered that the farm was surrounded by a wall . She would not be visible from the road. At the rear of the house, a lawn sloped gently down to a small wood. On the other side of the wood were a few fields, some wheat and some pasture in which a herd of cows was grazing.<br><br>Caroline walked across the lawn and was surprised to feel how sensualy magnificent was the feel of the grass beneath her bare feet. It was incredibly soft and gentle on her soft skin. She almost wept for the sheer joy of this contact with the Earth. A warm and gentle breeze was blowing and as it played over her exposed body, it seemed to the girl as if she were being lovingly caressed.<br><br>As soon as she reached the little wood and found herself surrounded by the trees, it was as though she had entered some other world altogether. Such a feeling of peace was about the place that she felt herself to be in some holy and magical spot. This must be what the Garden of Eden was like, she thought. Whilst she was looking about her, she heard a familiar voice - familiar since yesterday evening.<br><br>"Good morning, Caroline! I was wondering when you would make it down here. Lovely, isn't it?"<br><br>Caroline looked up to where the sound had come from, and saw a young woman, sitting with her legs astride one of the higher branches of the tree under which she was standing. She remembered stories she had read in her childhood about wood nymphs. The lady smiled at Caroline, a sweet, warm, yet half-sad smile, and climbed down with quite astonishing agility and leapt lightly down from the lowest branch on to the mossy ground beside Caroline. She placed her hands on the girl's naked shoulders and kissed her lightly on the lips.<br><br>So this is Grace Barlow, thought Caroline to herself as she took in the beautiful golden haired girl who stood before her. Grace was a little taller than Caroline and her skin was dark after many, many hours, days and weeks under the summer sun. With her evenly, deeply tanned skin and totally unmade up face, she seemed to be an integral part of the land, a child of nature. Her brown hands and equally brown bare feet looked hardened from toil and exposure - functional and yet still beautiful. She was completely naked. Caroline was to learn in due course that Grace was always naked, even in the bitterest cold of winter.</p>
+    `
+  },
+  4: {
+    title: "Chapter 4",
+    subtitle: "An unexpected encounter",
+    content: `
+      <p>"I hope you slept well, Caroline. It is a soft bed and a lovely room. How do you like my little world?"<br><br>"Beautiful. You seem to be so utterly on your own here - away from the outside world and all its cares. I almost envy you. There is a question for you, however! Where are my clothes?"<br><br>Grace laughed. "You will get them back when you leave. As my guest you won't need them, Caroline. Just enjoy being part of the rhythm of life and nature. Let yourself and your cares and troubles go away and allow your mind and soul to be healed and restored. This is why I have asked you to come here."<br><br>"Did you know my grandfather well?" she asked - rather at a loss for something to say after such a strange reply to her question.<br><br>"Years ago now, we were very close. Come along my love - there is work to be done on the farm. I have been up since before dawn. I am so happy you will be here to help. Happy for you - that is"<br><br>Grace led the wondering, although willing, Caroline through the wood and into the field of wheat, telling her that it was ready to be harvested and that the two of them would have to reap the whole field by hand. She taught Caroline how to wield a scythe and the pair set to work, getting ever hotter and dirtier as the day progressed. By the time the sun began to get lower in the sky and the heat of the day began to fade, Caroline was tired and thirsty as she had never been before. Her soft hands were covered in blisters and she was in agony, scarcely able to hold the scythe any longer. As they worked their way through the field, Grace taught her how to bind and stack the sheaves.<br><br>Just as the exhausted Caroline was ready to drop from exhaustion, Grace signalled that it was time to rest, eat and drink. She led the way back into the wood. There was a well from which Grace drew a bucket of water and it tasted cooler and cleaner than any Caroline had drunk in her life before. The two girls stretched out on the grassy and mossy ground under the shade of an ancient oak tree.<br><br>"This is a last vestige of an ancient forest that once covered all the country. I like to think that so much of Old England that has been destroyed by so-called progress has retreated into this beautiful grove and is here to give life to those who come here. I find strength and consolation whenever I walk among these trees. I am so glad they are here for you, my dear."<br><br>Caroline smiled lazily and looked at her poor hands.<br><br>"Just keep working, Caroline. Ignore the pain and in a short time your hands will be as work-hardened as mine and your feet will also grow strong and hard and be able to tread any path, no matter how rough and stony. The Earth will be yours then, just as soon as you have become Hers. Now we must get back to work, before the light is gone. After that there is milking to be done. I'll show you how - it's very easy really."<br><br>By the time all the various jobs had been done and Grace had baked tomorrow's bread in the furnace, it was almost eleven at night and Caroline was about to go up to her room when Grace stopped her with a hand gently and very firmly applied to her arm.<br><br>"You don't want to sleep up there! I never do unless it is very cold. Come with me, sweetheart."</p>
+    `
+  },
+  5: {
+    title: "Chapter 5",
+    subtitle: "A moment of decision",
+    content: `
+      <p>Grace took Caroline's hand and led her across the lawn, now shrouded in darkness, and into the wood. She motioned her guest to lie down on the soft ground under the tree in whose shade they had rested earlier. Grace lay down next to Caroline and put an arm around her.<br><br>"I love to sleep here, where so many kind spirits are watching over me. Sleep well, my darling."<br><br>With the sultriness of the summer night and the warmth of the girl next to her, Caroline was soon lulled into sleep. It was not yet light when Grace woke her up, beautifully, by kissing her lovingly on the mouth.<br><br>"Come on, lazybones. We've along, hard day ahead of us."<br><br>There was indeed a long day ahead. The field was only half reaped and there were chickens to be fed, cows to be milked and a pair of horses to be exercised. By the time they sat down to an open air lunch of bread, fruit and delicious creamy milk, Caroline was already tired and her hands were worse than yesterday - so much so that Grace bathed them in some kind of herbal preparation and told her they would now last out the day.<br><br>The young guest realised that it was now Sunday and she would be returning to London on tomorrow's early train. She mentioned this to Grace who looked sad.<br><br>"Please stay a while longer, Caroline. I'll make sure people know where you are! I think you need to spend a long time with me - I know you do. You can't face all your new responsibilities the way you are now. I can give you the strength, if only you will let me."<br><br>There was something so appealing in the look Grace gave her and in way she spoke that Caroline found herself again falling under the spell cast by this remarkable woman. She moved a little closer and put an arm around the warm, firm body of her new friend, telling her that she would stay for a week or two at the least. Her reward for this was a fervent kiss in which their two mouths seemed to melt into one channel of love, through which the souls of both girls passed freely back and forth, mingling together.<br><br>The afternoon was passed in the cornfield once again and they were by this time almost half-way through. Grace explained how the grain would need to be separated by threshing - also a manual process and then ground into flour. She emphasised that all these processes were extremely hard work and that the price of self sufficiency was a life of constant toil. Caroline heard all this with a steadily growing feeling of peace and inner satisfaction.<br><br>Maybe a couple of weeks of this existence were insufficient. All the cares and all the sadness were being slowly drained out of her mind and replaced by a feeling of oneness with the universe around her and a knowledge that she was loved and valued by an Almighty Providence who would never again allow her to be alone and unwanted. And Grace was a beautiful woman whose heavenly sweet kisses and caresses were beginning to intoxicate her, even when she was only thinking about them.</p>
+    `
+  },
+  6: {
+    title: "Chapter 6",
+    subtitle: "Bringing magic home",
+    content: `
+      <p>It was now Tuesday and the work of gathering in the wheat was almost over. The girls were lying under the oak after a hard morning working under the burning hot sun. Caroline was getting to be quite sun burnt herself by this time, although with nothing like Grace's wonderfully burnished skin. Grace had fallen asleep - surprisingly enough for one so tireless - and Catherine was lying beside her, studying the golden haired and golden-skinned body beside her.<br><br>She saw, as she looked closely at the young woman, many tiny and long-healed scars, presumably the results of minor accidents when her unprotected skin had been struck by chips of stone and other flying particles as Grace laboured at all the variety of farm related work. She was particularly interested in some faint scars around her eyes as if she had been hit in the face a few times.<br><br>Idly she put her hand on one of her friend's breasts, feeling the heart beating underneath and wondering at the firmness of a figure which had been unsupported for so long. She marvelled too at the warm velvety softness of her skin. She would have expected it to have had more of a leathery texture after so many months outdoors, naked in all weathers. Grace had already explained her decision, years ago, to give up all forms of bodily covering, choosing to be open to the elements and in tune at all times and in all seasons, with the living universe around her. She bent her head closer and kissed Grace's nipple, gently squeezing it between her lips.<br><br>At this, her companion woke up with a lazy smile and instinctively moved closer to Caroline, burying her face for a while between her breasts. The pair settled themselves down comfortably and gently fondled each other for some minutes.<br><br>"Back to work soon?" asked Caroline, whose hands were still giving her the most terrible trouble.<br><br>"Soon enough! Let's lie here a while longer and get used to each other. It's so nice!"<br><br>"Grace?"<br><br>"What, my lovely young friend?"<br><br>"I'm sure I woke up during the night and there was a cat lying on top of me, asleep on my stomach. But in the morning it had gone"<br><br>"That would be Engelbert. He comes and goes. I've no idea where he gets to for days on end. None of my business, really. Mind you, I was disappointed he wasn't here to meet you last Friday. I told him you were coming, but he took no notice."<br><br>"Do you mind if I stay for a bit longer than a couple of weeks, Grace? I sometimes don't think I ever want to leave here."<br><br>"You'll have to go one day, Caroline. It's vital you do, but not for a while. I think you need to see out a complete year with me and experience one complete natural cycle. Then you will be ready."<br><br>Ready for what? Caroline asked herself. Soon enough she was told to get back to work, still asking herself at the back of her mind why she was taking orders from a tenant and wasting time here when there were things to be seen to in London.<br><br>By this time, her feet were beginning to be sore, especially after many painful encounters with the stubble in the wheat field. Grace was adamant that she must keep on working and ignore the pain. ' Pain is only in the mind' was a phrase she was very fond of using whenever a tearful Caroline protested her inability to do any more work that day. Somehow Grace's adamantine will, allied to her continuing sweetness, enabled Caroline to keep going. At night she was sleeping from the moment her head touched the turf, scarcely aware of the gentle breathing of the sleeping girl beside her.<br><br>Grace seemed to be getting her to do any and every task that would cause yet more agony to her sore feet and blistered hands. She would apply various preparations at night, which seemd to have some beneficial effect, but allowed no cessation of work during the day. It was a month before Caroline realised, one morning, that she had not been in any discomfort for the last couple of days, and, looking at her calloused, serviceable hands and feeling the toughened soles of her feet, she knew that her painful initiation had been worth while.<br><br>Now that the wheat had been harvested and the grain stored away, the girls' attention turned to the orchard and the picking of pears, apples and plums. Caroline was becoming almost as agile as Grace in climbing trees. When the fruit had all been picked, then the process of preserving it would begin. One day, in the evening, when they were sitting inside the house for a change, Grace went down to the cellar and came up with two bottles, which she opened, pouring the golden contents into two glasses.<br><br>"Try that, Caroline!" said Grace.<br><br>Caroline sipped from the glass and a warm glow passed down her throat. It was some of the most powerful and fragrant cider she had ever tasted. She could tell that only a couple more glasses of that heady brew would be enough to put her out for the night. Grace looked on happily at her friend's obvious appreciation. She went down to the cellar once more and returned with four more bottles of this liquid gold.<br><br>"I think you and I have earned ourselves a little hangover! Don't you?"</p>
+    `
+  },
+  7: {
+    title: "Chapter 7",
+    subtitle: "A new beginning",
+    content: `
+      <p>A few days after the pair had drunk Grace's home made cider and awakened bleary eyed and none too well the next morning, an incident happened. They had just pulled up a row of potatoes and were taking them to the cellar to store in the dark, when they noticed two young men coming towards them. They were patently not nice young men. They were drunk and abusive young men. Catching sight of the two naked young women, they immediately made in their direction, expressing in short and extremely obscene words, what they were about to do to the young couple.<br><br>"What are we going to do, Grace" asked an apprehensive Caroline.<br><br>"Not 'we', my dear! It is what you are going to do! These thugs are on your property. You must defend your inheritance and get rid of them. Go on! Chase them off!"<br><br>"How can I, Grace? I'm just a girl and they are two strong young men."<br><br>"Go and chuck them off your land, Caroline! I will never speak to you again if you don't! You learned self-defence, didn't you? Now's your chance to show what you can do. Go and do it!"<br><br>"Could you do what you are telling me to do?"<br><br>"Yes! I have done it, and I still have the scars to prove how hard it was! It will be hard for you also, my darling, but you have no other choice. Go on!"<br><br>So a petrified Caroline, spurred on by the inexorable refusal of her friend to lift a finger to help her -telling her rather, that the time had come to fight her own battle for her own land - advanced towards the sneering and jeering couple of hooligans.<br><br>"You two are trespassing and damaging growing crops by walking across my property. You will please leave."<br><br>"And who's going to make us if we don't, darling!"<br><br>"I will! You have ten seconds to be on your way."<br><br>Before she had time to start counting, one of the two lunged towards her, in an effort to bring her to the ground, the better to have his way with her. (Euphemism for rape - Author.). She kicked up hard and caught him in the throat. He staggered back, choking and gasping.<br><br>His companion was not quite so slow and he aimed a mighty punch at Caroline's head which would have removed it from her shoulders had she not ducked away in time. Even so, he opened up a cut over her left eye, which immediately began bleeding copiously. She knew she must do something quickly, before her vision became too obscured for her to continue.<br><br>Flushed with triumph at his apparent destruction of Caroline, the jeering fellow stood in front of her, laighing at her bleeding face and geting ready to jump on her and rape her. Taking advantage of his over confidence, she kicked straight up between his wide open legs and her second adversary fell writhing to the ground to join his still half-conscious friend.<br><br>Grace came up and looked at the fallen pair.<br><br>"See, Caroline! I told you you could do it! Here! I've got a bit of rope. Let's tie them up and dump them over the wall. They won't trouble us again."<br><br>By the time they had ejected the trussed up and cowed couple from the farm, Caroline's face was covered with blood, which still oozed out of the cut over her eye. Grace took a look at it.<br><br>"A wound of honour, my darling Caroline! You'll be so proud of that in years to come. You'll always have the mark, you lucky girl! Now let's go inside and patch you up!"<br><br>As she stood while her friend attended to the cut, Caroline asked whether Grace had ever had a similar experience of having to defend herself.<br><br>"You were looking at my scars a few days after you came here, I seem to recall. Oh, yes! I have sometimes had to do what you just did. Don't be too full of yourself, Caroline - just be quietly satisfied with a job well done and humbly grateful that you were given the strength to do it. You did what was needed and what was right, but life requires no less than that from us all, every second of every day of our lives."<br><br>"Do I get a day off tomorrow, Grace?"<br><br>"No, you certainly do not, my darling. If I had thought that to have been a serious question, I would have have given you extra duties as a punishment!"<br><br>"It seems funny, sometimes, to be in such a subservient position to you! But I don't mind. This is all so utterly right, somehow. I sometimes think you must be my guardian angel, lovely darling Grace!"<br><br>"Not an angel, but an Angle! I am the spirit of Old England and you are the future that I mean to shape!"<br><br>"You do talk such rubbish, sometimes, Grace, but I love you more with every day that passes!"<br><br>Grace smiled at this, but if Caroline had been looking more closely she would have seen a deadly seriousness behind that tender visage and that loving, sweet smile.</p>
+    `
+  },
+  8: {
+    title: "Chapter 8",
+    subtitle: "The story continues",
+    content: `
+      <p>"It's a bit cooler tonight, Grace. How much longer will we be sleeping outdoors?"<br><br>It was now the end of August, the days were already appreciably shorter and the nights cooler than when Caroline had arrived back in July. She was used by now to the hard and incessant round of work. Her hands were hardened to the heavy labour and her bare feet could deal with any surface, no matter how rough. The constant physical exertion, which stopped only for a few minutes at midday, or whenever Grace decided, kept her warm and sweating during the day, but the nights were a different matter. She was becoming more and more appreciative of the warmth of the girl sleeping next to her.<br><br>Grace shifted her position and faced her friend and landlady, putting her arms around her and giving her a quick but exciting kiss before answering.<br><br>"You'll have to get used to it being much cooler than this before we move indoors. This is nothing, my darling. Nothing at all, compared to how cold it will be in a few months. Now go to sleep - we have so much to do in the morning!"<br><br>For whatever reason, her shivering ceased and Caroline dropped off to sleep almost immediately. Grace smiled at her young friend's recumbent form and moved a few inches away from her, leaving her without her warming propinquity. She continued to stare at the sleeping Caroline for some minutes and murmured a few words.<br><br>"You are so much tougher now, my sweet, but I see you're not nearly tough enough. There is so much more you must learn to endure before you are ready."<br><br>Caroline woke to find herself almost alone. Grace was nowhere to be seen and her only companion was the wayward Engelbert, who lay fast asleep on her firm young belly. She stroked the long haired ginger tomcat and he responded by purring loudly, before going back to sleep.<br><br>"I wonder where your mistress has gone" said Caroline. "Must be making an early start today - even earlier than usual. Gosh! but it's cold this morning! Nice to have you to warm me up you lovely boy!"<br><br>"Nice to have your lovely warm stomach to lie on!" replied the cat in a language Caroline did not understand.</p>
+    `
+  },
+  9: {
+    title: "Chapter 9",
+    subtitle: "The story continues",
+    content: `
+      <p>Caroline soon got to her feet, gently easing a disappointed and resentful Engelbert off his warm cushion of soft and girlish flesh, and went up to the house to have her morning shower and use the toilet. She saw Grace standing outside holding a bucket.<br><br>"Morning Caroline. Bath time! Stand nice and still!"<br><br>With this she came up to her and after raising the bucket high over Caroline's head, emptied half of its icy cold contents all over her. She handed her a bit of soap and ordered her to use it. Then she rinsed her off by pouring the rest of the water over her.<br><br>"No more hot showers for you, my girl! I've been far, far too lenient with you, and it won't do any longer. From now on it's going to get a whole lot harder for you. How dare you complain of the cold nights, when I have slept through far colder ones without any warm body next to me. Now get off to work. I think a nice bit of ploughing is just what you need today. I have things to do around here, so you'll be on your own for much of the day."<br><br>Grace had said the previous day that the stubble needed to be ploughed into the cornfield and shown her where the hand plough was kept. When she had asked why the horse could not be used to pull the plough, Grace had gone white with rage and told her that such fine horses could never be used for such menial work. Caroline had been utterly cowed by this unexpected anger on the part of her formerly gentle and sweet friend and felt utterly crushed until Grace recovered her good humour and comforted the almost tearful girl with a kiss and a hug.<br><br>The work was utterly back-breaking and exhausting. By midday, after five hours of constant toil, Caroline was close to collapse and still Grace had not come to help her or give her permission to rest. Despite the rigours of her life, which promised to get harder still in the days ahead, it simply did not occur to her to go back home to her comfortable house in London. She knew her place was here and that her friend was wise enough to know that what she was doing was for her own ultimate good.<br><br>Despite extreme exhaustion and the pain which was affecting her entire body she forced herself to continue all through the afternoon until the sun began to go down, and still Grace was nowhere to be seen. This was the first day that they had not worked side by side and the sense of isolation, desolation and remorse at having given offence grew in tandem with her tiredness.<br><br>Finally, as the light was beginning to fade, Grace appeared and told her to stop ploughing for the day, further telling her that there was work to be done in the house, which needed to be cleaned fom top to bottom before she either ate, drank or slept.<br><br>"I suppose you don't believe in electric vacuum cleaners"<br><br>"Don't be so stupid, Caroline! Of course I don't. You get down on your hands and knees and brush and scrub your heart out and you don't get up until you've finished. When you have there'll be food and drink for you in the wood, where we sleep. Don't even think about not doing a proper job, or you'll see just how hard on you I can really be!"<br><br>By this time they had reached the house and Caroline immediately started work, despite her extreme tiredness, hunger and thirst. By the time she had left every nook and cranny spotless and utterly free from any merest speck of dust, she scarcely had the strength to stagger across to the wood and the bread and water meal which was all that Grace had provided for her. After gratefully eating and drinking she lay next to Grace and prepared to sleep.<br><br>Grace pushed her away.<br><br>"You don't get any heat from me any more, Caroline. From now onwards you sleep on your own!"</p>
+    `
+  },
+  10: {
+    title: "Chapter 10",
+    subtitle: "The story continues",
+    content: `
+      <p>Caroline was awakened by a none-too-gentle prod in her side from Grace's foot - more of a vicious kick, really. She looked up to see her hostess frowning down at her.<br><br>"Come with me, Caroline. There are some things I want to show you, about which I would value your opinion."<br><br>Surprised that there could be any topic where she had anything to teach Grace and disturbed at her unfriendly tone, which continued to cause her terrible grief, she followed her up to the house. She noticed that a hosepipe had been attached to an outside water tap. Grace walked into the house and Caroline followed. Her friend wiped a finger across a window. She then put it in front of Caroline's eye.<br><br>"What would you say that was on my finger, Caroline ?"<br><br>"Dust, Grace! Sorry! I must have missed a bit last night."<br><br>"And what did I say would happen if you failed to do a proper job of cleaning my home?"<br><br>"That I would find out how severe you could really be with me. I'm sorry, Grace, but I was awfully tired yesterday. I worked non-stop for eighteen hours without food or drink."<br><br>"Don't make things worse by coming out with a lot of miserable excuses, Caroline. You're in a hole - stop digging it even deeper!"<br><br>"Yes, Grace. I promise to try and do better in future"<br><br>"That's better. Get upstairs, brush your teeth etc. and then report to me outside in the yard."<br><br>Some five minutes or so later, Caroline did as instructed. Grace told her to stand with her arms raised. She then turned on the tap, lifted the hosepipe and directed a jet of freezing cold water at her, playing it up and down her body for such a long time that Caroline began to shiver uncontrollably under its icy cold impact. Despite the fact that poor Caroline was obviously perishing with cold, Grace did not let up, and the poor victim knew that any plea for mercy would be quite useless.<br><br>She hated to see her friend in this implacable mood and only wanted to do something - anything - to regain her favour. With a great effort she controlled the shaking and trembling of her limbs and body and forced herself to stand quite still. A little later, the hose was turned away from her and off. Grace told her to get straight back to the field and continue ploughing without any food to break her fast.<br><br>This terrible regime lasted, without the slightest let-up, for three long and arduous weeks, at the end of which, the field had been completely ploughed and the house had been cleaned and re-cleaned over twenty times. Every night, Caroline collapsed onto the alfresco bed, separated from her friend and with only the occasional comfort of the here today and gone tomorrow Engelbert to keep out the cold. She vowed never to complain again to her friend about hardship.</p>
+    `
+  },
+  11: {
+    title: "Chapter 11",
+    subtitle: "The story continues",
+    content: `
+      <p>On the morning of the twenty first day after her punishment had started, Caroline woke to to find Grace lying on top her her and smiling happily at her. She bent down and kissed Caroline, hungrily and passionately. Caroline responded, delighted that the terrible estrangement was over at last. She had grown completely used to the harsh physical conditions and the growing cold at night, but not to Grace's awful remoteness. It was a long time before either was in a position to say anything.<br><br>"Still finding it too cold at nights, my angel?"<br><br>Caroline laughed, so happy to be addressed once more with endearments.<br><br>"No, Grace. I can face anything now, after these last few weeks!"<br><br>"Good, Caroline. That was the idea. Oh! How I've hated it! Every day I have had to force myself to be harsh and stern, when every second of these last weeks I've wanted to hold you and love you! Am I forgiven, my darling and uniquely precious Caroline? I only did it to help you."<br><br>Caroline could not hold back her tears and soon both girls were sobbing, whether out of joy for their renewed love or regret at three lost weeks, neither could quite tell.<br><br>When they were more or less recovered, Grace announced that today was to be a holiday, just as soon as the milking had been done. After Caroline's (and Grace's) first satisfying meal for weeks, the couple went up to the room Caroline had slept in on her first night and they spent much of the day in bed together, talking and loving and, to Caroline's relief after her non-stop work of the past few weeks, sleeping.<br><br>Engelbert came up and joined them. Truth to tell, he spent most nights here and only his deep affection for the two girls persuaded him to spend any time whatsoever sleeping out in that cold wood, of which they seemed so inordinately and unaccountably fond. He never would entirely get to understand humans and their odd ways, try as he might!</p>
+    `
+  },
+  12: {
+    title: "Chapter128",
+    subtitle: "The story continues",
+    content: `
+      <p>"I think this must be the loveliest time of the year, Caroline, with all these rich golden/red colours and the carpet of leaves all over everything."<br><br>It was well into October now and the cows had all been moved into their winter quarters. The work on the farm had slackened off a little and Grace and Caroline were relaxing under the ancient oak. Grace had her arm on the back of Caroline's shoulder and Caroline had her head on her friend's lap, her nose nuzzling that sweet clump of hair. Caroline somewhat reluctantly raised her head to reply.<br><br>"I'll reserve judgment until I've seen all four seasons, if you don't mind! It's so lovely to be friends again after that awful time last month and any season is wonderful as long as we are together.. I love you , my dear sweet Grace until my love is so strong it hurts enough to kill me. Why must I leave you one day?"<br><br>"Because you must, my darling. Ask no more questions. One day you will know."<br><br>Caroline seemed to accept this reply and said no more for some minutes. Then she spoke.<br><br>"I hope we don't have to go indoors to sleep for ever, Grace. I love it sleeping under these wise old trees."<br><br>Grace laughed into Caroline's light brown hair, kissing her silky locks as she did so.<br><br>"You'll know when the time comes! Even I have never yet managed a complete twelvemonth under the open sky - alas! And what do you think you have been chopping up all those logs for - exercise?"<br><br>"Can we have at least one night out in the snow under this tree - at least try to see if we can do it - just one night, Grace?"<br><br>"I fear I've made rather too zealous a convert my love! Never mind - be it as you wish!"<br><br>"The spirits of the wood will keep us safe, Grace. I trust them totally!"<br><br>"For the first time, I almost dread the winter, my darling Caroline - but I can't wait for that night to come, nevertheless!"<br><br>Engelbert listened with horror to this conversation. Was there no way he could make these foolish people see the error of their ways? He only hoped they left the house open for him to use on the night in question. Otherwise he would seek his feline fortune elsewhere!<br><br>Having decided on their night in the snow - always suposing it did snow during the coming winter - they resumed the still demanding daily round of tasks. Caroline spent another couple of hours chopping up firewood, pausing a couple of times to wipe the sweat off her brow as well as some blood caused by a splinter that had flown up into her face.<br><br>She was beginning to collect quite a nice little lot of cuts and scratches to adorn her young body, she reflected. No longer was she just a well brought up, pretty ornament of a girl, but a proper mature human being, working and suffering in order to stay alive and keep the land she owned in good heart. Engelbert sat watching from a safe distance. He knew exactly for what purpose the firewood was being prepared and at the thought of a lovely roaring fire to lie in front of in the coming winter months, he began to purr contentedly.</p>
+    `
+  },
+  13: {
+    title: "Chapter 13",
+    subtitle: "The story continues",
+    content: `
+      <p>Caroline was dripping wet and windswept. This was her morning in the cowshed. Feeding the cows and mucking out their quarters - a smelly but satisfying task. She had finished the milking and carried the pails of milk back into the house, lashed by the wind, the torrential autumnal rain coursing down her body, her hair plastered to her shoulders and strong young back. By the time she got indoors, she was bright red all over from the exertion and the impact of the heavy rainfall, which the gale-force wind had been driving in a horizontal assault on her naked body.<br><br>She joined Grace in the kitchen for their first meal of the day. The two of them sat and ate and drank in silence, listening to the tempest outside and watching the rain lashing at the windows. Finally Grace spoke. "It feels so safe and secure in here, my darling! Don't you feel so comforted to be in the shelter of the house and sitting here with me, with that going on out there?"<br><br>Caroline thought for a few moments and then replied, " Yes. It's nice for a few minutes, but I want to be out there with you, Grace, the two of us braving that downpour together! Let's go down to the wood as soon as we've eaten. Do you think we could could for a ride later, or would the horses object?"<br><br>"They'll be fine, Caroline, they'd like the exercise. Just as long as we dry them off thoroughly afterwards. Can't have them catching pneumonia!"<br><br>Having cleaned up after breakfast and put Grace's priceless crockery back in its place they made their way out of the house, watched glaringly by a disgusted and contemptuous Engelbert, who was angrily wondering when the first fire was going to be lit.<br><br>They had spent the night under the trees as usual and now that the leaves had all fallen, the water had dripped steadily down on them for the whole night. Caroline marvelled at, and was ever more grateful for, that hard-won endurance which enabled her to sleep through such cold discomfort. Admittedly the warmth of Grace's body had now long been restored to her and this had made all the difference. Once she was enfolded by those strong and tender arms, pressed against that beloved body, the world only consisted of the two of them and was a place of warmth and reassurance.<br><br>"How well did you know Granddad, Grace?" asked Caroline as the two stood under the old tree, half shetered from the rain and totally shetered from the wind.<br><br>"Very well, darling. As well as two humans can! But that was long ago. Even so, I knew when he died, that you needed me and he would have wanted me to do for you what I have done and am doing. The work and life of this farm was the thing nearest and dearest to his heart."<br><br>It couldn't have been that long ago, thought Caroline, looking at her young hostess. This girl was scarcely older than she! She kept this thought to herself, as well as wondering about another mystery. From where had Grace made the phone call? There was no phone in the house, as well as no radio or television. No newspapers were ever delivered. And yet this strange girl who never seemed to leave these premises had known of her grandfather's death, waiting until the funeral obsequies were over before contacting her to invite her here.<br><br>She shook her head as if to dispel these thoughts and put her arms around her friend, trying to force Grace to the ground so that they could enjoy each other for the thousandth time. A willing and delighted Grace needed little or no forcing and soon they were both lying on the waterlogged moss, lost yet again in their own wonderful enchanted world.</p>
+    `
+  },
+  14: {
+    title: "Chapter 14",
+    subtitle: "The story continues",
+    content: `
+      <p>Engelbert was finally a self-satisfied and smugly contented cat. He lay stretched out in front of the log fire, protected from flying sparks by the fireguard. He thanked his lucky stars for the intervention of dear old Mother Nature, who had been kind enough to visit the land with the first mercilessly hard frost of the year. It was mid-November now and the world outside was a frozen hell, into which the pleasure-loving, lazy Engelbert ventured as little and as seldom as possible. Those two stupid girls were always outside, even now. How glad I am to be a sensible cat, he thought - that pair of madwomen don't even have any nice long fur like me!<br><br>Caroline was staggering across the farmyard, two full and very heavy milk pails tied together on a pole, resting on her strong and calloused shoulders. She was having to be most careful not to lose her footing on the treacherous surface. From time to time she had long wondered why they needed such prodigious amounts of milk between the three of them. Even accounting for all the cheese and butter they made, there must be an enormous surplus of dairy products on this farm and a world out there wanting to be fed!<br><br>She had asked Grace about this and that mysterious and ever more beautiful lady had smiled, assuring Caroline that nothing was ever wasted. She sold nothing, but gave away what she didn't need. Caroline was puzzled. Gave away to whom, though, and how? she asked herself."<br><br>They had tried to spend the previous night outside as usual, but the inexorably penetrating cold had soon proved too much, even for their hardy and tough young bodies. They had both come inside and gratefully got together between the sheets of that lovely bed in that lovely room, surrendering themselves to the luxury of pampered warmth and to each other. Engelbert had grumpily moved aside to make room for the two lovers, and then had his good humour restored as he felt the precious warmth of the happy young women coming up to him through the bedclothes.<br><br>Finally reaching the dairy without mishap Caroline poured some milk into the churn and set about producing butter. This was a hard job and despite the building 's being unheated, she was soon sweating. She looked around her, as she worked, at all the large cheeses stacked on the shelves and she wondered again just who, apart from Grace, Engelbert and she, was ever going to get to eat them.<br><br>Grace had looked after the stables and fed the poultry, some of whom were getting beautifully plump as they unwittingly neared Christmas and the end of their days. She also was flushed with all her exertions, protected from the cold by her wonderful constitution and also by the never-ending stimulus of hard physical work. Her immediate tasks completed, she came into the dairy and watched Caroline toiling away at the churn.<br><br>She knew of the fateful and unwilling decision of Caroline's grandfather to send the poor vulnerable little girl away to school - how it had almost broken the old man's tender heart, as that recently bereaved little mite, with her tear-stained face, had been led away by the Principal to begin her first day at her new and strangely terrifying school. Looking at the strong and self-confident young woman before her, she could see, now, just how wise the old man had been. In this rapidly and splendidly maturing girl lay so many of the hopes and dreams that the two of them had spoken of together as they lay beneath that same grove of oaks that had since become so precious to Caroline and her.</p>
+    `
+  },
+  15: {
+    title: "Chapter 15",
+    subtitle: "The story continues",
+    content: `
+      <p>"Merry Christmas, my Darling!"<br><br>"Merry Christmas, Grace my sweet!"<br><br>"Merry Christmas, dear old Engelbert!"<br><br>These last words were said together by the two happy and extremely tipsy girls.<br><br>Engelbert stirred not in the slightest as he slept before the warm fire. Stupid girls! He loved them both dearly, but he was having such a lovely dream!<br><br>"I suppose the spirits of our dear wood were here long before Christianity!" said a semi coherent Caroline.<br><br>"Rubbish, my sweet!" replied her ever more happy companion. "Jesus Christ was present at the foundation of the world and he is older than any of us, even the spirits of the wood!. Of course - our spirits in our sacred grove were here long before Augustine came to bring the Gospel to our land, but those spirits rejoiced when he came and they rejoice to this day - although they must be so sad at our once great nation's decline into selfish materialism."<br><br>The two ever more mutually infatuated young women had just come back from a night spent under the sacred oaks. Christmas Eve had brought the first snowfall of the winter and both girls had known as they watched the swirling snowflakes turn their beloved world into a white wonderland, that this was their night to sleep out in the cold and snow.<br><br>As they reached the grove, their naked feet having left behind them a trail of perfectly formed prints in the virgin snow, Caroline saw a huge pile of leaves, heaped up beneath the venerable tree that had stood guard over them for so many a blessed night during the summer.<br><br>"Sorry if I seem to be cheating, my love. But I think these leaves may just keep us both alive during this holy and lovely night! Remember the story of the Babes in the Wood? Well, Caroline! We're two cute little babes in this lovely old wood! Let's get ourselves comfortable - as far as we can! "<br><br>The two excited girls burrowed down deep into the pile of autumn leaves, trying to forget the multitude of non too savoury creatures with whom they were sharing their rest, and slept the most peaceful night that had either of them ever known. When they had wakened long before the dawn and exchanged Christmas greetings and frighteningly passionate Christmas kisses, both knew that a bond now existed between them that neither life nor death could ever break.<br><br>The succulent chicken, that had so recently fussed and clucked about the farmyard, had been eaten, washed down with Grace's fine cider, and a greedy Engelbert had been given his share. All three occupants of the farm stretched out luxuriating in front of the cheerful fire. After a while and with a great effort, Grace roused herself and left the room, coming back with a bottle, a corkscrew and two glasses.<br><br>"Your grandfather and I had planned to drink this together, Caroline. Sadly, we were not able. The cares of the world intervened and this precious wine has been left unopened for far too long. Now is the time to drink it. Sorry, Engelbert my love! You can't share this, I'm afraid!"<br><br>Caroline had never before tasted such a fine wine. She took one sip and Grace did the same and leaned towards her with her mouth invitingly open. The two shared the precious vintage together, passing wine slowly and sensuously from one mouth to another until the bottle was empty.<br><br>The cat watched intently as his two beloved friends passed slowly into a happy, alcohol induced, stupor. When both had passed out he jumped lightly onto Caroline's recumbent form and curled up happily on her naked and comfortable stomach. When the two friends awoke, Engelbert was still there and Caroline had not the heart to disturb him. She lay quietly and studied his peaceful sleeping furriness for a while before going back to sleep herself. Grace watched the two of them for some time before getting slowly to her feet. She tidied up all the remnants of the Christmas festivities, then picked Caroline up with great tenderness and carried her upstairs to bed. Engelbert followed behind, his tail high in the air and purring loudly.<br><br>Outside the snow continued to fall and the whole world was covered with a white blanket. There would be plenty of work in the morning for the girls to do, clearing the snow from the farmyard and feeding the livestock, but that was hours away. For the time being all that they had to do was sleep, the three of them together, happy in each others' company.</p>
+    `
+  },
+  16: {
+    title: "Chapter 16",
+    subtitle: "The story continues",
+    content: `
+      <p>For whatever reason. the New Year was not celebrated. The terrible weather forced the girls to work like fury to keep the yard free of snow. Each morning they would both be shovelling away to keep the passage to the stables, dairy and cowsheds free. Caroline wondered whether she ought not to ask Grace if they could not at leat wear some form of covering for their feet, as she looked down at her frozen blue toes and feared that she might lose them to frostbite.<br><br>As if to forestall any such request, Grace herself raised the matter, one morning when both girls were shivering in the kitchen, warming themselves before the fire and drinking from two steaming mugs of cocoa.<br><br>"No, Caroline! You may not have covering for your feet, you wicked girl! I know what you've been thinking and you are to stop thinking it this instant. As a penalty for harbouring such thoughts, you will get straight back outside and not come back in till I tell you. Go on! Get outside this instant, and when you are finally allowed to come in there is a house to be thoroughly cleaned!"<br><br>When, after two terrible hours, a penitent and freezing cold Caroline was finally allowed inside again it took all day before feeling returned to her feet and she would never again ask for any alleviation of Grace's strict code of total nudity at all times and in all weathers. This was the first time she had attracted Grace's displeasure since that terrible three weeks in late summer and she vowed thenceforth to endure any hardship rather than incur such wrath again.<br><br>It was not until early March that the daytime temperatures once again rose above freezing and the thaw set in. Engelbert enjoyed himself every day before the fire, but the two girls were constantly outdoors seeing to the work of the farm. Caroline quite forgot her fears for her bare feet and was out every morning shovelling the fallen snow away from the yard. She was amazed at her increasing hardihood and even Grace expressed her admiration, telling her that there was no longer anything to choose between the two of them when it came to physical toughness. "I've just about taught you everything I know. I really am so very proud of you!" she told her one evening after a particularly gruelling day.<br><br>With the Spring, the tempo of work increased, what with sowing and getting the cattle out to pasture again. The bull was left alone with a selected few cows and Caroline had the awesome experience of helping them calve in due course. Gradually the crops grew and ripened and finally the fileds lay golden and ready for harvesting. The morning of Caroline's three hundred and sixty fifth day finally arrived.<br><br>On this fateful last morning, Caroline took her guest into the house and upstairs. Her clothes were where she had left them a year previously. She put them on reluctantly. They were very tight about the shoulders - she was a bigger and stronger girl by far, now and would need to completely fit herself out with a new wardrobe when she returned to normality.<br><br>"I don't want to go, Grace! I want to live here with you and dear old Engelbert for ever. Why must I go?"<br><br>"Because you must, my darling. When you see Janet Fortescue later today, I'm sure you'll understand why you are going back to London and what work you must do for me."<br><br>Grace kissed her for one last time - until when? she asked herself, and she picked up Engelbert and kissed his sweet furry face. Then she walked back to the road of whose existence she long since ceased to be aware - she had never heard even one vehicle pass along it all year.<br><br>The old car with its silent driver was waiting and soon she was on the little branch line on her way back to Derby. At Derby she barely had time to buy a morning paper before the London express left. When she asked if her year old return ticket was still valid, the porter looked oddly at her and said, yes. of course it was.<br><br>She sank into her First Class seat and opened the paper. As luck would have it she had opened it at the obituary page. There, staring out at her was a picture of her grandfather! She looked more closely at the paper, and what she saw caused such a shock to her system that she almost fainted.</p>
+    `
+  },
+  17: {
+    title: "Chapter 17",
+    subtitle: "The story continues",
+    content: `
+      <p>Janet Fortescue looked up as Caroline came into her office.<br><br>"Good afternoon Caroline. Nice weekend? My, but you have caught the sun! I had a month in Antigua last year without getting a tan like that!"<br><br>Caroline smiled at this civilty, but she had no time for trivialities and came straight to the point.<br><br>"Janet, please tell me about Granddad's property in Derbyshire"<br><br>Janet looked surprised and answered, "He didn't have any, Caroline - at least, not for very many years. He had a farm there, which he rented to a young woman of whom he very fond. He met her shortly after he became a widower and set her up there. He used to spend a lot of time up there - he'd get up whenever he could."<br><br>"What happened? Why does he own it no longer?"<br><br>"It was compulsorily purchased in connection with a reservoir scheme. It's been under thirty feet of water for nearly forty years now. Your grandfather would often talk about it. He fought the scheme tooth and nail, but it was no use. He called it the destruction of a bit of Paradise and a wicked piece of organised vandalism. I don't think he ever really got over it."<br><br>Caroline needed time to digest all this. Finally she asked. "What happened to the young lady - his tenant?"<br><br>"No one ever knew. She just seemed to vanish off the face of the earth, she and a cat she was very fond of - a present from your grandfather. She must be nearly sixty now, wherever she is."<br><br>"So if I wanted to get the train up to Fordham Magna, I would only find a lake where the farm used to be?"<br><br>Janet laughed and said, "Fordham Magna is also under many feet of water. Sometimes, when there has been no rain for a while, the church spire can be seen sticking up. But that's a corner of England that has gone for ever! As for a train - well, that line was closed in the early Sixties. One of Dr Beeching's first casualties, I'm afraid."<br><br>Caroline had just about reached the end of her tether and her mind was reeling from all this. It was only a few days since she had last been in this office. She had bought a ticket to a place that no onger existed and yet when, in the train earlier that morning, she had looked at that ticket, it had been made out only to Derby. Who had sold her the ghostly ticket? Who was the porter at Derby who had directed her to the Fordham Magana train? Who had driven her to the farm? Where was Grace now? Had she dreamed all this? Was she going mad?<br><br>"Have you somewhere I can freshen up, Janet? I feel a little dusty after my journey back to London - I've been away."<br><br>Janet gave her the key to her private wash-room and assured her that she could take her time and no one would disturb her.<br><br>Caroline locked the door behind her and undressed. Her whole body was deeply tanned. She looked closely in the mirror. There, above her eye, was the scar left after her encounter with the violent tresspassers. All over her body were little scars acquired in the course of a year's hard work. Her hands were hardened and calloused as were her shoulders on which she had carried the milk churns time without number. She felt the soles of her feet and they were hardened like the rest of her. This was not the body of a schoolgirl, but that of a hard-working woman and she was determined to keep it that way.<br><br>She rejoined Janet.<br><br>"What do you intend to do, now that you are a rich woman?" asked that lady, relieved that Caroline's distress seemed to have eased.<br><br>"Look around for a little farm, Janet. Something big enough to support me and small enough to work on my own, or with maybe one other person to help. I know just what sort of place I'm looking for, somewhere very remote and out of the way; I just hope it doesn't take me too long to find it!"<br><br>"That sounds a lonely existence for a young girl like you!"<br><br>"Oh! I won't be lonely, Janet. Not if I find the right place, I won't!"</p>
+    `
+  },
+  18: {
+    title: "Chapter 18",
+    subtitle: "The story continues",
+    content: `
+      <p>The Agent handed Caroline the keys to her new property and wished her many happy years in this new home. He left, leaving her to look around the farm at leisure. It was not a replica of that ghostly, long drowned, place on which she had spent a year working, but there were features that she felt sure would appeal to Grace. The familiar and beloved sight of a long-haired ginger tomcat confirmed her certainty that she had chosen well. The agent said the animal had appeared out of nowhere, just after the transfer of the farm to her ownership had been completed.<br><br>There was no lawn at this place leading to the distant spinney. It was necessary to walk over a ploughed field to reach it. Caroline went inside and undressed. Outside again, she shivered a little - it was late October by this time. No matter how cold the weather, she felt the same sensation of being caressed by a loving Earth and Air as on that first day of her friendship with Grace over one year ago -or was it only a few months?<br><br>The feeling of the rough ground under her once again bare feet was as intoxicating as ever and a great joy started to rise up inside her, so that she wanted to shout and sing. She looked round from time to time and was happy to see that she was being followed.<br><br>Finally she reached the shelter of the trees - not all ancient oaks, but beeches, sycamores and alders as well. It was under one old oak that she came to a halt and felt Engelbert sinuously wrapping himself around her ankles, purring loudly.<br><br>"Hello again, my dear Caroline. We must be the guardians of this place from now on, you and I and dear old Engelbert!"<br><br>Caroline looked up into the tree. There was Grace, sitting astride a branch, naked as the day she was born, just as she had been on the first day she had seen her. Once again, she climbed down with all her well-remembered agility and leapt nimbly on to the ground next to the joyful Caroline. This time she did not kiss her lightly on the lips, but passionately and with a fierce hunger.<br><br>Finally, Caroline drew back and asked Grace if she could come up to the house, or was she forced to stay out in the woods for ever.<br><br>"No! I'm not some kind of spirit, only flesh and blood, Caroline. Just like you, now that you have given me back my life to resume. I can exist anywhere I wish! Like you, I will grow old and die and be buried. We two will grow old together. Correction - we three!"<br><br>And so it was to be. This particular bit of Old England was never to be built on and Caroline and Grace were allowed to see out their days in peace.<br><br>Engelbert saw out his feline lifespan and died after ten years in his new home, being buried under his favourite tree. The day after a grieving couple had laid the faithful old creature to rest a little ginger kitten wandered mewing piteously into the farmyard and soon he was loved as dearly as the old cat had been - in fact Caroline was always convinced that the little fellow was a reincarnation.<br><br>THE END</p>
+    `
+  }
+};
+
+let currentChapter = 1;
+const totalChapters = Object.keys(stories).length;
+let isAnimating = false;
+
+// DOM elements
+const frontTitle = document.getElementById('frontTitle');
+const frontSubtitle = document.getElementById('frontSubtitle');
+const frontContent = document.getElementById('frontContent');
+const backTitle = document.getElementById('backTitle');
+const backSubtitle = document.getElementById('backSubtitle');
+const backContent = document.getElementById('backContent');
+const pageFlipper = document.getElementById('pageFlipper');
+const frontPage = document.getElementById('frontPage');
+const backPage = document.getElementById('backPage');
+const currentPageNum = document.getElementById('currentPageNum');
+const totalPagesSpan = document.getElementById('totalPages');
+const progressFill = document.getElementById('progressFill');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const themeBtn = document.getElementById('themeBtn');
+
+// Initialize
+function init() {
+  totalPagesSpan.textContent = totalChapters;
+  displayChapterOnFront(currentChapter);
+  updateControls();
+  updateProgress();
+}
+
+// Display chapter content on front page
+function displayChapterOnFront(chapterNum) {
+  const story = stories[chapterNum];
+  if (!story) return;
+
+  frontTitle.textContent = story.title;
+  // frontSubtitle.textContent = story.subtitle;
+  frontContent.innerHTML = story.content;
+  currentPageNum.textContent = chapterNum;
+  
+  // Reset scroll position
+  frontPage.scrollTop = 0;
+}
+
+// Display chapter content on back page
+function displayChapterOnBack(chapterNum) {
+  const story = stories[chapterNum];
+  if (!story) return;
+
+  backTitle.textContent = story.title;
+  // backSubtitle.textContent = story.subtitle;
+  backContent.innerHTML = story.content;
+  
+  // Reset scroll position
+  backPage.scrollTop = 0;
+}
+
+// Update control buttons
+function updateControls() {
+  prevBtn.disabled = currentChapter === 1;
+  nextBtn.disabled = currentChapter === totalChapters;
+}
+
+// Update progress bar
+function updateProgress() {
+  const progress = (currentChapter / totalChapters) * 100;
+  progressFill.style.width = progress + '%';
+}
+
+// Navigate to next chapter
+function nextChapter() {
+  if (isAnimating || currentChapter >= totalChapters) return;
+  
+  isAnimating = true;
+  const nextChapterNum = currentChapter + 1;
+  
+  // Prepare the back page with next content
+  displayChapterOnBack(nextChapterNum);
+  
+  // Start flip animation
+  pageFlipper.classList.add('flip-next');
+  
+  setTimeout(() => {
+    // After flip is complete, move content and reset
+    currentChapter = nextChapterNum;
+    displayChapterOnFront(currentChapter);
+    updateControls();
+    updateProgress();
+    
+    // Reset flipper without animation
+    pageFlipper.style.transition = 'none';
+    pageFlipper.classList.remove('flip-next');
+    
+    // Re-enable transition after a frame
+    setTimeout(() => {
+      pageFlipper.style.transition = '';
+      isAnimating = false;
+    }, 20);
+  }, 800);
+}
+
+// Navigate to previous chapter
+function prevChapter() {
+  if (isAnimating || currentChapter <= 1) return;
+  
+  isAnimating = true;
+  const prevChapterNum = currentChapter - 1;
+  
+  // Prepare the back page with previous content
+  displayChapterOnBack(prevChapterNum);
+  
+  // Start flip animation
+  pageFlipper.classList.add('flip-prev');
+  
+  setTimeout(() => {
+    // After flip is complete, move content and reset
+    currentChapter = prevChapterNum;
+    displayChapterOnFront(currentChapter);
+    updateControls();
+    updateProgress();
+    
+    // Reset flipper without animation
+    pageFlipper.style.transition = 'none';
+    pageFlipper.classList.remove('flip-prev');
+    
+    // Re-enable transition after a frame
+    setTimeout(() => {
+      pageFlipper.style.transition = '';
+      isAnimating = false;
+    }, 20);
+  }, 800);
+}
+
+// Toggle theme
+function toggleTheme() {
+  document.body.classList.toggle('dark');
+  themeBtn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+}
+
+// Event listeners
+nextBtn.addEventListener('click', nextChapter);
+prevBtn.addEventListener('click', prevChapter);
+themeBtn.addEventListener('click', toggleTheme);
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    e.preventDefault();
+    nextChapter();
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    prevChapter();
+  } else if (e.key === 't' || e.key === 'T') {
+    toggleTheme();
+  }
+});
+
+// Touch/swipe support
+let touchStartX = 0;
+let touchEndX = 0;
+
+pageFlipper.addEventListener('touchstart', (e) => {
+  touchStartX = e.changedTouches[0].screenX;
+});
+
+pageFlipper.addEventListener('touchend', (e) => {
+  touchEndX = e.changedTouches[0].screenX;
+  handleSwipe();
+});
+
+function handleSwipe() {
+  const swipeThreshold = 50;
+  const diff = touchStartX - touchEndX;
+  
+  if (Math.abs(diff) > swipeThreshold) {
+    if (diff > 0) {
+      // Swiped left - go to next
+      nextChapter();
+    } else {
+      // Swiped right - go to previous
+      prevChapter();
+    }
+  }
+}
+
+// Start the app
+init();
+
+</script>
+
+</body>
+</html>
