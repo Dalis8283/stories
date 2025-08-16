@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Party</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --accent: #0f4c75;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b3b3cc;
+            --highlight: #4a9eff;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.8;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--highlight);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        .author {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 0.7rem 1.5rem;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid var(--highlight);
+            border-radius: 50px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: rgba(74, 158, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .control-btn.active {
+            background: var(--highlight);
+            color: white;
+        }
+
+        .story-content {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1.2s ease-out;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--highlight), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        .story-text {
+            font-size: 1.1rem;
+            line-height: 1.9;
+            text-align: justify;
+            transition: all 0.3s ease;
+        }
+
+        .story-text p {
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+
+        .story-text p:hover {
+            opacity: 1;
+        }
+
+        /* Reading modes */
+        .reading-mode-dark {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --text-primary: #e8e8e8;
+        }
+
+        .reading-mode-light {
+            --primary-bg: #f5f7fa;
+            --secondary-bg: #c3cfe2;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        .reading-mode-sepia {
+            --primary-bg: #f4f1ea;
+            --secondary-bg: #e8dcc0;
+            --text-primary: #5d4037;
+            --text-secondary: #8d6e63;
+            --border: rgba(139, 69, 19, 0.2);
+        }
+
+        /* Font sizes */
+        .font-small .story-text { font-size: 0.95rem; }
+        .font-medium .story-text { font-size: 1.1rem; }
+        .font-large .story-text { font-size: 1.25rem; }
+        .font-xl .story-text { font-size: 1.4rem; }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--highlight);
+            transition: width 0.1s ease;
+            z-index: 1000;
+            box-shadow: 0 0 10px var(--highlight);
+        }
+
+        .floating-controls {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 100;
+        }
+
+        .floating-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid var(--highlight);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-size: 1.2rem;
+        }
+
+        .floating-btn:hover {
+            background: rgba(74, 158, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(74, 158, 255, 0.3); }
+            to { text-shadow: 0 0 30px rgba(74, 158, 255, 0.6); }
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .story-content { padding: 2rem 1.5rem; }
+            .title { font-size: 2rem; }
+            .floating-controls { display: none; }
+            .controls { gap: 0.5rem; }
+            .control-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        }
+
+        .word-count {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body class="reading-mode-dark font-medium">
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1 class="title">The Party</h1>
+            <p class="subtitle">Adapted from <a href="https://writingsofleviticus.grometsplaza.net/JamieW/Party.html" style="font-family: inherit; font-style: italic; color: inherit;">grometsplaza</a></p>
+            <p class="author">by Jamie W</p>
+        </header>
+
+        <div class="controls">
+            <button class="control-btn" onclick="toggleTheme('dark')">🌙 Dark</button>
+            <button class="control-btn" onclick="toggleTheme('light')">☀️ Light</button>
+            <button class="control-btn" onclick="toggleTheme('sepia')">📜 Sepia</button>
+            <button class="control-btn" onclick="changeFontSize('small')">A⁻</button>
+            <button class="control-btn active" onclick="changeFontSize('medium')">A</button>
+            <button class="control-btn" onclick="changeFontSize('large')">A⁺</button>
+            <button class="control-btn" onclick="changeFontSize('xl')">A⁺⁺</button>
+        </div>
+
+        <main class="story-content">
+            <div class="story-text">
+                <p>Stacy loved to sit in front of the mirror. It was one of the reasons she had grown her jet black hair long and spent hours tying it up in complicated ways. Tonight was party night and she looked amazing. It was hard to see her slender figure and large, rounded breasts beneath the dressing gown, but she knew it was all there.</p>
+
+                <p>Unable to resist, Stacy parted the front of her dressing gown enough to show her cleavage. Sometimes her breasts felt like they were too big – the twinge in her back every so often was evidence of that – but she had to respect them for the power they commanded over men. The right outfit, usually either a low cut gown or a tight shirt with exactly the right number of buttons open, and she was irresistible. It had gotten her in trouble with jealous women on occasion but it was definitely worth it.</p>
+
+                <p>She flicked off the hairdryer just in time to hear a voice from the living room. It was her flatmate Gemma, who was currently engrossed in one of her boring football matches. Stacy sometimes liked to amuse herself by stealing the TV remote and changing the channel to absolutely anything else. Hearing Gemma whine was funny sometimes.</p>
+
+                <p>“You useless twats!” Gemma yelled. “What are you doing?”</p>
+
+                <p>The two of them had been friends for six years and had shared a reasonable ground floor flat for half that time. It had made sense in many ways, what with the two of them attending the same college, but Stacy was feeling a little pleased their time together was nearly over.</p>
+
+                <p>There was nothing especially wrong with Gemma. It was just three years of living together had spoilt the good times they had used to have. Gemma used to be fun and a good laugh, but college had made her serious, obsessed with studying, and boring. Combine those things with her football obsession and Stacy couldn’t help be pleased to see the back of her.</p>
+
+                <p>Stacy was a party girl and was not ashamed of that. She knew it had a serious effect on her college work and, completely unlike Gemma, she had just about scraped through two of her three exams. Gemma had passed all of them with flying colours, of course. Stacy just consoled herself with the fact that Gemma was ten inches shorter than she was, had mousey blonde hair, small breasts and pretty average looks. The qualifications might get her a better job, but Stacy knew her looks meant she didn’t have to worry about working.</p>
+
+                <p>Finally finished, Stacy admired herself a moment longer and then left the bathroom. She had picked an outfit already and it was laid out on the bed. It was a tight pair of jeans and a flimsy white shirt. Under that she wore a matching red lingerie set. She wanted it to stand out through her shirt and sticking above the waistband of her jeans.</p>
+
+                <p>“Fucking hell” she announced, admiring herself in a full-length mirror, “you are irresistible.”</p>
+
+                <p>She was ready both for the party and for afterwards. A few hours of Gemma and their college ‘friends’ (more Gemma’s friends than hers) and she would be desperate for a night out on the town. Her latest would-be conquest, the hunky James, had agreed to meet her at a nightclub.</p>
+
+                <p>Stacy wandered out into the living room to see how Gemma was doing preparing for the party. It had been Stacy’s idea, of course, to celebrate their last night together, but why should she do the work?</p>
+
+                <p>The living room seemed almost empty. There was a settee against one wall, a television and DVD player on a stand opposite and a table with many drinks laid out on it. All of their assorted bits and pieces had been packed away in preparation for moving out.</p>
+
+                <p>Gemma chucked an empty can at the TV and swore. Stacy didn’t know much about football, but even she could see the problem: Gemma’s team was losing four-nil and there was only twenty minutes left to play.</p>
+
+                <p>“Problem?” Stacy asked with a big smile, knowing how annoyed Gemma was.</p>
+
+                <p>“Of course there’s a problem!” Gemma said without looking away from the screen. “This useless bloody team is dying on its arse out there!”</p>
+
+                <p>Stacy dropped down onto the settee. “Can’t always win.”</p>
+
+                <p>“They can!” Gemma announced loudly.</p>
+
+                <p>“They can’t.”</p>
+
+                <p>Gemma turned to her. “Bet you they can!”</p>
+
+                <p>This threw Stacy a bit. That was a really rash statement for careful and boring old Gemma. What did she want to bet anyway? A pound? The washing up?</p>
+
+                <p>“Nothing to say now? Know that you’ll lose?” Gemma rubbed her hands together with clear enthusiasm.</p>
+
+                <p>“What kind of bet did you have?” Stacy was getting really intrigued. “I don’t have much money.”</p>
+
+                <p>“Neither do I after buying all those drinks.” Gemma grinned like she had just had a great idea. “How about a forfeit?”</p>
+
+                <p>“What kind of boring forfeit would you want to do? Play Knock Down Ginger? Do a handstand? Make a prank phone call?”</p>
+
+                <p>“Nothing like that. A proper forfeit.”</p>
+
+                <p>“What do you consider a proper forfeit then? Go on, surprise me, if you can.”</p>
+
+                <p>“Okay.” Gemma muted the TV. “Whoever loses this bet has to spend the entire party… completely naked!”</p>
+
+                <p>“Naked?” Stacy snorted, trying to hide her shock. “You would go naked in a room full of our friends for an entire evening?”</p>
+
+                <p>“We’re not going to see them again.”</p>
+
+                <p>“You wouldn’t do it!”</p>
+
+                <p>“Wouldn’t I? There’s only one way for you to find out, and that’s to accept this bet.”</p>
+
+                <p>Stacy didn’t know how to respond. She had expected a forfeit so pathetic it would be laughable, but Gemma had got completely the other way. It took a few seconds to get her thoughts straight.</p>
+
+                <p>“Unless you’re just a coward,” Gemma taunted.</p>
+
+                <p>“That’s it!” Her mind was made up now. She held out her hand for Gemma to shake. “This bet is on.”</p>
+
+                <p>Gemma shook. “Would you look at that: my team scored while we were talking. Maybe their luck is changing.”</p>
+
+                <p>“No way. They’ve got no chance.”</p>
+
+                <p>Gemma turned the volume up and the two of them watched. Stacy found herself enthralled by a football match for the first time ever. Every time the ball neared the goal of the team she had found herself supporting her stomach churned with worry. Every goal scored made her feel a little bit more sick.</p>
+
+                <p>By the time the score was 4-3 Stacy was getting seriously worried. When the score equalised it was like her heart stopped. Gemma’s team had become unstoppable. They had complete control of the ball and, even though there was less than a minute on the clock, Stacy knew they would win.</p>
+
+                <p>She couldn’t shake the image of herself at the party, her entire body on display and desperately trying to make awkward small talk with somebody who would obviously be completed distracted.</p>
+
+                <p>Would Gemma really make her do it? She would have made Gemma do it. She knew that. The thought of ending their time together getting the better of her flatmate had made her almost dizzy with excitement. Now her head was still spinning, but at the thought of those bitches from college seeing her stood there exposed and unable to do anything about it.</p>
+
+                <p>Stacy liked to show off her body. Everybody knew that. But not like this. Seeing her naked was a reward for only the best of men and that was her choice. It also took place in a bedroom, with romantic lighting and the curtains shut. This would be completely different. How many people would come? Would she be completely surrounded?</p>
+
+                <p>Gemma leapt to her feet and let out a celebratory yell. She skipped around the room and whooped. Then stopped and turned to Stacy.</p>
+
+                <p>“Go on. It’s nearly time for the party and you have to be getting undressed.”</p>
+
+                <p>Stacy forced a smile. “Oh come on, that was just a joke. I’m not going to get naked in a room full of people. Not for you and not for anybody.”</p>
+
+                <p>“You’re doing it.” Gemma said, sounding very serious.</p>
+
+                <p>Stacy was feeling nervous. Maybe it was time to leave. Just go out for the evening and give the party a miss. What was Gemma going to do? Stacy wouldn’t be there and all her stuff was in her bedroom and the door was locked. Stacy stood and was halfway to the door when Gemma stepped in front of her.</p>
+
+                <p>“Where are you going?”</p>
+
+                <p>“To finish getting ready.”</p>
+
+                <p>“You can take off your clothes right here.”</p>
+
+                <p>“Look, Gem…”</p>
+
+                <p>Gemma cut in with: “Can you honestly say that you wouldn’t have made me do it?”</p>
+
+                <p>The fake smile was getting harder to maintain. “Of course not.”</p>
+
+                <p>“You would and you know it. There is absolutely no way you’re getting out of doing this. You are getting naked right now.”</p>
+
+                <p>“I’m not.” Stacy insisted.</p>
+
+                <p>“You’re doing it.” Gemma said again. “I just hope for your sake that you took the time to shave today.”</p>
+
+                <p>“Alright!” It seemed to be the only way out. “Look, I’ll get naked and I’ll let you take a picture or something, as long as you promise not to put on the internet. Is that good enough for you? Because it should be.”</p>
+
+                <p>Gemma didn’t respond. Just stared and waited. Folded her arms and looked really pissed off.</p>
+
+                <p>Stacy needed to try something new. “Why are you so keen on seeing my body anyway? Has your boyfriend dumping you put you off men?”</p>
+
+                <p>That was a bad idea. “Here’s the thing, Stacy: while you’ve been out partying, I’ve gone and learnt Judo. If you don’t take off your clothes, I will take them.”</p>
+
+                <p>“You’re not serious.”</p>
+
+                <p>Gemma cracked her knuckles. “Do you want to see just how serious I am?”</p>
+
+                <p>Things were moving too fast. Would Gemma really do that? She looked really serious about it and Stacy did once recall Gemma knocking out a guy for trying to fondle her. She wasn’t sure, but she had been completely certain that Gemma wouldn’t have made such a bet in the first place, and look how wrong she was about that.</p>
+
+                <p>Gemma threatened, “I’m not going to ask again.”</p>
+
+                <p>“Alright… I’ll…” She stared at the other women with wide and frightened eyes.</p>
+
+                <p>It didn’t make a difference. Stacy unbuttoned the white shirt and was about to drop it to the floor when Gemma took it away. Next were the jeans. They were so tight that it had taken her a while to fit into them. She had hoped to have some help taking them off that night.</p>
+
+                <p>“Sorry.” She said without thinking, as she struggled to remove them.</p>
+
+                <p>“I can get a knife and cut you out of them.” Gemma offered.</p>
+
+                <p>Stacy finally stepped out of them jeans. Gemma snatched them away and gestured for her to continue. Stacy unhooked her bra and tried to use one arm to keep her breasts covered as she removed it. They seemed to squish up against her arm and her nipples awkwardly appeared over the top.</p>
+
+                <p>“I don’t know why you’re bothering with that. We’re going to see everything anyway.”</p>
+
+                <p>Stacy slowly lowered her arm and exposed her breasts. She could feel herself blushing bright red already. Her breasts, rather than feeling pleasingly large, suddenly felt absurdly big. Like two parade floats stapled to her chest that were advertising her embarrassment.</p>
+
+                <p>Next were the knickers. Stacy had shaved herself down there and was now wishing – in spite of what Gemma has said – that she hadn’t. It made her pussy lips seem a lot more prominent than they usually were and it was a huge effort to expose them. She had stopped with the waistband just about keeping herself covered.</p>
+
+                <p>Gemma saw her hesitation and quickly lowered the knickers the rest of the way herself. Stacy felt strange having Gemma’s face so close to her bare groin. Gemma snatched the knickers away so fast that Stacy nearly tripped over.</p>
+
+                <p>“Very nice.” Gemma announced, appraising her. “Never realised what big nipples you have.”</p>
+
+                <p>Stacy’s jaw dropped open as Gemma pinched the nipple of her right breast. Then winced as Gemma pinched harder. She was too shocked to even think to do anything about it.</p>
+
+                <p>“You’re blushing already!” Gemma laughed.</p>
+
+                <p>“There you go: I’m naked. Can I please get dressed now? The party is going to be starting in a couple of minutes.”</p>
+
+                <p>Stacy couldn’t help but jump as the doorbell rang. It hadn’t seem that loud before. She was sure of that. Her hands quickly moved to try and cover herself. “Gemma, you need to give me back my clothes,” she insisted. “Or at least give me the key to my room.”</p>
+
+                <p>Gemma just grinned broadly and shook her head.</p>
+
+                <p>“Please?” She pleaded. “This isn’t funny.”</p>
+
+                <p>“Not yet.” Gemma announced as she walked towards the door.</p>
+
+                <p>“I’ll do something else!” Stacy hurried after her. “I’ll get you some money. You can have my jewellery. Just please don’t make me do this!”</p>
+
+                <p>There was no response. Gemma went out into the entrance hall and Stacy couldn’t risk being seen. She looked around for cover, but there wasn’t any. Stacy decided that Gemma could go fuck herself and instinct carried her from the room. Her heart was thumping fast already. She reached the door to her room and tried it but, no, it was locked. She even tried to kick it but all that did was make her foot hurt.</p>
+
+                <p>“Hey, Stacy, where are you?” Gemma called from the other room.</p>
+
+                <p>She could hear at least two other voices. One of them sounded like Shannon, who had replaced Stacy as Gemma’s best friend. Stacy hated Shannon and the feelings were mutual. Shannon would not leave her alone with a chance to torment her like this.</p>
+
+                <p>Stacy quickly tried Gemma’s door in passing and then ducked into the bathroom. She quickly locked the door. That wouldn’t stop her, because it could be opened from outside, but she could grab a towel to cover herself and then…</p>
+
+                <p>The towel rail was empty.</p>
+
+                <p>There had been two big bath towels hanging there. Now there was nothing but a very small hand towel next to the sink. That would barely cover her pussy. She opened the airing cupboard. That was empty as well. Just a day or so before and the house would have been stuffed full of things that she could have hidden behind or wrapped around herself. Now there was nothing.</p>
+
+                <p>“Just making sure you live up to our bet. I’ve made sure there’s nothing in the flat for you to cover yourself. Even taken down the curtains.”</p>
+
+                <p>Shannon appeared at Gemma’s side and laughed loudly. She quickly took out her mobile phone and started to take some pictures. Another woman could just about be seen. Stacy didn’t know her, although she looked a bit familiar: she had long and lightly curled ginger hair and was dressed in a pale grey jogging suit.</p>
+
+                <p>“Don’t hide yourself.” Gemma instructed. “Stand up straight and let us see it all.”</p>
+
+                <p>“Give me back my clothes right now.” Stacy tried to sound tough, but couldn’t have felt any more feeble than she did huddled in the corner.</p>
+
+                <p>“What, these?” Gemma held up the clothes. “That reminds me, I’ve got one more thing to do.”</p>
+
+                <p>Gemma walked out of the bathroom. Stacy tried to hurry after her, but Shannon blocked the doorway.</p>
+
+                <p>“Where are you going?” Shannon asked.</p>
+
+                <p>Stacy knocked her aside. Gemma was at Stacy’s open bedroom door. She chucked in the clothes and then slammed the door shut.</p>
+
+                <p>“Now we’re ready.” Gemma held up the keys. “The only way you’re going to get any clothes is to get these keys. The only way you’re going to get these keys is do exactly what I say. Do you understand?”</p>
+
+                <p>Stacy lunged for the keys, but Gemma easily knocked her back. Shannon grabbed Stacy and held her in place. Stacy recoiled from Shannon’s breath on her bare back. She managed to get away from the other woman’s grip.</p>
+
+                <p>“I said: do you understand?”</p>
+
+                <p>Stacy nodded. “Yes.”</p>
+
+                <p>Gemma stepped forward, pressing down on Stacy’s bare foot with her shoe and using just enough pressure to hurt. Her face was inches away from Stacy’s and she was clearly angry. Then she smiled, a cruel smile, and laughed.</p>
+
+                <p>“Please, Gemma, what did I do?”</p>
+
+                <p>“What did you do?” Gemma was shocked now. “What did you do? Do you really not know?”</p>
+
+                <p>“I don’t.” This was true. Stacy had no idea. She honestly thought that the two of them were still friends. Not very good friends, admittedly, but still friends.</p>
+
+                <p>“Then you’ve got the next six or so hours to remember. That should be plenty of time. I’m guessing it will be the longest night of your life.”</p>
+
+                <p>“ Please, please…” Stacy was on the verge of crying.</p>
+
+                <p>Gemma just grabbed her arm and lead her back into the living room. All Stacy could do was awkwardly stand in the middle of the room as Gemma finished preparing. She didn’t know what to do with herself. Shannon and the mystery redhead both sat on the settee and exchanged some quiet remarks that made both of them giggle.</p>
+
+                <p>Gemma had been right about one thing. Stacy really hadn’t noticed the curtains were missing. Now she was aware of how big the windows were and how busy the road right outside suddenly seemed to be. All it took was a passer-by glancing in the window and…</p>
+
+                <p>“Lower your hands.” Gemma commanded.</p>
+
+                <p>“What?”</p>
+
+                <p>“You’ve agreed to do what I tell you. And I’m telling you that you are not to cover yourself up in any way. I want everyone to see everything that you’ve got. Cover yourself up and this evening will get a whole lot worse. Do you understand?”</p>
+
+                <p>Stacy didn’t know what she could say. She just nodded.</p>
+
+                <p>“Tonight you’re going to be our waitress. Understand?”</p>
+
+                <p>Stacy nodded again. She couldn’t speak if she wanted to. She was too busy holding back her tears and she could tell that Gemma would really love seeing her cry. Her innocent and sweet little friend had turned into a cruel monster and all Stacy could do was to try and make it through the night.</p>
+
+                <p>Gemma continued: “You will serve drinks, but you will not drink anything alcoholic yourself. I want you to appreciate every moment of this. Understand?”</p>
+
+                <p>Another nod. That was Stacy’s only plan to help herself through this ordeal ruined. She had figured that enough drinks and she might not even mind her exposure. That and she might get drunk enough to not remember the details later.</p>
+
+                <p>“I’ve not been offered a drink yet.” Shannon said from the settee.</p>
+
+                <p>“Don’t just stand there.” Gemma said. “You know what do you.”</p>
+
+                <p>Shannon gave her drink order and Stacy walked to the table. Shannon was being surprisingly quiet. She was a short women, shorter even than Gemma, but definitely pretty. Stacy had wondered on more than one occasion if she was a lesbian (did that explain the redhead?) and it was a thought that was becoming increasingly pressing. Especially when she saw that Shannon’s drink was right at the back of the table. That required leaning right over. She tried to quickly snatch up the drink.</p>
+
+                <p>“No, not that one.” Shannon commanded. “I fancy that drink behind it.”</p>
+
+                <p>Stacy leaned further forwards. There was a snort of laughter behind them and she squeezed her legs together to try and limit the view. That just made it harder to balance and she had to spread her legs even further. Not only was her pussy in clear view, her arsehole was probably putting in an appearance as well. The bottle was just out of reach. She leaned forwards – and then jumped back as one of her bare boobs dipped into an ice bucket.</p>
+
+                <p>“Oh, shit!” Shannon guffawed. “I didn’t think she would actually do it!”</p>
+
+                <p>Stacy span around and made a fist. Her anger momentarily took over from her feelings of shame and she advanced on the seated woman.</p>
+
+                <p>“Stacy!” Gemma barked.</p>
+
+                <p>Stacy hardly heard her. What she couldn’t ignore, though, was Gemma grabbing her arm and forcing up behind her back. The smaller women was a lot stronger than she had expected and Stacy found herself pressed up against a wall.</p>
+
+                <p>“Stacy, say ‘sorry’ to our guest.”</p>
+
+                <p>She hesitated, and that was a bad idea. Gemma applied more pressure.</p>
+
+                <p>“I said: say ‘sorry’ to our guest.”</p>
+
+                <p>Stacy forced out a quick apology and then went back to the drinks. Her arm ached and her boobs stung from where they had slapped into the wall, but nobody was interested when she tried to get some sympathy out of it.</p>
+
+                <p>“I can’t believe this is actually happening.” Shannon said. “I can’t believe you actually managed to get her naked.”</p>
+
+                <p>“It was easy.” Gemma said. “Just a little bit of trickery. I recorded a football match a few months back – a really exciting one – and stuck it on while she was preening herself. I know she wouldn’t be able to resist a bet.”</p>
+
+                <p>“She didn’t realise it was a set up?”</p>
+
+                <p>Stacy couldn’t believe it. It was bad enough to lose to Gemma, but being tricked so easily by her was even worse. She looked away in shame at the reveal of how easily she had been fooled. Somebody was passing the window and Stacy had to look away from that as well.</p>
+
+                <p>The clock was rapidly approaching eight and the start of the party. Stacy hoped that maybe nobody else would come and her nightmare would be limited at least a bit.</p>
+
+                <p>It was not to be. It was only a few seconds past the hour that the doorbell suddenly rang. It made Stacy, who had been on edge anyway, jump and goose pimples sprung up all over her body. She felt even more exposed and it was only going to get a lot worse.</p>
+
+                <p>“Don’t worry.” Gemma smiled. “I’ll get the door. You stay right where you are and be ready to greet our first guests.”</p>
+
+                <p>Stacy pushed a stray hair from her eyes and her hand was shaking. How many people would it be? How much worse could it get?</p>
+
+                <p>“Hey, Stace?” Shannon asked. “You feeling cold? It’s just you’re shaking. And one of your nipples has gone hard.”</p>
+
+                <p>Stacy could hear voices from out in the entrance hall. It sounded like a whole crowd had arrived. She couldn’t tell who it was. Maybe they were her friends. Maybe they would see her and how uncomfortable she was and spring to her defence. Yeah, a couple of her mates would be more than a match for Gemma and her stupid Judo.</p>
+
+                <p>It wasn’t to be. The group that entered the room was made entirely of Gemma’s friends. They weren’t shy about hiding their reactions: loud and lengthy laughter. There were now nine dressed women, including Gemma, opposite the naked Stacy and all were revelling in her shame. Stacy had never felt so self-conscious before in her life. Her arms twitched at her side as she restrained from hiding herself. She had to look up at the ceiling to avoid seeing their faces.</p>
+
+                <p>“Give us a twirl!” one of them yelled.</p>
+
+                <p>Stacy hesitated.</p>
+
+                <p>“Go on!” Gemma insisted. “Give us a twirl!”</p>
+
+                <p>Stacy awkwardly turned around. She found a hand slap her on the backside and the laughter from the group became even louder. The sound of the doorbell ringing again could just about be heard over their noise.</p>
+
+                <p>“Stacy!” Gemma yelled. “It’s your turn to get the door!”</p>
+
+                <p>Stacy didn’t argue. What would be the point? Gemma had intimidated her alone and now she had her friends to help. She had to squeeze through the middle of them and the feeling of their clothes against her bare skin was like torture. Somebody pinched her thigh and she yelped. That inspired even more laughter.</p>
+
+                <p>The doorbell rang again as she stepped into the entrance hall. It was only a tiny little room, with bare coat hooks on the wall. There was also a mirror and Stacy caught sight of herself. It made her feel awful. In just a short space of time she had gone from almost being in love with reflection to dreading the sight of it. Her body was red all over, especially her face and chest, and her breasts seemed almost freakish.</p>
+
+                <p>She took a deep breath and forced herself to open the front door. More of Gemma’s friends were outside and they shrieked at the sight of her. None of them seemed at all surprised. Had all of them known about it?</p>
+
+                <p>“Oh my days!” One of them announced loudly. “Look at her big old titties!”</p>
+
+                <p>Now Stacy couldn’t help herself. She folded her arms in front of her breasts, but she knew it was a waste of time, and she dropped them again. The cold night air made her shiver and her nipples began to get hard. She had to get back before any of them thought she was getting turned on by the experience.</p>
+
+                <p>Stacy turned and let them follow her into the living room. They were all talking amongst themselves and it was impossible for Stacy to pick out individual conversations. Not that she needed to here. She knew they were all talking about her. They were certainly all staring at her.</p>
+
+                <p>She scratched her bum without thinking and the feeling of the bare flesh was overwhelming. There were – she quickly counted – eighteen dressed people and her in the room. They were all friends of Gemma’s. And they were seeing her naked body from every angle.</p>
+
+                <p>Gemma suddenly appeared at her side. “That’s everyone. You can start to get us some drinks now.”</p>
+
+                <p>“What about my friends?”</p>
+
+                <p>“Your friends? I didn’t invite them. I didn’t want them here spoiling our fun. Besides, it’s not like these are my friends.”</p>
+
+                <p>“Then who are they?”</p>
+
+                <p>“They’re the ‘We Hate Stacy’ Club. They’re all here to see you have the worst night of your life.” She raised her voice. “Hey everyone! Who do we hate?”</p>
+
+                <p>They all responded: “Stacy!”</p>
+
+                <p>“Who do we hate?” Gemma asked louder.</p>
+
+                <p>“Stacy!” The crowd shouted back.</p>
+
+                <p>Stacy couldn’t believe it. She didn’t even recognise most of the assembled women and yet they clearly despised her. What the fuck was happening? What had she done to deserve this? Could any of them begin to comprehend what they were putting her through?</p>
+
+                <p>Gemma raised her hand and the room went silent. Stacy could hear her heart beating rapidly as she wondered what was going to happen next. Time seemed to stand still as the assembled crowd became completely motionless.</p>
+
+                <p>“Stacy here is going to treat us to a little show in five or so minutes. Until then, she’ll be serving drinks, so ask her for whatever you want.”</p>
+
+                <p>“What show?” Stacy blurted out in shock.</p>
+
+                <p>“You’ll see.”</p>
+
+                <p>The time slowly passing was agonising. Everybody wanted ice in their drinks and the way it clinked around in the glasses just emphasised how much she was shaking. At least it meant she got to duck into the kitchen and out of sight every so often to visit the freezer.</p>
+
+                <p>What else did they want? They had seen her naked. They had their fun. Stacy had been thoroughly ridiculed and embarrassed. Her body felt like it was on fire from where she was blushing so violently.</p>
+
+                <p>It took all her effort to concentrate on who wanted what drinks. She had already managed to turn all of them against her and she didn’t want to risk upsetting them further. She was also concentrating on who had and hadn’t been served, because she figured that her ‘show’ would begin as soon as everybody had a drink.</p>
+
+                <p>She was right. It was only seconds after she had handed over the glass that the room suddenly fell silent again. Gemma stepped out with one hand behind her back. She used the other to gesture Stacy to approach. Some of the other women stepped in place behind her and she was completely surrounded.</p>
+
+                <p>“Most of you probably don’t know this” Gemma loudly stated, “but Stacy here used to be better at skipping rope than anybody else I’ve ever known. If they had skipping in the Olympics, who knows where she would be today?”</p>
+
+                <p>Stacy froze in place. It was true that she had been excellent at skipping and that she had bolstered her pocket money during her teenage years by charging the neighbourhood boys to watch. That was a long time ago. Skipping itself wasn’t the problem. It’s what her body would be doing while she was skipping. Gemma knew how self-conscious she was about her boobs and how she had spent so much money on sports bras to try and keep them from bouncing about the place.</p>
+
+                <p>“So now she’s going to demonstrate her skill for us. Isn’t that right, Stacy? Won’t that be fun for you?”</p>
+
+                <p>Gemma held out a coiled skipping rope.</p>
+
+                <p>Stacy didn’t take it. She couldn’t take it. She couldn’t move. Even when her brain told her hand to move it remained in place. This was like a nightmare. Fuck it, this was exactly like nightmares that had haunted her for years.</p>
+
+                <p>“Take it.” Gemma insisted. “Before we get annoyed.”</p>
+
+                <p>Stacy forced herself to take the skipping rope with a trembling hand. She dropped one end and was more than aware of the view the women behind her were getting when she bent over to retrieve it. She was finally ready to go.</p>
+
+                <p>Gemma didn’t say anything. Nobody did. They just stood and stared at her.</p>
+
+                <p>Stacy took a small jump. The skipping rope caught on her foot and she nearly fell over onto her face. She just about managed to get her balance and tried again. This time it worked.</p>
+
+                <p>She jumped and jumped, letting the skipping rope move without thinking about it, almost like it was moving on its own. Stacy’s boobs shook violently. Each jump seemed to be worse than the last. Her bare feet thumped down hard on the laminate floor boards and a pain shot up her legs. The crowd was laughing and jeering. Even when Stacy closed her eyes she could still feel her breasts moving and she knew exactly what the group was seeing.</p>
+
+                <p>It took Stacy a moment to realise she had stopped. The crowd started to chant, to chant ‘skip’ over and over again. She knew that Gemma was stood close by and was preparing to make her move.</p>
+
+                <p>Stacy couldn’t hold back any more. She let out a garbled sob and felt the hot tears running down her cheeks. She tried to stop the sobbing, because that made her breasts shake as well. Even her tears seemed to be working against her as she felt them drip down onto her bare skin.</p>
+
+                <p>The room had fallen silent again. “What shall we do?” Gemma asked.</p>
+
+                <p>“Let’s kick her out,” one woman suggested.</p>
+
+                <p>“How about we leave her over in the park, near the football fields?” asked another.</p>
+
+                <p>“What’s it to be?” Gemma asked. “Skipping here or a little trip to somewhere a lot more public? I think the basketball team is having a party tonight.”</p>
+
+                <p>Stacy swallowed hard. Then started to skip again. She jumped and she could feel her whole body reacting to the impact of her bare feet on the floor. Her bum wobbled and her tits were jerking so violently it felt like she was going to get two black eyes.</p>
+
+                <p>The crowd starting to clap. They were yelling for her to go faster and faster.</p>
+
+                <p>Stacy leaned on the kitchen counter and sobbed loudly. She was alone in the room, having been sent to get some snacks from the cupboard, and couldn’t help herself. They had finally let her stop skipping. She didn’t know how long it had gone on for, but it must have been a long time. Her feet, legs and arms were sore. Her body had been covered in sweat and her carefully styled hair was a mess, plastered to her face.</p>
+
+                <p>Next they had made her serve more drinks to everyone in the room. It felt an odd thing to say, but after the skipping ordeal, serving drinks naked to a room full of people had been a relief. More of them had been watching videos of her skipping on their mobile phones than had been watching her. They’d had their fun and their abuse had peaked early.</p>
+
+                <p>That’s what she desperately hoped anyway.</p>
+
+                <p>“What are you doing?”</p>
+
+                <p>“Just getting some snacks.” Stacy hadn’t noticed Gemma appearing.</p>
+
+                <p>“Looked more like you were staring off into space to me. I think you were just trying to hide yourself away from us.”</p>
+
+                <p>Stacy quickly tried to look busy. She opened the nearest cupboard and grabbed the first thing that came to hand.</p>
+
+                <p>“I don’t think my guests will be interested in eating dishwasher tablets.”</p>
+
+                <p>Stacy’s head dropped. Yep, that was what she was holding. She couldn’t look at Gemma now. It was true that she had been hiding, but, in her situation, who wouldn’t? At least Gemma hadn’t walked in a couple of minutes earlier and found her curled up in the corner.</p>
+
+                <p>“Leave the snacks for now.” Gemma put an arm around her. “It’s time for your second punishment.”</p>
+
+                <p>“My… my what?” Stacy stammered in alarm.</p>
+
+                <p>“Your second punishment.”</p>
+
+                <p>“Please…” The waterworks were starting again. “Please, haven’t I done enough? Wasn’t the skipping humiliating enough?”</p>
+
+                <p>“Personally speaking, yes. I’d say you’ve had enough – and I thought I really hated you – but they want more. Lots more. I guess that none of them have ever been your friend.”</p>
+
+                <p>“Then just tell them it’s over. Tell them all to go home. Or just give me my keys and let me get dressed.”</p>
+
+                <p>“I can’t.”</p>
+
+                <p>“Why not?”</p>
+
+                <p>“I don’t have your keys any more. Shannon does. She was worried I might feel sorry for you. And she was right.” She patted Stacy’s back. “Sorry, Stacy.”</p>
+
+                <p>“Why are they doing this to me? I’ve never met those people before and yet they want me to suffer.”</p>
+
+                <p>“They’re getting impatient out there. Just go out and get your punishment done. Then I’ll explain everything. Okay?”</p>
+
+                <p>Stacy nodded and took a deep, ragged breath to try and steady herself.</p>
+
+                <p>“They want you to dance for them. They’ve got some moves you have to use.”</p>
+
+                <p>“I ache all over. I don’t know if I can dance.” Stacy grabbed some tissue and started to wipe around her eyes.</p>
+
+                <p>“Just tidy yourself up a bit and I’ll tell them you’ll be right out.”</p>
+
+                <p>“Look, Gem, I just have two questions. Two really serious questions. How far are they going to go with us?”</p>
+
+                <p>“They’re not going to touch you – well, maybe a little smack on your backside – and you will not leave this flat.”</p>
+
+                <p>“You promise?”</p>
+
+                <p>“I promise.” Gemma started to leave, then turned back.</p>
+
+                <p>“And…” Stacy stumbled over her words. “And…”</p>
+
+                <p>“What?”</p>
+
+                <p>“Are they going…” deep breath “going to make me wank myself off for them?”</p>
+
+                <p>Gemma looked shocked.</p>
+
+                <p>“It’s just… not only can’t I think of anything more humiliating, I’d also be at it for a long, long time. This is doing absolutely nothing for me.”</p>
+
+                <p>“No. No, of course not.” He face softened. “I’m sorry, Stacy. I know I started this, but… look, I’m just sorry, okay?”</p>
+
+                <p>“Can I go out with you? It’ll be easier than doing it on my own.”</p>
+
+                <p>“Sure, come on.”</p>
+
+                <p>Stacy didn’t know why, but she felt a tiny bit comforted having Gemma by her side. The two of them had had some problems – though nothing, she felt, to warrant this – but maybe having just one person on her side would make all the difference.</p>
+
+                <p>“If I could get you out of this, I would.” Gemma whispered. “But they’ve had a lot to drink and I think it will be best for to just get on and do it.”</p>
+
+                <p>Everyone else in the living room was waiting up at one end. Shannon was poised at the stereo system to turn on the music. Gemma looked back and winked to Stacy, then joined the others. A woman stepped forward and it was the mystery redhead.</p>
+
+                <p>“Hi Stacy. I’m Charlotte.” She smirked. “You ready to dance?”</p>
+
+                <p>“Just get on with it.”</p>
+
+                <p>“Feisty for a naked girl! We’re going to put on the music. I’ll dance and all you have to do is copy whatever I do. Okay?”</p>
+
+                <p>“Yeah…”</p>
+
+                <p>“Say ‘Yes, Mistress.’ I don’t know why, it just seems right.”</p>
+
+                <p>“Yes, Mistress.” Stacy dutifully repeated.</p>
+
+                <p>“I am a dance teacher, so expect a lot. I’m also very, very flexible.” Charlotte grasped her right ankle and, balancing herself perfect, held it up above her head with the leg perfectly straight. “Think you can do that?”</p>
+
+                <p>Stacy was trying her best to put up a strong front, but inside she was a wreck. At least with the skipping she didn’t have to concentrate. It took a while, but she had let her mind drift away and her body had automatically taken care of the movements required. Now she had to pay strict attention.</p>
+
+                <p>There was something oddly familiar about Charlotte. Like they had met before. Charlotte clearly didn’t like her, but she was trying to figure out how much. The churning fear deep in her stomach was telling her that it was going to be really, really, really bad.</p>
+
+                <p>Shannon whispered something into Charlotte’s ear and both women laughed. Shannon, clearly unsteady on her feet from all the drink she’d had, made her way back to the stereo. She pressed the ‘play’ button and music started.</p>
+
+                <p>Charlotte began slowly, swinging her hips from side to side and Stacy did likewise. She decided to completely focus on Charlotte and hoped maybe she could block out everybody else in the room.</p>
+
+                <p>Charlotte puts her hands on her swaying thighs and then slowly moved up her body. It was making it hard for Stacy to keep her focus when she could feel the naked skin against her fingertips. She traced over her hips, up her stomach and then to – oh, come on – her breasts. Charlotte made sure she lingered there. Made her stroke the nipples and feel a horrible shiver go through her whole body.</p>
+
+                <p>The music suddenly got louder and faster. Charlotte responded appropriately and her hips began to buck rapidly and her arms wave around.</p>
+
+                <p>Focus on Charlotte, Stacy told herself, focus on Charlotte. On Charlotte and the beat of the music. Nothing else matters.</p>
+
+                <p>Charlotte did a high kick and Stacy just about managed to imitate her. She almost fell over and it was clear that it had been noticed by her audience. Charlotte kicked again and Stacy managed it this time.</p>
+
+                <p>There was no time to congratulate herself. Charlotte’s moves were coming fast and Stacy was struggling to keep up with her. It was good in a way because, between the sweating and the exertion, Stacy barely had time to think about all the people watching.</p>
+
+                <p>They both ended up seated on the floor and Stacy didn’t even have time to wince when Charlotte brought her legs up straight in front of herself and then began to rapidly open and close them.</p>
+
+                <p>“Come on! Wider than that!” Charlotte yelled over the music. “Or we have to keep doing this until you get it right!”</p>
+
+                <p>Stacy pushed herself as hard as she could. The muscles of her inner thighs hurt so much. Charlotte held herself in place and Stacy forced herself to do the same. She bit her lip to keep her mind off the pain it was causing.</p>
+
+                <p>Charlotte moved suddenly and was crouched down. Then she leant back, resting her hands on the floor and began to grind her hips violently. Stacy felt like she couldn’t cope. More than ever, she was now aware of her naked body and the humiliation she was suffering.</p>
+
+                <p>They ended up back on their feet and slowed down as the song neared the finish. When it finally did stop, Stacy almost collapsed. There was a round of applause and Charlotte took a bow.</p>
+
+                <p>“More dancing!” Shannon yelled.</p>
+
+                <p>Stacy’s head was swimming and she felt like being sick.</p>
+
+                <p>“No!” Gemma stepped from the crowd and approached. “No more. She’s suffered enough. Any more of this and you’re going to do some real damage.”</p>
+
+                <p>There was silence in the room. Stacy was the one who now felt like laughing, but purely out of relief.</p>
+
+                <p>“Stacy, go and have a shower. Just relax and I’ll be in to see you in a while.”</p>
+
+                <p>“What are you doing?” Shannon asked, now slurring a little. “We agreed to this. This is what we all wanted.”</p>
+
+                <p>“Look at her. She can’t keep going. At least give her a break while me and you have a talk about this. Okay?”</p>
+
+                <p>Shannon was clearly not keen.</p>
+
+                <p>“Okay?” Gemma repeated with a hard edge to her voice.</p>
+
+                <p>“Yeah, whatever.” Shannon waved her off. “I’m having another drink.”</p>
+
+                <p>Stacy didn’t wait to be told again. She walked out of the room, down the hall and into the bathroom. Then closed and locked the door, even though she knew it didn’t make a difference.</p>
+
+                <p>The hot water was the best feeling Stacy had experienced in a long time. It washed away her sweat and the flow of water massaged her tired muscles. She closed her eyes and let everything else melt away. There was nobody else there now and she could relax. She let herself cry again and the tears mingled with the water flowing down her face. Then, at last, she felt calm and her mind felt straight. This was the right place to be naked. It was somewhere she had been naked many times before. She knew the situation might turn bad again, but, for now, she was feeling comfortable. It was important to keep hold of that feeling for as long as she possibly could.</p>
+
+                <p>She didn’t know how much time went by, but she didn’t care. Eventually she caught sight of movement through the glass shower door and saw Gemma waiting. Gemma opened the door and Stacy shuddered at the feel of the cold bathroom air entering the shower cubicle.</p>
+
+                <p>“Sorry.” Gemma said, then smiled. “Scrub your back?”</p>
+
+                <p>Stacy turned the tap and the shower went off.</p>
+
+                <p>“You okay?”</p>
+
+                <p>“Well as can be expected.” Stacy stepped out of the cubicle. “I don’t suppose there’s any point in asking for a towel to dry myself?”</p>
+
+                <p>“They’re all locked away in your room.”</p>
+
+                <p>“So, what do they want from me? Got some stirrups they want to put me up in? All want to come around with a rubber glove and give me an examination?”</p>
+
+                <p>“I’ve been talking to Shannon. Calmed her down a bit. And we’ve made a deal. You just have to do one more thing and…”</p>
+
+                <p>“What is it?” Stacy asked, expecting the worst.</p>
+
+                <p>“They want some pictures. All you have to do is hold one pose for five minutes…”</p>
+
+                <p>“Five minutes?”</p>
+
+                <p>“They wanted twenty minutes first of all. You just keep in place, let them take some pictures and then that’s it. You can have your keys back from Shannon and then they’re all going to a nightclub.”</p>
+
+                <p>“Couldn’t you have just made them leave?”</p>
+
+                <p>“It was the best I could do. It was either that or… well… you don’t want to know what else they wanted to do.”</p>
+
+                <p>Stacy dropped down to use the toilet as a seat.</p>
+
+                <p>“I turned against them for you, you know. They wanted to strip me as well and have both of us…” Gemma was blushing now. “Just think of it this way: if you thought masturbating in front of them was awkward, imagine me naked and with my head between your legs, trying to lick an orgasm out of you.”</p>
+
+                <p>That was quite the image, Stacy had to admit to herself. For the first (and only) time that night she actually found herself a little bit aroused and quickly turned her thoughts to something else. Mainly how angry she was with Gemma for getting her into this situation in the first place.</p>
+
+                <p>“Will you do it?”</p>
+
+                <p>“Yes!” Stacy snapped. “Of course I’ll do it! Come on, they can have me all nice and wet as well and then they can fuck off and leave me alone.”</p>
+
+                <p>“Just make sure you hold the position for the full five minutes. If not, they’ll want something else from you. Okay?”</p>
+
+                <p>“Fuck you.” Stacy spat back.</p>
+
+                <p>“Please, Stacy, just do it.”</p>
+
+                <p>“I’ll do it. Just make sure that you’re out of this flat tonight and I never want to fucking see you ever again, alright?”</p>
+
+                <p>“Yeah, okay.”</p>
+
+                <p>Stacy stomped out of the room and Gemma hurried to follow her. Heads turned as Stacy went back into the living room.</p>
+
+                <p>“Oh, good.” Shannon gloated. “You’re back.”</p>
+
+                <p>“Where do you want me?”</p>
+
+                <p>“Sat on the floor, right here.” Shannon pointed downwards.</p>
+
+                <p>Stacy sat down as instructed. “Let me guess: legs wide open?”</p>
+
+                <p>“Curb the fucking attitude or I might think of something worse. And, anyway” she waved her glass around and spilt half the contents, “that’s not how I want you. What I – what we – want is your feet behind your head.”</p>
+
+                <p>Stacy felt herself blushing hard again at the thought: pussy splayed apart and her tits, once again the bane of her evening, pressed between her legs and sticking out more than ever. They had clearly put a lot of thought into the pose. Would she even be able to hold it for five whole minutes?</p>
+
+                <p>Muscles twinged as she brought up her feet. She had certainly used to be able to get her feet behind her head. She struggled and forced her legs higher. Then swung them back and got her feet in place. Suddenly, somebody was grabbing tightly hold of her ankles and holding them in place.</p>
+
+                <p>“What are you doing?” She yelped in surprise.</p>
+
+                <p>“Charlotte is just helping you hold the pose.” Shannon explained, grinning smugly all the while. “So, now that your hands are free, be a darling, and pull your pussy wide open.”</p>
+
+                <p>“No!” Stacy yelped.</p>
+
+                <p>“Do it!” Shannon insisted.</p>
+
+                <p>Stacy looked to Gemma, who seemed concerned. She was nodding to Stacy in encouragement and silently mouthed the word ‘please.’</p>
+
+                <p>“And that’s it?”</p>
+
+                <p>“That’s it.”</p>
+
+                <p>Stacy swallowed hard and gently lifted her hands from the floor. Her back rested against Charlotte’s legs and she stayed in place. Then, with shaking hands, she reached around and grabbed the top of her thighs. Stacy closed her eyes tightly and then pulled her hands apart. She felt her pussy gaping open.</p>
+
+                <p>“Further.” Shannon said. “And open your eyes.”</p>
+
+                <p>Stacy pulled harder until it hurt her a little and forced herself to look at the women closely examining her. They were all leaning in and having a really good look. Mobile phones started to appear and she heard the shutter sound of pictures being taken.</p>
+
+                <p>“Fucking hell!” Shannon laughed. “Your pussy is enormous!”</p>
+
+                <p>She knelt down and leant her head close to Stacy’s groin.</p>
+
+                <p>“Hello!” And then repeated the word in a mock echo. “Hello… Hello.. Hello…”</p>
+
+                <p>Women began to shriek with laughter. Stacy wanted to look away but knew there would be no point.</p>
+
+                <p>“I can see a couple of lost dildos up there!” Another woman laughed.</p>
+
+                <p>Stacy tried to lower her feet. Charlotte’s grip strengthened and held her legs in place. Shannon posed herself next to Stacy and more pictures were taken. Shannon reached around her and squeezed hard on her right boob.</p>
+
+                <p>One at a time, the women sat next to Stacy and all had their pictures taken. Stacy could just about see the clock to her left and was counting away the seconds. By time everybody had done there was less than two minutes remaining. So far, three minutes and change had felt like over an hour.</p>
+
+                <p>Gemma – the only woman who hadn’t got a picture taken – appeared through the crowd. Everyone else suddenly stepped back and left her standing alone. What the fuck was happening now? Gemma was looking her straight in the eye and smiling. She reached back for the door handle and pulled it open.</p>
+
+                <p>The world seemed to go into slow motion as James was revealed in the entrance hall. He looked confused, then saw Stacy and his expression changed. He was shocked and then delighted.</p>
+
+                <p>Stacy was too shocked to react for a moment. She tried to lower her legs, but Charlotte clung on even more and Stacy felt nails digging into her skin.</p>
+
+                <p>More men were appearing behind James. It looked like the whole football team. Stacy had thought that being shamed by the women she hated was bad enough. The men being there was a hundred times worse. Especially with James, to whom she had been so attracted, clearly loving her exposure and discomfort.</p>
+
+                <p>Stacy covered herself up as well as she could and tried to pull herself free. Charlotte’s hands were clamped on her like a vice. She had no option but to uncover herself again, to the obvious delight of the football team, and try to wrestle away the other woman’s hands.</p>
+
+                <p>She finally managed to get away from Charlotte’s grip, feeling the nails scratching her but not caring, and then hurried to her feet. There was lots of noise and people yelling. Stacy didn’t care. She just had to be aware from them.</p>
+
+                <p>Stacy ended up in the kitchen. She needed a drink. She desperately, desperately needed a drink. There was a bottle of vodka tucked away in the cupboard that she had noticed earlier.</p>
+
+                <p>Gemma walked in and was trying to stop laughing. She was holding a half-pint glass of clear liquid and she struggled to keep it from spilling.</p>
+
+                <p>“You cunt!” Stacy fumed, angrier than she’d even been before and then slammed the cupboard door shut. “You fucking cunt!”</p>
+
+                <p>“Oh, lighten up!” Gemma chortled.</p>
+
+                <p>Stacy reacted without thinking and launched herself at Gemma to attack. Gemma easily deflected the blow and Stacy’s momentum made her thump hard into the wall.</p>
+
+                <p>“Calm down, Stacy. You haven’t got a chance against me anyway.”</p>
+
+                <p>“I don’t fucking care. How could you do that? How could you turn on me like that? I thought…”</p>
+
+                <p>“I know what you thought.” Gemma had stopped laughing. “And that just goes to show how fucking stupid you are. That whole thing was set up from the beginning. We’ve spent weeks planning this.”</p>
+
+                <p>Stacy leaned against the counter. “Why?”</p>
+
+                <p>“You don’t remember much of anything when you get drunk, do you? You certainly don’t remember turning my boyfriend against me and then getting him in your bed, do you? I remember it well. I definitely remember how you laughed at me. Mocked me. Humiliated me.”</p>
+
+                <p>“Is that it?”</p>
+
+                <p>“Combine that with your attitude, never cleaning up after yourself, stealing from me, never paying rent, crashing my car… it all adds up you know.”</p>
+
+                <p>Stacy didn’t know what to say. She knew she wasn’t the easiest person to live with, but did she deserve this? She didn’t remember what she was supposed to have done with Gemma’s ex, but did even that justify it?</p>
+
+                <p>“So, there I was, pissed off and miserable and this woman approached. We got talking. Her name was Shannon. She was in a bad mood as well, mainly because she had been thrown out of college. Something about you stealing an important essay, handing it in as your own work and then saying she copied you. We spent a whole evening talk about what we wanted to do you.</p>
+
+                <p>“The next time she brought somebody else. Somebody else you had upset. You’ve caused so much trouble for so many people and caused so much upset that we soon had a whole gang. The ‘We Hate Stacy’ Group. We started to come up with some ideas. I told them how self-conscious you are about your breasts and it seemed such a brilliant way to get revenge.</p>
+
+                <p>“We wanted to see you blush. And shake. And cry. And for you to be more humiliated than you would have thought possible. Did it work?”</p>
+
+                <p>Stacy didn’t respond. All she could think to do was return to the cupboard and keep searching for the vodka.</p>
+
+                <p>“Nothing to say?”</p>
+
+                <p>“Fuck you! Fuck the lot of you!”</p>
+
+                <p>“Here, have my drink, if you’re that desperate.”</p>
+
+                <p>Stacy snatched away the drink and downed it in one. The neat vodka scorched her throat and nearly made her wretch. She closed her eyes and it seemed like she could feel the alcohol coursing through her veins.</p>
+
+                <p>“I thought you would have apologised. Tried to make amends for what you did and try and get on our good side.”</p>
+
+                <p>“Fuck you!” Stacy said again, angrier. “Fuck the lot of you!”</p>
+
+                <p>“Aren’t you worried about getting these back?” Gemma held up the keys.</p>
+
+                <p>“You had them all along, didn’t you?”</p>
+
+                <p>“Of course I did. And it looks like I’m going to keep them.”</p>
+
+                <p>“Whatever. I’m going to kick down that door and I don’t care if it breaks every fucking bone in my foot.”</p>
+
+                <p>“Help yourself.” Gemma stepped aside.</p>
+
+                <p>Stacy took one step and nearly fell over. She was light-headed and the room started to spin. She knew she had downed the drink fast, but it shouldn’t have done that. Stacy leaned against the counter for support.</p>
+
+                <p>“Something wrong? Feeling a bit dizzy?”</p>
+
+                <p>“What have you done now?” “I didn’t introduce you to Claire, did I? She works as a nurse. Has access to all sorts of medicines and anaesthetics. I suggest you lie down before you fall down.”</p>
+
+                <p>Stacy staggered from the room and fell against her bedroom door. She pounded on it as hard she could and struggled with the handle. It was getting increasingly difficult to even keep her eyes open. Her feet gave way and she slid down onto the floor.</p>
+
+                <p>Before she finally slipped into unconsciousness, Stacy saw Gemma approaching.</p>
+
+                <p>* * *</p>
+
+                <p>Stacy woke and was dazzled by bright sunlight. She was on a hard surface and dreaded the thought of where she might find herself. It was clearly several hours since they drugged her and they could have gotten her anywhere in that time. There could be hundreds of people waiting in silence for her eyes to open.</p>
+
+                <p>It was inside. She listened. Just the sound of a ticking clock and traffic passing by outside.</p>
+
+                <p>Her mouth felt weird, like there was something in it. She tried to move her body and there was something holding her hands in place behind her back.</p>
+
+                <p>Stacy slowly opened her eyes and was shocked to find herself still in the flat. Everyone else had gone and they seemed to have taken the furniture with them. Aside from her and the clock, the room was completely empty. She looked at the time and it was nearly half past nine.</p>
+
+                <p>It was awkward when she couldn’t use her hands to help, but she managed to stand and stretch her aching body. It was obvious she would be sore in the morning and a night on a hard floor hadn’t helped.</p>
+
+                <p>She walked into the corridor and couldn’t believe her eyes when she saw her bedroom door had been left wide open. Stacy hurried into the room, only to stop as she saw it was empty as well. They had even taken up the carpet.</p>
+
+                <p>On closer inspection, there was something in the room: a mirror. Stacy couldn’t believe the sight of her reflection. There was a ball gag in her mouth. She turned and looked over her shoulder. Her hands were cuffed together. There seemed to be a padlock holding on the gag.</p>
+
+                <p>There was also, she noticed, a piece of paper taped to the wall next to the mirror. It was a handwritten note.</p>
+
+                <p>Hi Stacy,</p>
+
+                <p>I promised we wouldn’t take you out of the flat, didn’t I? I didn’t say anything about leaving anything else with you.</p>
+
+                <p>All your things are in a storage locker five miles away. Its location and the keys to open it are on top of the bus stop outside the town hall.</p>
+
+                <p>You could have swallowed your pride and asked somebody for help, but that would have been too easy, so I decided to make it really fun. I’m sure an intelligent slut like you can figure out a solution to your problem.</p>
+
+                <p>Fuck you,</p>
+
+                <p>Gemma</p>
+
+                <p>P.S. Make sure you’re out by 10 AM or somebody will be there to throw you out.</p>
+
+                <p>Stacy hurried from the room and into the kitchen. It was empty. They’d even taken the drawers and the doors from the cupboards. The bathroom and Gemma’s old bedroom had been completely emptied.</p>
+
+                <p>Back in the living room, Stacy looked at the clock and saw it was five to ten. Who would they be sending?</p>
+
+                <p>Stacy was between a rock and a hard place. It was either leave or be forced to leave. The road outside was thick with traffic and three people were chatting on the other side. To get the key, she would have to walk through them and then go to the busiest street in town. That would have been bad enough, but now she couldn’t even try and cover herself. No. She would get help. Ask a neighbour. How would she ask a neighbour? All she could do was make a muffled noise that could mean anything. Nothing short of a locksmith could get her out of this and she didn’t know any.</p>
+
+                <p>What else could she do? The man next door had always been nice to her. Maybe if she made a distressed noise he would let her in and that wouldn’t be so bad. Certainly not as bad as what had happened the night before or the thought of complete strangers seeing her in the most humiliating position she could imagine.</p>
+
+                <p>Though even that meant stepping out into the street. Whatever she did, her future contained terrible shame.</p>
+
+                <p>Stacy ended up at the street door. She had to turn to open it and reach around for the lock. She took a deep breath and opened it a little. Cold air rush in. It tussled her hair and brushed across her naked bottom. It would be best, she reasoned, if she just went for it: casually walk out like she was doing nothing unusual at all. Maybe the people across the road wouldn’t even notice her.</p>
+
+                <p>There was no chance. She knew that. Stacy was naked, restrained and gagged. Whatever happened, she was going to be the centre of attention. Would people help? Or would they assume she was into it and doing it on purpose? Or maybe even just be too shocked to do anything and just stare at her?</p>
+
+                <p>One last deep breath and Stacy opened the door. She stepped out into the sunshine and, despite her efforts to stop it, the door locked behind her. The pavement was cold and rough beneath her feet. Car horns began sounding. Somebody yelled something from a passing car. The people across the road were already looking. Stacy hurried to the neighbour’s front door and kicked on it loudly. Cars were slowing down now so people could have a better look.</p>
+
+                <p>She tried to yell for the neighbour to come and save her. All that came out was a weird noise and a bit of dribble that ran down her chin.</p>
+
+                <p>There was nothing. Stacy knelt down and awkwardly used her nose to pry open the letter box. The flat looked empty. They must have gone to work. She moved back and the letter box snapped back into place.</p>
+
+                <p>Stacy was tearing up again. She forced herself to hold it back and looked around for somewhere to go. There was a whole line of school children and accompanying adults approaching. If they saw here, there would be serious trouble.</p>
+
+                <p>Stacy turned and hurried away. Her bare feet slapped against the pavement, the wind caressed her naked body and her breasts bounced away.</p>
+
+                <p>What the fuck was she going to do next?</p>
+            </div>
+        </main>
+
+        <div class="word-count" id="wordCount">
+            Word count: <span id="wordCountNumber">0</span> words | Reading time: <span id="readingTime">0</span> minutes
+        </div>
+    </div>
+
+    <div class="floating-controls">
+        <button class="floating-btn" onclick="scrollToTop()" title="Back to top">↑</button>
+        <button class="floating-btn" onclick="scrollToBottom()" title="Go to bottom">↓</button>
+        <button class="floating-btn" onclick="toggleFullscreen()" title="Toggle fullscreen">⛶</button>
+    </div>
+
+    <script>
+        let currentTheme = 'dark';
+        let currentFontSize = 'medium';
+
+        // Theme switching
+        function toggleTheme(theme) {
+            document.body.className = `reading-mode-${theme} font-${currentFontSize}`;
+            currentTheme = theme;
+            
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                if (btn.textContent.includes('Dark') && theme === 'dark') btn.classList.add('active');
+                else if (btn.textContent.includes('Light') && theme === 'light') btn.classList.add('active');
+                else if (btn.textContent.includes('Sepia') && theme === 'sepia') btn.classList.add('active');
+                else if (btn.textContent.includes('🌙') || btn.textContent.includes('☀️') || btn.textContent.includes('📜')) {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Font size changing
+        function changeFontSize(size) {
+            document.body.className = `reading-mode-${currentTheme} font-${size}`;
+            currentFontSize = size;
+            
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                if (btn.textContent === 'A⁻' && size === 'small') btn.classList.add('active');
+                else if (btn.textContent === 'A' && size === 'medium') btn.classList.add('active');
+                else if (btn.textContent === 'A⁺' && size === 'large') btn.classList.add('active');
+                else if (btn.textContent === 'A⁺⁺' && size === 'xl') btn.classList.add('active');
+                else if (btn.textContent.includes('A')) {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Progress bar
+        function updateProgressBar() {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.body.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = scrollPercent + '%';
+        }
+
+        // Scroll functions
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Word count and reading time
+        function updateWordCount() {
+            const text = document.querySelector('.story-text').innerText;
+            const words = text.trim().split(/\s+/).length;
+            const readingTime = Math.max(1, Math.ceil(words / 200)); // Assuming 200 words per minute
+            
+            document.getElementById('wordCountNumber').textContent = words;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Smooth entrance animation
+        function animateElements() {
+            const elements = document.querySelectorAll('.header, .story-content');
+            elements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.2}s`;
+            });
+        }
+
+        // Auto-save content (removed - editing disabled)
+        function saveContent() {
+            // Editing disabled - no auto-save needed
+        }
+
+        // Event listeners
+        window.addEventListener('scroll', updateProgressBar);
+        window.addEventListener('load', () => {
+            animateElements();
+            updateWordCount();
+            updateProgressBar();
+        });
+
+        // Update word count when content changes (removed - editing disabled)
+        // document.querySelector('.story-text').addEventListener('input', () => {
+        //     updateWordCount();
+        //     saveContent();
+        // });
+
+        // Update word count when title/subtitle changes (removed - editing disabled)
+        // document.querySelector('.title').addEventListener('input', saveContent);
+        // document.querySelector('.subtitle').addEventListener('input', saveContent);
+        // document.querySelector('.author').addEventListener('input', saveContent);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1': toggleTheme('dark'); e.preventDefault(); break;
+                    case '2': toggleTheme('light'); e.preventDefault(); break;
+                    case '3': toggleTheme('sepia'); e.preventDefault(); break;
+                    case '-': changeFontSize('small'); e.preventDefault(); break;
+                    case '=': changeFontSize('large'); e.preventDefault(); break;
+                }
+            }
+            
+            // ESC to exit fullscreen
+            if (e.key === 'Escape' && document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        });
+
+        // Initialize
+        updateWordCount();
+    </script>
+</body>
+</html>
