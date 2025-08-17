@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>The Reluctant Exhibitionist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "The Reluctant Exhibitionist – Family Reunion",
+            author: "Seahawk",
+            chapters: [
+                {
+                    title: "Chapter 1",
+                    subtitle: "",
+                    content: `“I’m surprised you decided to take summer classes instead of traveling like you were originally planning,” my brother David said to me.<br><br>“I don’t know, I guess things were going so well for me in the classroom that I just wanted to keep it going,” I lied. “And anyway this’ll give me a chance to take a couple of fun electives like acting that I couldn’t squeeze in during the year.”<br><br>“Well, I guess you’re more dedicated than I was when I was your age,” he said. “Spending your summer going to college instead of Europe sounds kind of boring to me.”<br><br>“I guess I’m just your boring little sister Wendy,” I replied. At least when I’m not parading around places like grocery stores in the nude. I didn’t say that last sentence out loud, of course.<br><br>If David only knew that less than 24 hours ago I’d taken a long naked stroll at a popular lake, showered in front of a crowd of people, and then masturbated in the back seat of a car in the parking lot. Or that I’d be doing more things like that all summer long so some crazy woman could get her jollies. What would he think about my boring plans for the summer then? And what would he think of me?<br><br>Last week after Nancy informed me of her scholastic plans for me for the summer I’d called home to tell my mom, minus any mention of the naked summer jobs I’d be doing, of course. She insisted that I come home for a few days before classes started so, after a plane flight this morning, here I sat in my parents’ back yard at a barbecue with tons of friends and family here to see me. I was trying my best to pretend that I was the same girl they sent away to college last fall but the more my mom and dad bragged about my academic achievements the more I felt like a total fraud. These people all think they know me, but they don’t. Not anymore.<br><br>Don’t get me wrong, I love my family and was genuinely happy to see them again, it’s just that I was no longer sure I deserved their love and respect in return. Deep down I knew they’d love me no matter what, I just believed now they were destined to be disappointed in me no matter how this all played out. I mean, with all the things that Nancy had planned for me for the remainder of my college years how long could I keep my secret life a secret? Little did I know how soon I’d find out.<br><br>I tried to put all of that out of my mind and forced a smile onto my face as I made the rounds of the party my parents were throwing for me. Maybe it was the wine but after awhile I started to loosen up and was genuinely having a good time. After visiting with friends and family for awhile, my favorite cousin Becky and I separated ourselves from the rest of the gathering and huddled together in a corner of the backyard.<br><br>Becky was my age and we’d been playmates and best friends ever since we were little kids. She was going to a different college and we hadn’t seen each other since Christmas break so we both started gabbing nonstop in order to catch up. After awhile the conversation drifted around to my social life. “So no boyfriends, Wendy?” she asked.<br><br>“Not really. I guess I’ve been spending too much time in the library.” That wasn’t exactly the truth; I’d done my share of partying and dating for most of the year but ever since Nancy had gotten her hooks into me it’d pretty much killed off my social life.<br><br>“You mean to tell me you haven’t been doing anything…interesting?” She emphasized the word “interesting” and had a coy look on her face as she said it.<br><br>“Not really,” I replied hesitantly.<br><br>Becky smiled mischievously and pulled her phone out of her purse. It was one of those new smartphones that had a bunch of different functions and she started playing with it until she found what she wanted. “I want to show you something,” she said as she handed it to me and I think all of the blood must have drained out of my face when I saw the photo on the screen. I looked up quickly to see if anyone else was watching us and then down at the photo again. It was a picture of me modeling lingerie at Sinful Delights. That had been the day of my first true public exposure by Nancy.<br><br>“Where the hell did you get that!” I said in a forced whisper.<br><br>“There’s more,” Becky giggled. “Just keep watching.” I stared in numb horror as she scrolled through picture after picture showing me displaying various embarrassing outfits and varying amounts of skin. These weren’t the photos that Margaret had taken in the dressing room; they must have been taken by someone in the crowd that had gathered to watch. I was hoping that the pictures would end before they got to the most humiliating part of the show but I knew they wouldn’t. She scrolled through at least a dozen pictures before I saw myself in the open-bust teddy with my bare breasts displayed for the crowd. And in the next photo there was Nancy slipping the teddy off of me; and in the next I’m standing in front of the crowd in all my naked glory; and finally one last photo of my naked backside as I stomped back to the dressing room. Oh. My. God.<br><br>“Put that away, Becky,” I hissed as I grabbed her hand and dragged her into the house away from prying eyes in the back yard.<br><br>Behind Closed Doors<br><br>Becky and I both sat on the bed in my bedroom as I scrolled through the pictures again. Maybe I was hoping that they weren’t really as bad as I thought at first glance but no such luck, though. They weren’t as high quality as the ones Margaret had secretly taken of me in the dressing room but they were plenty good enough to see my face, along with every other inch of my body. “Where the hell did you get these, Becky?”<br><br>“My boyfriend found them on the internet,” she replied. “He recognized you and showed them to me.”<br><br>“Where on the internet?”<br><br>“I don’t know, wherever it is that guys always find this stuff. He said they’ve been floating around the internet for awhile.”<br><br>“You don’t care that your boyfriend is surfing the internet looking for pictures of naked women?”<br><br>“Wendy, they all do it. Guys’ brains are just hard-wired that way so I’m not going to get too worked up over it. Anyway, this isn’t about me and my boyfriend so don’t change the subject. Do you have something you want to tell me about, cousin?”<br><br>I guess I shouldn’t have been surprised by this. It seems like everyone has some kind of digital camera with them these days so I should’ve known that some of my naked exploits would end up on the internet. One of the things that counselors at our college warned the girls against was providing nude photos and videos of themselves to boyfriends because they inevitably wind up on the internet. Don’t allow any picture to be taken that you wouldn’t want friends and family to see, we’d been told. Well, this was living proof of that. I wondered now how many pictures of my naked stroll at Lake Rutherford just yesterday were already on the internet?<br><br>“It was just a modeling job at a lingerie store that kind of…um, got out of hand,” I said finally.<br><br>“No kidding,” Becky responded. “Who’s the woman who’s peeling the teddy off of you?”<br><br>“It’s, um…just some woman I know who set this up for me.”<br><br>“Wendy, this is me you’re talking to and I know damn well you’re not telling me everything. You look embarrassed as hell in these pictures. What’s going on?”<br><br>I sighed and started rubbing my throbbing temples with the tips of my fingers. The old Wendy would’ve broken down in tears in this situation but the new Wendy was stronger and more resilient. I guess I have Nancy to thank for that, I thought. All I felt now was a weary resignation that this was all spinning out of control much sooner than I’d hoped. Just yesterday I’d run into one of my professors at Lake Rutherford and now my own cousin knew about Sinful Delights. And this was still supposed to be the early phases of my training where my “relatively tame” assignments – by Nancy’s definition anyway – were allegedly designed to insure my anonymity!<br><br>“Oh Becky, I wish I could tell you everything right now, but I just can’t,” I finally responded. “It’s just that everything at college is a total mess right now.”<br><br>“It can’t be that bad. I mean, you’re the top student in your class, right?”<br><br>I blurted out a short laugh. “Yeah, well….I guess there is that,” I said sarcastically. I desperately wanted to tell Becky everything but I didn’t dare, did I? Nancy had warned me over and over again about what would happen if I told anyone about her and her blackmail scheme.<br><br>“Are you doing nude modeling for money?” Becky asked. “Or doing something worse?”<br><br>I shook my head. “No, nothing like that. My parents give me plenty of money.” I sat quietly for a minute mulling things over before I finally made a decision: I just had to tell someone! Keeping quiet about everything that’d been happening to me was eating me up inside.<br><br>“Becky,” I said finally. “You have to promise, promise me you won’t tell anyone about what I’m about to tell you."<br><br>Becky nodded. “I promise.”`
+                },
+                {
+                    title: "Chapter 2", 
+                    subtitle: "Confessions",
+                    content: `Becky sat in silence for a couple of minutes just thinking about everything I’d told her. And I’d told her about everything: the plagiarized term paper, the naked car rides, the t-shirt training, Sinful Delights, my nude strolls through two crowded stores, the summer jobs jar, Lake Rutherford, Nancy’s manipulation of my grades…everything. I can’t really blame her for needing time to digest all of that; I’d have trouble swallowing it myself if I hadn’t lived it.<br><br>“Wow,” she said finally. That was all she could manage before falling silent again.<br><br>I have to admit that it felt cathartic to finally tell someone about all of this but it was still terribly embarrassing for me to tell my own cousin. I trusted Becky implicitly or I never would have done it, but I couldn’t help but wonder what she thought of me now. I couldn’t imagine her ever getting mixed up in something like this herself.<br><br>She finally spoke up again. “So they actually caught you masturbating in the car? Why would you do that if you knew they’d be along with a video camera at any moment?”<br><br>“I don’t know, Becky. I’ve asked myself that about a thousand times already since yesterday. Nancy says it’s because I subconsciously wanted to get caught. She thinks that she’s uncovered a submissive streak and deep down I really want to be forced to do this, so I’m closing any doors to escape."<br><br>“Do you think that’s true?”<br><br>“I don’t know…maybe. All I know is that I’d do just about anything to keep people from seeing that masturbation tape and Nancy knows it. I just have so many conflicting emotions about all of this that I really don’t know what I think anymore. I really, really do hate what she’s making me do but at the same time it is kind of an incredible feeling to be the only one naked in a public place. It’s hard to describe what it’s like, but I guess I can see now why some women are into that kind of thing.”<br><br>I thought back now to that first conversation at Nancy’s dining room table when she described her obsession with thoughts of public exhibitionism and how she needed me as part of her self-designed “therapy.” I guess I could sympathize at least a little bit now with what she'd been going through because I’d become obsessed with the same thing myself. I thought about it constantly and just about everywhere I went now – every store or park or restaurant or campus building - I’d wonder if someday I’d be forced by Nancy to be naked there and imagining what that would be like. I guess my sympathy for Nancy only went so far, though, knowing I was the one who had to act out her intense fantasies.<br><br>Becky interrupted my thoughts. “It’s not really that strange that you’d get turned on by it, Wendy,” she said. “I mean, being naked in public is a pretty common fantasy, isn’t it?”<br><br>“Yeah, I guess. It just seems weird to feel so exposed and vulnerable and humiliated, but at the same time so aroused by it.”<br><br>“You know, Wendy, I’ve been skinny dipping with some friends in college and I have to admit that I liked it,” Becky said a little sheepishly. “I’ve even fantasized about what it would be like if the police showed up while I was skinny dipping and I was forced to run away without a stitch of clothing.” Becky began to blush. “I even got kind of hot just now listening to your story and imagining that happening to me.”<br><br>I was a little surprised to hear all of this. My rather shy, reserved cousin had an exhibitionist streak herself. “Becky, it’s one thing to fantasize about something like that and maybe even experience it in small doses, but what I’m being forced to do goes way beyond that.”<br><br>“I know and I wouldn’t want to be in your shoes. Well, if you were wearing any shoes,” she giggled. “It’s just that I think Nancy may be right. Deep down maybe you really don’t want to get out of this. You have to know that Nancy could get into a lot of trouble herself if this got out and I think most people would have called her bluff by now.”<br><br>“I know,” I replied. “And I’ve thought about that many times. It’s just that I really did cheat on that paper so if this became public I’d still get kicked out of school. And now she has a bunch of nude photos and videos of me that she’d make sure to send to everyone I knew.”<br><br>“Yeah, but didn’t you say she plans on exposing you to friends and family someday anyway?”<br><br>“Yes, but at least I’d be able to graduate and eventually move on past all of this. If I got kicked out of school now and everyone saw all of these embarrassing photos and videos anyway it would be the worst of both worlds. And I’d just die if anyone saw that masturbation video!”<br><br>“Maybe it’s not that bad.”<br><br>I shook my head. “I’ve seen it already. When we dropped off Margaret at her house we went inside and she hooked the video camera up to the TV. It goes on for two or three minutes and you can see everything. I was totally oblivious to the camera.” The images from that video flooded back into my mind and I remembered how mortified I'd been as I watched it in Margaret’s living room. “And worst of all, Nancy says that someday she wants me to repeat that performance in front of a crowd.”<br><br>“What? I thought you said she promised not to force you to have sex.”<br><br>“Unwanted sex,” I corrected her. “She says that I can hardly claim now that this is unwanted sex and besides I won’t have a partner.”<br><br>“Wow,” Becky said again.<br><br>“I know…wow.” We both fell silent for a minute before I spoke again. “I guess I have discovered some things about myself that I never realized before. You know what I’ve been thinking about at night for the past month, Becky? There’s a small park about five or six blocks from my apartment and I’ve been wondering if I could sneak out in the middle of the night and make it there and back naked without being caught.”<br><br>“Really? After everything you’ve been forced to do over the past few months you’d want to go out and expose yourself on your own?”<br><br>“I just think that it’d be different. The things that Nancy’s forced me to do have been so…overwhelming…and I guess that’s the whole point of it for her. Whenever I start to reach a certain comfort level she’s going to keep pushing me to the next level. I remember how terrified I was when I first started the naked car rides but now I think I might actually like doing them if I knew that was all I had to do. But the naked car rides were just a starting point to prepare me for the next phase where I‘m overwhelmed and terrified again. If I could do something milder where I was in control…I don’t know, I think it might be kind of fun and exciting.”<br><br>“I guess I see what you mean,” Becky said. She looked like she was mulling something over in her head before she finally blurted out, “Let’s do it tonight, Wendy.”<br><br>“Do what?”<br><br>“Let’s go streaking! Let’s see if we can make it to the lake and back naked!”<br><br>“Tonight? From the house here?"<br><br>"Yes, from here. Both of us naked!"<br><br>“No, Becky. No way. I just exposed myself to like two or three hundred people yesterday…”<br><br>“But this might be our only chance! I know your parents will let me stay over tonight if I ask and I could never do it on my own. But this would be easy for you. Let’s do it!”<br><br>“No,” I said again less convincingly and Becky continued to press her case. Was I really considering doing this after everything I’d been through? I know I told Becky I was thinking about trying something like this from my college apartment, but this was different. I wouldn’t dare try something like this from my parents’ house in my own home town, would I? But even as I tried to talk myself out of it I felt the first stirrings of arousal and knew what my eventual answer would be.<br><br>“Okay, Becky,” I said finally. “If you really want to do this, I’ll do it.”`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "A Warm Summer’s Night", 
+                    content: `I could hear Becky’s heavy breathing as she slept next to me in my bed and I looked over at the clock on my bedside table. It was 1:48 a.m.…just twelve minutes before the time we agreed to do this. I reached over and shut off the alarm knowing I wouldn’t need it. I was surprised by how nervous I was about this, especially considering some of the things I’d done under Nancy’s command. This might seem tame compared to walking stark naked into a supermarket but it wasn’t without risks either. The lake was nearly a mile's walk away through residential neighborhoods and we’d be a long way from any clothing if anything went wrong. This was a very wealthy neighborhood and not exactly party central at night but you never know for a certainty that there won’t be anyone looking out of a window or arriving home late. And since this was where I grew up the odds were pretty good that if we were caught it would be by someone I knew. And the fact that my parents were asleep in the house unsettled me a little, too.<br><br>The more I thought about this the more I thought it was a really bad idea and was tempted to forget about it and just let Becky sleep. Then I heard Becky stir and roll over. “What time is it,” she asked sleepily.<br><br>“It’s almost two,” I replied.<br><br>“Oh my god,” she said as she sat up in the bed, “it’s almost time!”<br><br>“Becky, I don’t know if we should do this,” I said. “We might get caught.”<br><br>“I know that, Wendy. That’s part of the excitement. We just have to do this!”<br><br>“Okay,” I said. “But let’s at least carry some clothes with us just in case.”<br><br>“No way. Please, Wendy, if we’re going to do this let’s go all the way. No lifelines.”<br><br>I sighed and nodded in agreement. I watched as Becky jumped out of bed and peeled off her t-shirt and panties. She’s a petite girl with short black hair, dark eyes and a very tight, lithe body with small but perfectly shaped breasts. I was surprised to see that she was shaved completely bare down below and she blushed a little as she saw where my eyes were focused. “My boyfriend talked me into that,” she said a little sheepishly. She looked adorable in the moonlight shining through the window.<br><br>I climbed out of bed and peeled off my own t-shirt and panties. “Alright Becky,” I said, “let’s do this.”<br><br>I opened the bedroom door and we tip-toed down the hallway until we reached the sliding glass door that led to the backyard. I turned off the alarm system and slid the door open and we stepped outside into the warm summer air. It was a cloudless night with a full moon and it was surprisingly bright outside even in these early morning hours. The night won’t be much of a cover for us, I thought. I slid the door closed behind us and we walked stealthily around the side of the house until reaching a gate that led to the front yard. I unlocked the latch and after we’d both stepped through it I let it swing shut and lock behind us. “Aren’t we locked out now?” Becky whispered with a hint of panic in her voice. “Yes,” I responded, “but I hid a key out here so we could get back in.”<br><br>Becky smiled with relief and we started moving again toward the driveway in front of the garage. We hadn’t gone more than a few steps when a light snapped on above the garage. We stood frozen momentarily beneath the light before scurrying across the driveway to crouch behind some bushes on the other side. “Did your parents turn those on?” Becky whispered.<br><br>I shook my head. “Motion detectors turned it on automatically. Damn it, I forgot all about that. Sorry. It’ll go out in a minute.” I looked through the bushes at the house across the street. If anyone had been up over there the light might have drawn their attention, but the windows remained dark.<br><br>“God, we’re not even out of the front yard yet and I’m already a nervous wreck,” Becky said. “I don’t know how you do this.”<br><br>“I’m nervous, too,” I said truthfully. It’s weird, but in a way this seemed even more difficult than some of the things Nancy had been forcing me to do. There was no one here tonight to command me to do this and no consequences if I decided to back out. Yesterday I’d known ahead of time that people – lots of people – were going to see me naked. Tonight, though, I didn’t know what was going to happen. We might be able to make it all the way to the lake and back without being seen, but then again we might not. The prospect of the unknown ahead of us tonight sent a shiver of excitement through my body.<br><br>“Maybe we should go back,” Becky said and I shook my head. I knew now that I wanted to go through with this. The light over the garage snapped off and I grabbed Becky’s hand and pulled her from the bushes. We walked past the end of the driveway and stepped naked into the street that led past our house.`
+                },
+                {
+                    title: "Chapter 4",
+                    subtitle: "An Early Morning Stroll", 
+                    content: `“I can’t believe I’m doing this,” Becky said as she held my hand in a death grip. I don’t know how many times I’ve said those same words to myself over the past couple of months as Nancy’s naked little puppet, and here I was a thousand miles away from her and separated from my clothes once again. What the hell is wrong with me?<br><br>We were about a hundred yards down the street from my house now and all the reasons why this was a very bad idea came back to me now. These were my neighbors’ houses – people who knew both of us – and we were very exposed out here in moonlight. There was no sidewalk here and the perfectly manicured lawns ran all the way to the street leaving very few places to find cover if we needed to in a hurry.<br><br>My senses were on full alert as I watched and listened intently for anything out of the ordinary and I looked over and saw Becky’s eyes darting back and forth doing the same. I also that her nipples, like mine, were on full alert and guessed that she was feeling the same strange brew of excitement, unease, vulnerability, and arousal that had become so familiar to me. The scrape of the pavement beneath my feet and the slight bouncing of my breasts with each step were constant reminders of my nudity.<br><br>So far there’d been no signs of life in any of the houses we passed and we still had about a hundred yards to go to the street that led down to the lake when we heard the sound of a car engine. We froze in our tracks as the sound got louder and I looked at our surroundings. We were in front of Dr. Johnson’s house and there were no good hiding spots anywhere nearby. Up ahead a pair of headlights began turning the corner and I pulled Becky by the hand and the two of us scampered onto the lawn. “Lie down,” I hissed and we pressed ourselves flat on our stomachs about ten yards from the street.<br><br>The car rolled slowly up the street toward us and I knew that it was bright enough in the moonlight that if the driver looked in our direction he’d see a couple of full moons here in the grass. I held my breath as the car approached but it continued to roll past us without slowing down or stopping.<br><br>“Whew,” Becky said. “Did you recognize the car?”<br><br>“Yeah,” I said. “It’s one of our neighbors from down the street. I don’t know his name, though.” I looked over at Becky. “So do you want to keep going?”<br><br>“Yes,” she whispered, “this is too much fun.”<br><br>I had to admit that for the first time since starting my new life as a naked-on-demand exhibitionist I was really enjoying being out nude in public myself. It’s amazing what a difference it makes to have some semblance of control over my situation without a psycho bitch pushing me to the limits. “C’mon then,” I said, “we still have a long way to go.”<br><br>We made it to the end of the block without any further incident and then turned right down the street that led down to the lake. This street had a sidewalk and provided more cover to hide in but it was also more likely to get traffic and had the added problem of being lit by streetlights. Every step we took led us further from home and any access to sanctuary or clothing and this just heightened my feelings of exposure and vulnerability.<br><br>Our pace quickened as we walked downhill and after a few minutes I was able to make out our destination in the distance: the small park that provided public access to the lake. I also saw the highway that lay between us and the park. It shouldn’t be all that busy at this time of night but I could still see occasional beams of headlights passing by on it. The final leg of our journey would be the riskiest and was where we were most likely to be seen. To our right now was the park’s overflow parking lot hidden from the street by trees. “Let’s take a break,” I said to Becky and I led her into the relative shelter of the empty lot and we found a patch of grass to sit on.<br><br>“God, this is so intense,” Becky said. “Look at my hands.” She held one up and I could see it was trembling. “This must be nothing for you, though.”<br><br>“No,” I laughed. “This is a long way from nothing.” I had to admit to myself though that this was easier for me than it would’ve been even a couple of weeks ago before the nude store walks and Lake Rutherford. I really was progressing just as Nancy had promised I would at the beginning. I knew I was no longer the naive novice who’d sat at her table that first day. In fact, I kind of felt like I was mentoring my own novice right now and seeing Becky’s reactions to all of this was kind of exciting for me. I guess I could understand better now what Nancy was experiencing as she guided me through the various “adventures” that she’d planned so meticulously. It also made me feel more than a little bit guilty about what I was doing to Becky, though.<br><br>Oh, I know that it wasn’t the same…I wasn’t forcing Becky to do anything against her will. It’s just that I knew that she never would have done this without me and if we got into trouble tonight it would be my fault. I also wondered if maybe I was introducing her to something that might lead her into trouble down the road.<br><br>“God, it’s bright out tonight,” Becky said looking up at the moon.<br><br>“I know,” I said. “Not exactly ideal conditions for a couple of naked girls, is it? Of course if Nancy was directing this I’d be doing it in broad daylight so it could be worse.”<br><br>“Do you hate Nancy?” she asked.<br><br>I shook my head. “You know me, I’m not really a hateful person,” I responded. “My feelings about her are…complicated.”<br><br>“I don’t know, she sounds like kind of a bitch.”<br><br>“Well, she’s definitely a very self-centered, manipulative person,” I said. “But after these past couple of weeks I think I do understand better what drives her to do this. These experiences are pretty intense and I guess even experiencing them vicariously is a high for her. That doesn’t mean I like her or forgive her for putting me through all of this, though.”<br><br>“You remember how I told you I was getting kind of hot when you were telling me your story?” Becky asked. I nodded. “Well, it’s kind of embarrassing to tell you this but after we went to bed I was thinking about you walking naked through that supermarket and I started imagining doing it myself. Well, you know, having someone make me do it because I could never do that on my own. And as I imagined it I started getting wet.” Becky looked over at me with an embarrassed smile before continuing. “I was tempted to give myself a little rub but with you in bed with me that would’ve been too weird. I remember wishing, though, I could trade places with you. Is that crazy?”<br><br>“Yes,” I laughed. “You’re batshit insane if you want to be me! But since you let me in on your secret I’ll tell you another one of mine. The same thing happens to me when I’m in bed and start to think about some of the things I’ve had to do. I start to get wet and have to, um…take care of it.”<br><br>“Really?”<br><br>“Really,” I responded. “I haven’t had sex with a guy since this all started but I feel more sexually alive now than ever. I’ve started sleeping in the nude which I never did before, and sometimes I feel like my body has this kind of low level electrical current running through it.”<br><br>“So Nancy has definitely pushed some of your hot buttons, huh?”<br><br>“I guess you could put it that way. And I’m sure the same thing has happened to her. I can just tell. I know she’s becoming addicted to this and that scares me. She’s going to push me as far as she possibly can.”<br><br>We both fell silent again and stared up at the moon until the sound of a car passing by on the street next to us brought me back to the task at hand. “Becky, we’ve been out here too long already. We’re almost to the lake so let’s finish this and get back home.”`
+                },
+                {
+                    title: "Chapter 5",
+                    subtitle: "Skinny Dipping", 
+                    content: `Becky and I hid behind a tree near the highway separating us from the park as we watched a pair of headlights coming toward us. After the car had passed and the taillights grew dim we dashed across the road to the other side. Up ahead I could see moonlight shining off of the lake. We’d made it!<br><br>“Race you, Wendy,” Becky said as she started running. Even though the park was closed at this time of night I was still wary about running into someone here. Ah, what the hell, I thought to myself as I took off running after her. So much for stealth.<br><br>We ran a short distance down a paved path and then onto a grassy area with picnic tables and some playground equipment for kids. This was a popular area for families during the summer but it lay deserted now. Becky had gotten a head start and was too fast for me so I had a nice view of her naked little butt as we raced toward the water. After reaching a wooden dock that went about thirty feet out into the lake Becky kept going to the end and, without hesitating, dove into the water. I followed her and a shock went through my body as I dove under the surface. The lake was much colder than I’d expected!<br><br>We both surfaced and started laughing before I shushed her. “Shhh…let’s not make too much noise.”<br><br>“Brrr…this water’s cold,” Becky said, stating the obvious. “I thought it’d be warmer.”<br><br>“I guess it’s still too early in the summer,” I said. “We should be heading back anyway.”<br><br>“We’ve come all this way,” she said, “let’s swim out to the dock at least. It’ll warm us up.” About twenty yards further out in the lake was a small square dock that served as a favorite resting and sunbathing spot for swimmers. The two of us swam to the dock, then climbed onto it and sat down facing the beach that lay about thirty yards away, still shivering from the cold water. “We may have to have sex to generate some body heat,” Becky joked and we both laughed.<br><br>Fortunately the still night air was warm enough that after a few minutes the goosebumps began disappearing. “When we were kids did you ever think that someday we’d be sitting on this dock totally naked?” Becky said.<br><br>“Nope,” I said. “It never crossed my mind.”<br><br>“And we’re about a mile from our clothes!” she said. “That’s the crazy part.” Becky and I sat there talking quietly for a few minutes, basking in the exhilaration we were both feeling and taking in the peaceful, quiet beauty of the lake at night. It was such an amazing feeling that I didn’t want to leave.<br><br>“What time do you think it is?” Becky asked after awhile.<br><br>“It’s probably after three now. We didn’t exactly set any records getting here and we’ve probably been out here at least thirty minutes now. We really should get started back.”<br><br>“Spoilsport,” Becky teased. “I guess I’m just not that anxious to dive back into that water.”<br><br>“I know,” I said, “but unless you have some water walking ability that I don’t know about that’s our only way back.”<br><br>The shock of the cold water hit me again as I began a slow steady stroke back toward the shore. It took just a couple of minutes for us to reach the long wooden dock on the beach and I was ready to hoist my self up the medal ladder when I saw the glow of a cigarette in the distance. “Becky,” I whispered, “someone’s coming!” We eased ourselves around to the side of the dock, keeping it between us and the people we could now see in the moonlight approaching the beach. We silently pulled ourselves along the side of the dock until we reached shallow water and then peered over it. On the beach about thirty feet away was a group of teenagers, two boys and two girls.<br><br>“Let’s go skinny dipping,” one of the boys said.<br><br>“You wish,” a girl replied. “I bet it's fucking freezing anyway.” She kicked off a shoe and stuck a bare toe into the edge of the water. “Yep. I’m not going in.”<br><br>The four of them settled down on the beach and cracked open some beer cans taken from a small cooler “You know who that girl is?” Becky whispered to me. The voice sounded familiar but I hadn’t gotten a good luck at her face so I shook my head. “That’s Pam Lynch,” she said.<br><br>“Oh shit, you’re right!” She was a girl from our high school class and I knew if she spotted us our exploits would be all over town by tomorrow. On top of that her parents were good friends with my parents. Why had we wasted so much time out on the dock? We could’ve been home by now!<br><br>As I listened to the group talking and laughing it was obvious that they weren’t going to be leaving anytime soon. Becky and I were both shivering now and it was equally obvious that we couldn’t stay indefinitely in the cold water. I started looking around for a way out and the only nearby shelter was a small wooden building that served as a snack shack during the day. If we could get to there then we should be able to escape from the park without them seeing us. About sixty feet of open ground lay between us and the building, though.<br><br>I told Becky my plan and she quickly agreed to it through chattering teeth. I waited until it looked like none of them were looking our direction and then, as silently as possible, we exited the water and started crawling slowly toward the building. I kept looking over at the group but fortunately they were too engrossed in each other to notice the two naked girls on their hands and knees just a stone’s throw away. After what seemed like an eternity we reached the relative protection of the snack shack and then huddled together to get some warmth back into our bodies. After a couple of minutes I glanced at our escape route out of the park and then around the building at the two couples who were cracking open another round of beers. As long as we were quiet we should be able to get out of here now without being seen.<br><br>I took hold of Becky’s hand and we took a couple of tentative steps away from the shelter of the shack when I saw some movement on the path leading out of the park. I quickly pulled Becky back behind the shack as the figures drew closer, uncertain if we’d been seen. I peered around the corner of the shack and saw two flashlights snap on illuminating the faces of two police officers.<br><br>“What the hell do you guys think you’re doing?” one of them said.`
+                },
+                {
+                    title: "Chapter 6",
+                    subtitle: "Busted", 
+                    content: `“Let’s see some ID’s,” one of the cops said as the two police officers shined their flashlights on the four teens on the beach.<br><br>“We were just leaving,” I heard Pam Lynch whine as the four teens handed over their driver’s licenses. “Please don’t arrest us.”<br><br>“Well let’s see what we’ve got here,” the cop said as he shuffled through the four ID’s. “You’re all under the legal drinking age and are trespassing in a closed park. So we’ve got a little problem here, don’t we?”<br><br>Becky and I barely dared to breathe as we hid behind the snack shack just a few feet away. I glanced over at Becky and saw the frightened look on her face and guessed that I probably had the same expression on mine. Please, please just arrest them already and get out of here!<br><br>The four teens kept pleading their case to no avail and after a couple of minutes the two cops handcuffed them and started herding them toward the park exit. Becky and I held our breath as they all passed by on the opposite side of the small shack and I was almost ready to relax when it happened.<br><br>“Eeek!” Becky squealed behind me as I snapped around in disbelief. I saw her staring down at the ground where a small brown snake was slithering past her feet and into the grass. Becky then looked up at me in wide-eyed horror at what she’d just done.<br><br>“Who’s there?” a voice cried out as the beams of two flashlights swung around toward our hiding spot. I grabbed Becky’s hand and pulled her away from the side of the shack.<br><br>“Run!”<br><br>We took off flying across the grass at full speed as we heard the sound of footsteps pounding behind us. I took a quick glance over my shoulder and saw that one of the cops was chasing us while the other had stayed with Pam’s group. We were running with no thoughts of direction and followed the edge of the lake as it took us further from home with each step. I’m not the fastest runner in the world but it’s amazing what a little adrenaline will do for you and I was able to keep pace with Becky who had run cross country in high school. I glanced over my shoulder again and saw that we were actually pulling away from the cop chasing us.<br><br>We soon found ourselves running through one of the lake’s parking lots and on the other side we came upon a walking path that led through the woods at the edge of the lake. Without hesitation we started running down the trail and soon the sound of footsteps began to diminish and eventually stopped. After a couple of minutes we stopped to catch our breath and listened intently for any sound of the cop approaching.<br><br>“I don’t…think…he’s chasing us any more,” I said still breathing hard.<br><br>“Thank God,” Becky gasped. “What are we going to do now?”<br><br>I looked at the heavy woods surrounding us on each side and decided that leaving the path was no option for a couple of naked barefoot girls. We either had to keep going forward or turn back and I didn’t like either choice. Behind us were the cops who, for all I knew, were still in the park. But going forward led us further away from home and I knew where this path ended and it definitely wasn’t a place where I wanted to be naked. Just then the thought occurred to me that if I knew where this path ended the cop probably did too and he could radio for another car to meet us on the other end while he waited behind us. We'd be trapped! We had to get to the other side before that happened.<br><br>“Becky, we have to keep going and get out of here fast,” I said and we started running again, this time at a steadier pace. The bouncing of my breasts was becoming uncomfortable and I cupped them with my hands as we jogged along. It took us maybe five or six minutes to reach the end of the trail and when we got there I was relieved to see there wasn’t a cop waiting for us. I knew that one could be along at any moment, though.<br><br>“Oh, shit,” Becky said. “Look where we are!”<br><br>“I know,” I sighed. We were right across the street from Lakeside Town Center, the largest shopping mall in the city. This entire area was well lit by streetlights and in the distance a pair of headlights was moving toward us. “Becky, we can’t stay here,” I said.<br><br>“Where the hell are we going to go?”<br><br>Across the street in the middle of the mall parking lot was a lone parked car. “C’mon,” I said and we dashed across the pavement toward it. After reaching it we crouched down behind it and watched as a police car pulled up and stopped at the end of the walking path we’d just emerged from. A single cop got out of the car, flipped on a flashlight and started walking down the path. I looked around at our surroundings. We were stuck in the middle of a brightly lit mall parking lot with our only direct route home cut off.<br><br>“Okay Wendy,” Becky said. “I’m officially not having fun anymore.”`
+                },
+                {
+                    title: "Chapter 7",
+                    subtitle: "Things Get Worse", 
+                    content: `“More cops!” Becky whispered excitedly. “God, do they think we robbed a bank or something?” I peered around the parked car we were hiding behind and saw a second patrol car cruising slowly past the walking path we'd emerged from shining a bright spotlight into the trees surrounding it.<br><br>“No,” I replied, “they’re probably just bored at this time of night. Looking for a couple of naked girls probably beats the hell out of whatever else they’d be doing right now.” I also knew this meant they might keep up the search for awhile. This wasn’t exactly a high crime area anyway.<br><br>At the far end of the parking lot was a bank with a large digital clock outside of it and I saw that it was 3:48 a.m. now. I’d thought this adventure would take us no more than an hour at the most but now it was going on two hours and we were a good two miles from home in the middle of a mall parking lot! When I’d been thinking about all of the possible outcomes of our nude excursion tonight I have to admit that I’d never imagined this scenario.<br><br>With our safest and most direct route home currently cut off I started thinking about an alternate route. The only other way to get home would be to walk north through a business district, take a left on a busy street that had traffic on it at all times of the day or night, and then another left onto the road that curved past the lake. And that road would be getting more and more traffic as time passed. There was simply no way to get home that way without being seen by lots of people even at this time of the morning. On top of that it would add at least another mile to our journey. I decided that we simply had to wait until the cops grew tired of looking for us and left so we could go back the same way we came.<br><br>I peered back around the car and saw that the second patrol car had now parked next to the first one. A cop emerged from the car, lit up a cigarette and then leaned against the side of the car facing the mall parking lot. There was no way for us to leave the protection of the parked car now without being seen. My legs were getting tired from crouching so I sat down on the pavement and pulled my knees up to my chest. “Might as well get comfortable, Becky,” I said. “We may be here awhile.”<br><br>Becky took a seat next to me. “I’ve decided that I wouldn’t want to be you after all, Wendy.”<br><br>“Me neither,” I replied.<br><br>Lakeside Town Center was a large, very upscale open-air mall with dozens of stores, bars, restaurants, and a cineplex. Directly in front us was a major department store and the its interior was lit just enough by security lighting that we could see the women’s clothing department through a window. Inside were rows and rows of women’s clothing silently taunting us. “I’d give anything to be in there right now,” Becky said.<br><br>“I know,” I sighed.<br><br>The bank clock turned to 4:00 a.m. and I started worrying now about getting home before the sun came up. We had probably a little over an hour until sunrise and our way home was still blocked by the police. I peered around the car again and saw that the cop was walking lazily around the path entrance with no sign yet of the police officer who’d gone up the trail looking for us.<br><br>“Wendy!” Becky hissed. “Someone’s coming!”<br><br>Emerging from the department store was a man wearing a janitor’s outfit and after exiting the building he turned to lock the door behind him. The graveyard shift must be over, I thought, and it wasn’t hard to guess which car was his. Becky and I scurried around to the rear of the car so the janitor wouldn’t be able to see us as he approached but now we were within the cop’s sightline. I looked over and saw that the second cop had emerged from the trail now and the two of them were talking with their backs to us. The sound of footsteps approaching grew louder and then we heard the car door open and close.<br><br>I guess in retrospect the smart thing to do would’ve been to ask the guy for a ride home but I wasn’t exactly thinking clearly at the time. You can probably figure out what happened next: the guy started the car and pulled out away from us leaving us completely exposed in the middle of the parking lot. And the sound of the car engine drew the attention of the two cops across the street.<br><br>“Run!”<br><br>`
+                },
+                {
+                    title: "Chapter 8",
+                    subtitle: "Escape From Justice", 
+                    content: `For the second time tonight Becky and I were on the run from the police, this time toward the entrance to the open air mall. We sprinted across the parking lot and then past the escalators that led to the second floor shops. The gap between the escalators and the stores on each side was too narrow for a car to get through so if they were going to chase us it would have to be on foot.<br><br>We kept running past a series of darkened shops and then through a small courtyard with a fountain and benches. I'd actually worked in this mall one summer as a teenager and knew every square foot of it so I led Becky through a maze of turns until I felt it was safe to stop. We were breathing heavily again as we crouched down by the entrance to a video game store to listen for any evidence of the police officers. About a minute later we spotted one of them about fifty feet away. We held our breaths as he stopped, shined his flashlight around for a few seconds, and then headed off away from us.<br><br>I thought for a minute about where to go next and then decided on the path that would give us the best chance of escape. The two of us started walking as quickly and quietly as possible, listening intently for the sounds of footsteps. It wasn't just the police I was worried about; I knew there had to be at least one night security guard patrolling the area, too. I can’t describe just how weird it felt walking in the nude through this place that I was so familiar with but you can probably imagine it. This whole night felt like a weird dream that I just couldn’t wake up from.<br><br>After reaching the east end of the mall I surveyed the area ahead of us. There was no parking lot to cross here, just a wide street. Directly across the street from us was a gated apartment complex, and about fifty yards to our right on the other side of the apartments was a small patch of woods. I knew there was a jogging trail that ran between the apartments and the woods and that would be our new destination.<br><br>Just then I saw a pair of headlights. It was the second cop and he was shining his spotlight into the mall area as he cruised slowly down the street we had to cross. We moved back into the shadows and he rolled past our hiding spot without stopping. After his taillights had disappeared we made our run for it, sprinting across the street and then down the sidewalk that led past the gates of the apartment complex. We were out in the open for maybe two minutes and after reaching the jogging trail we stopped and crouched down to see if anyone was following us.<br><br>“Well, at least I won’t need to go to the gym today,” Becky gasped, still breathing heavily. Maybe it was the stress or just the whole absurdity of the situation, but I started to laugh and couldn’t stop. Becky joined in and we both laughed until we were nearly in tears. Maybe we were laughing just to keep from crying.<br><br>“Oh, God,” I said finally as I caught my breath. “This is just insane.”<br><br>“I don’t know,” Becky said. “I think we’re the ones who are insane.” This got us both laughing again. If anyone had seen the two of us right then they really would have thought we were both nuts and not just because we were naked.<br><br>The moon had set now and it was actually much darker than when we’d first started, but I knew that wouldn’t last much longer. Barring divine intervention, or at least some form of transportation, I knew we’d never make it home now by sunrise. We were still crouched down and watching the mall from the entrance to the jogging trail but there was no sign of the cops following us. We’d lost them, at least for now. “What are we going to do, Wendy?” Becky asked finally.<br><br>“I don’t know, but I think we should keep going down this path. We need to put some distance between us and the police.”<br><br>“But we keep getting farther from your house!”<br><br>“I know, but what choice do we have? We can’t go back that way. We’re going to have to find some clothes or a ride or something. Do you know anyone who lives around here?”<br><br>“No. Not close anyway.”<br><br>“Me neither,” I said. “Let’s start walking and I’ll see if I can think of something.”<br><br>“Where does this path go anyway?”<br><br>“I don’t remember now. I guess we’ll see when we get there.”<br><br>“Lovely. Maybe we can take a walking tour of the whole business district as long as we’re out here.”<br><br>I started laughing again. I just couldn’t help it anymore.<br><br>For the second time tonight Becky and I were on the run from the police, this time toward the entrance to the open air mall. We sprinted across the parking lot and then past the escalators that led to the second floor shops. The gap between the escalators and the stores on each side was too narrow for a car to get through so if they were going to chase us it would have to be on foot.<br><br>We kept running past a series of darkened shops and then through a small courtyard with a fountain and benches. I'd actually worked in this mall one summer as a teenager and knew every square foot of it so I led Becky through a maze of turns until I felt it was safe to stop. We were breathing heavily again as we crouched down by the entrance to a video game store to listen for any evidence of the police officers. About a minute later we spotted one of them about fifty feet away. We held our breaths as he stopped, shined his flashlight around for a few seconds, and then headed off away from us.<br><br>I thought for a minute about where to go next and then decided on the path that would give us the best chance of escape. The two of us started walking as quickly and quietly as possible, listening intently for the sounds of footsteps. It wasn't just the police I was worried about; I knew there had to be at least one night security guard patrolling the area, too. I can’t describe just how weird it felt walking in the nude through this place that I was so familiar with but you can probably imagine it. This whole night felt like a weird dream that I just couldn’t wake up from.<br><br>After reaching the east end of the mall I surveyed the area ahead of us. There was no parking lot to cross here, just a wide street. Directly across the street from us was a gated apartment complex, and about fifty yards to our right on the other side of the apartments was a small patch of woods. I knew there was a jogging trail that ran between the apartments and the woods and that would be our new destination.<br><br>Just then I saw a pair of headlights. It was the second cop and he was shining his spotlight into the mall area as he cruised slowly down the street we had to cross. We moved back into the shadows and he rolled past our hiding spot without stopping. After his taillights had disappeared we made our run for it, sprinting across the street and then down the sidewalk that led past the gates of the apartment complex. We were out in the open for maybe two minutes and after reaching the jogging trail we stopped and crouched down to see if anyone was following us.<br><br>“Well, at least I won’t need to go to the gym today,” Becky gasped, still breathing heavily. Maybe it was the stress or just the whole absurdity of the situation, but I started to laugh and couldn’t stop. Becky joined in and we both laughed until we were nearly in tears. Maybe we were laughing just to keep from crying.<br><br>“Oh, God,” I said finally as I caught my breath. “This is just insane.”<br><br>“I don’t know,” Becky said. “I think we’re the ones who are insane.” This got us both laughing again. If anyone had seen the two of us right then they really would have thought we were both nuts and not just because we were naked.<br><br>The moon had set now and it was actually much darker than when we’d first started, but I knew that wouldn’t last much longer. Barring divine intervention, or at least some form of transportation, I knew we’d never make it home now by sunrise. We were still crouched down and watching the mall from the entrance to the jogging trail but there was no sign of the cops following us. We’d lost them, at least for now. “What are we going to do, Wendy?” Becky asked finally.<br><br>“I don’t know, but I think we should keep going down this path. We need to put some distance between us and the police.”<br><br>“But we keep getting farther from your house!”<br><br>“I know, but what choice do we have? We can’t go back that way. We’re going to have to find some clothes or a ride or something. Do you know anyone who lives around here?”<br><br>“No. Not close anyway.”<br><br>“Me neither,” I said. “Let’s start walking and I’ll see if I can think of something.”<br><br>“Where does this path go anyway?”<br><br>“I don’t remember now. I guess we’ll see when we get there.”<br><br>“Lovely. Maybe we can take a walking tour of the whole business district as long as we’re out here.”<br><br>I started laughing again. I just couldn’t help it anymore.<br><br>Becky and I began walking down the jogging trail. It was bordered on our left by a ten foot iron rail fence separating us from the apartment complex in case we had any ideas of seeking help from there, and on our right were thick woods. Once again we were being funneled in a direction that led us further from home with each step and closer to sunrise with each passing minute.<br><br>As we walked my mind started weighing different options, none of them good. For safety reasons, I didn’t like the idea of asking some random stranger for a ride home. If we could get to a phone I guess we could call one of our friends to pick us up, but I didn’t know anyone who’d do it without blabbing to everyone we knew about it. If we could find a taxicab I suppose we could talk the driver into giving a couple of naked girls a free ride home or paying him once we got there. I even contemplated catching a city bus home, as humiliating as that would be, but I had no idea where the bus stops were or if any of the busses even ran from this area to near where we lived.<br><br>We’d been walking for about five minutes when the woods on our right began to thin out and I thought I saw a light shining through the trees. “What is it?” Becky asked after I stopped to get a better look.<br><br>“Let’s see what’s on the other side of these trees,” I said, and the two of us began making our way carefully through them. My bare feet were already sore from our long journey and the pine needles and underbrush we passed through weren’t helping matters any.<br><br>“Next time we go streaking I’m wearing shoes,” Becky said.<br><br>“Next time we go streaking I’m wearing clothes,” I responded. I could see now that there was definitely a clearing ahead of us and after a few more feet we emerged onto soft grass. About ten feet in front of us was a sand trap and beyond that was a putting green. “I know where we are now, Becky,” I said.<br><br>“Where?”<br><br>“Lakeside Country Club. My dad’s a member here.”<br><br>I’m not a great golfer but I’m not bad either and it’s something that I take some pride in. My dad’s an avid golfer and he’d brought me to play here many times so I was very familiar with this course. I even got a hole-in-one here when I was sixteen and my dad threw a big party for me afterwards.<br><br>There aren’t many good things about being stuck naked in your hometown, but knowing your way around is definitely an advantage. We never could’ve gotten this far without being caught, especially back at the mall, if I hadn’t been intimately familiar with this area. Now that I was back on familiar ground again a new idea began to form in my head. “I think I know where we can find a ride home,” I said to Becky and told her my plan. It wasn’t a good plan, mind you, it was just the least bad of the ones I’d thought of so far.<br><br>“I don’t care anymore,” Becky said. “I just want to get the hell out of here.”<br><br>`
+                },
+                {
+                    title: "Chapter 9",
+                    subtitle: "Caddyshack", 
+                    content: `The sky on the horizon was starting to brighten as Becky and I lay hidden behind some trees past the edge of the clubhouse parking lot. It wasn’t much of a hiding spot but it was as good as we were going to find near the employees entrance to the club. I knew the club opened at six but the employees would start arriving before that and it was the caddies in particular I was interested in. They were usually college kids picking up an extra few bucks during the summer break and one of them would be our best hope of finding a ride home. I knew this was going to be embarrassing as hell but all of our other options were even worse at this point.<br><br>Becky was curled up into a ball beside me and had drifted off to sleep and I realized just how exhausted I was, too. It wasn’t just from the lack of sleep, but from the stress of the evening. Despite being under Nancy’s nearly constant control for the past few months this was the longest I’d ever been out nude in public at any one time, even counting the naked car rides. What had started out as a lark tonight had turned into my most intense experience yet and it was still a long way from being over. If this plan didn’t work I really didn’t know what we’d do.<br><br>The first of the employee cars started rolling into the lot in front of us as the groundskeepers began arriving to prepare the course for the day ahead. These were older guys with real jobs and families to support and were less likely to ditch work even to give a couple of naked girls a ride home. I knew the caddies wouldn’t be arriving until about opening time so I settled back in for the wait as the sky continued to brighten.<br><br>I started wondering again just what it was inside of me that Nancy had tapped into that led me to being in this situation. At least I could rationalize taking part in the nude exploits that Nancy demanded by telling myself that I desperately wanted to stay in school. And even though this had been Becky’s suggestion I knew that it was really my own fault for agreeing to it, although I guess I could thank Nancy’s “training” for providing the fortitude and desire to do this without her direction. I also knew that memories of tonight’s adventures would fuel many orgasms in the coming days and even now I felt the unmistakable stirrings of arousal. Just like yesterday in Nancy’s car, the urge to bring myself to orgasm right here was almost overwhelming and if Becky hadn’t been lying beside me I might have done it. Maybe I do subconsciously want and need the type of intense emotions that public nudity arouses in me. Or maybe I just need a boyfriend.<br><br>The sound of a car engine interrupted my thoughts and I watched as a car rolled into the employee parking lot. A college-aged boy emerged from it and I began shaking Becky awake. “C’mon, Becky” I said. “This is our ride home.” Becky sat up groggily as if she wasn’t quite sure where she was. “C’mon,” I said again and pulled her to her feet.<br><br>The boy had walked around to the rear of the car and was pulling a bag out of his trunk as we approached. The urge to cover myself was strong but I needed to do everything I could to entice him into giving us a ride so I let my hands hang at my side to insure he’d get a full view of my body.<br><br>“Hi there,” I said. As embarrassing as this was I have to admit that the look on his face as he turned and saw us was priceless. I doubt he could’ve looked any more astonished if he’d seen a pair of leprechauns riding unicorns approaching. “I don’t suppose you could give a couple of naked girls a ride home, could you?” I asked with my brightest smile.<br><br>His eyes darted from me over to Becky and back to me again. Then he threw the bag back into the trunk and slammed it.<br><br>“Absolutely.”`
+                },
+                {
+                    title: "Chapter 10",
+                    subtitle: "The End of a Long Night", 
+                    content: `I had an odd sense of déjà vu as the car pulled out of the country club lot. Another day, another naked car ride. I was seated in the front seat and Becky was in the back as I told our driver my address. “Do you know where that is?” I asked.<br><br>“Yeah, I know the general area,” he said. “You’ll have to give me directions when we get close, though.” I could tell he was trying to sneak glances over at me without being too obvious about it and I have to admit that I was still more than a little turned on. The fact that the boy next to me was very good looking didn’t help matters any.<br><br>“So are you going to get in trouble for being late to work?” I asked.<br><br>“Naw, it’s no big deal. So what’s going on? Are you girls out streaking or something?”<br><br>“Something like that,” I said, “although it kind of got out of hand.”<br><br>“Where are your clothes, anyway?”<br><br>“Back home,” I said.<br><br>“You mean you came all this way naked? Holy shit!” he laughed.<br><br>“Local law enforcement provided some motivation,” Becky said and began telling him the story.<br><br>“You guys ran naked through the mall? That’s awesome! Have you ever done anything like this before?”<br><br>“Wendy has…lots of times,” Becky said and I turned and shot a death glare at her. “Oops, I shouldn’t have told you that,” she said.<br><br>“You’re Wendy Wilson, aren’t you?” he said to me.<br><br>“Yes,” I sighed. “How did you know?”<br><br>“I’ve seen you at the club with your dad. You guys never use caddies, though, so I don’t know if you remember me.”<br><br>He looked vaguely familiar but I guess I’d never really noticed him there. “We carry our own bags,” I said. “My dad has the notion that golf should be a form of exercise.”<br><br>“Yeah, that’s kind of a quaint idea these days. My name’s Trevor, by the way. And who’s this in the back?<br><br>‘I’m Becky. I don’t play golf so you don’t know me but I probably would’ve noticed you if I did.”<br><br>We continued the small talk as we drove and Trevor shot me a little smirk as we cruised past Lakeside Town Center. “Do you want to stop and take a stroll through the mall?” he asked.<br><br>“No, thanks,” I said. “Been there, done that, didn’t get the t-shirt.”<br><br>Trevor laughed. “You guys are pretty damn adventurous, I’ll say that. And you’ve done stuff like this before, Wendy?”<br><br>“Sort of. I’d rather not talk about it, though.” I shot another nasty glance back at Becky. “You’re not going to tell my dad about any of this are you?”<br><br>Trevor shook his head. “No, but I was wondering if I could ask a couple of favors, though.”<br><br>Uh oh, I thought. Here we go. “I don’t know. I guess it depends on what they are.”<br><br>“Don’t worry,” he said sensing my unease, “they’re just requests. I’m not going to kick you out of the car or threaten to tell your dad or anything if you don’t want to do them.”<br><br>“Okay. What are they?”<br><br>“First, I was wondering if maybe I could get your phone number or e-mail address or something. Maybe we can get together sometime this summer. You can even wear clothes if you want, although I won’t encourage it.”<br><br>“I would,” I said, “but I won’t be here this summer. I’m taking summer classes at my college.” I felt a twinge of bitterness over the control that Nancy had over my life.<br><br>“Ah,” he said.<br><br>“I’ll be here this summer,” Becky piped in from the back.<br><br>“You have a boyfriend, Becky,” I said.<br><br>“I know but he could ask anyway. You’re not the only naked girl in the car, Wendy, and I’m feeling a little ignored back here.”<br><br>We were coming up to the park by the lake now and it seemed like ages ago that we’d run past here and dived into the cold water. I gave Trevor directions to our house and sank down in my seat as we rolled past the familiar houses in my neighborhood. “Stop here,” I said about a hundred feet before reaching my house. I didn’t want to get out of the car in front of it in case my parents were up, although it wouldn’t be much better if any of my neighbors saw us. Trevor pulled over and shut off the engine and I glanced at the clock on the dashboard. It was 6:23 a.m. We’d been gone for more than four hours.<br><br>“So what was the second favor?” I asked him.<br><br>“I was wondering if I could get a picture of the two of you. I promise not to show it to anyone.” I thought again about the warning the counselors had given us about boys and nude pictures ending up on the internet but that horse was already out of the barn for me anyway.<br><br>“I don’t care,” I said, “as long as Becky doesn’t.”<br><br>“I guess so,” she said. “We’d be out hitchhiking or something right now if he hadn’t helped us.”<br><br>“Do you have a pen and paper?” I asked. Trevor reached across me and opened up the glove compartment. He retrieved a pen and a receipt for an oil change and handed them to me. I wrote down my e-mail address and gave it back to him. “You can take the picture as long as you send me a copy of it.”<br><br>Trevor smiled. “You’ve got a deal.”<br><br>We looked around nervously for any signs of life in the neighborhood but everything still seemed quiet. The sun was now up over the cloudless horizon as the dawn gave way to a new day and we’d be in plain view now if anyone was watching. We exited the car as Trevor pulled out his camera phone. “Let’s take it in front of your house,” Becky said. “If we’re going to get a memento of our adventure tonight we might as well do it right.”<br><br>I glanced over to our house and saw that the curtains were still closed. “Alright,” I sighed. “Let’s hurry, though.” We walked to the front of our house and Becky and I put an arm around each other and faced Trevor. “Hurry,” I said nervously. We smiled for the camera as he took the shot.<br><br>“Maybe one more?” he asked. “Um…from the rear?” We turned to face the house and Trevor clicked off another shot. I’m so dead if my parents see these pictures, I thought to myself.<br><br>“Awesome,” Trevor said. “Thanks. I’ll be in touch.”<br><br>We thanked him again and then scampered off toward the hidden key to the back yard gate.`
+                },
+                {
+                    title: "Chapter 11",
+                    subtitle: "Epilogue", 
+                    content: `I stared through the early morning darkness at the ceiling fan above my bed hoping that the hypnotic motion of the slowly turning blades would help still my mind. My blankets were lying in a pile on the floor and a light sheen of perspiration covered my nude body, the damp bed sheet beneath me clinging to my bare back. It was going to be a scorcher today.<br><br>The now familiar feelings of fear, dread, and anticipation flowed through my body and I glanced over at the glowing numbers on the clock next to my bed for the umpteenth time in the past couple of hours. It was only 5:35 a.m. but I knew I wouldn’t be getting any more sleep tonight. I was back in my campus apartment and it was Saturday morning, which meant that in just a few hours I’d be surrendering myself once again to Nancy’s demented control.<br><br>I crawled out of bed, walked over and sat down at my desk and stared numbly at the screen saver on my computer monitor for a few minutes. Finally I gave the mouse a flick and pulled up my e-mail. I had two new messages. The first was from Trevor and it contained attachments.<br><br>“Wendy, here are the pictures you asked for. I promise that I haven’t shown them to anyone. Hope to see you again next time you’re in town.” I downloaded and unzipped the file and saw the first picture of Becky and myself posing nude in front of my house at the end of that crazy night last week. I bet Trevor likes this one, I thought after scrolling to the next one showing our naked backsides. I had to admit that those were a pair of fine asses. I saw that there were more pictures and I couldn’t help but smile as I scrolled through another four pictures that Trevor had secretly snapped as we’d made our way through our front yard toward the backyard gate. Yep, he’s a guy alright. They can never seem to get enough of naked women.<br><br>The second e-mail was from Becky. “Wendy, you’ve got to tell me everything that Nancy makes you do today. Call me or IM me tonight. Don’t forget! Oh, and you know how I said I would never ever do anything like that again ever? I’ve changed my mind. I've decided we just have to go streaking again the next time you’re home!”<br><br>That last part didn't surprise me much. I knew she was hooked, just like me. I clicked on reply and attached Trevor’s photographs. “Maybe these will give you second thoughts about that, Becky. Or maybe not. I promise to tell you all about whatever happens this afternoon.”<br><br>I had no idea what awful thing Nancy had planned for me today but I’d find out in about seven hours. I hit the send button and then crawled back into bed. It was going to be another long day in the very strange life of Wendy Wilson.`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>The Reluctant Exhibitionist Returns</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "The Reluctant Exhibitionist Returns",
+            author: "Seahawk",
+            chapters: [
+                {
+                    title: "Chapter 1",
+                    subtitle: "",
+                    content: `Hello again. I don’t know if some of you will remember me or not but my name is Wendy Wilson and I’ve written in the past here in great detail about my time under the control of one Nancy Johnson, Assistant to the Dean at my college. I know it’s been awhile since you’ve heard from me but I guess it’s been more difficult than I thought putting all of these experiences down in writing. It’s been cathartic in a way but it’s also forced me to relive memories and emotions from those adventures that have been largely buried up until now.<br><br>“Adventures” was Nancy’s word for my nude outings, certainly not mine, but sometimes I find myself unconsciously thinking in her terms even now. I guess that’s what happens when you spend so long under another person’s complete control… you inevitably start seeing the world from their perspective. I know that Nancy desperately wanted to see the world from my point of view. That was the whole point of the self-prescribed “therapy” that she invented to help herself deal with her obsession with public exhibitionism: to live vicariously through me as I experienced what she so badly wanted to experience herself, but couldn’t. It didn’t matter at all to her that I wanted no part in her therapy and had to be blackmailed into doing it – that only heightened the experience for her.<br><br>I still remember vividly sitting in my car that Saturday afternoon about a block from Nancy’s house where I’d pulled to the curb to help calm my nerves and think things over. It was just fifteen minutes until I was supposed to meet Nancy for the first of my assigned “summer jobs” and I didn’t know if I could actually go through with it. As much as I tried to convince myself that my previous experiences would help get me through it my stomach still felt like the Cirque du Soleil had moved in for a matinee performance and my heart was racing at a hundred miles an hour. Would this ever get any easier? I didn’t know.<br><br>I do know that a lot of my anxiety that day had to do with the fact that any hopes I had that this would never really go as far as Nancy had always promised had completely evaporated the previous weekend. That’s when I’d actually walked completely naked through two crowded stores at Nancy’s command. And that was supposed to be just the beginning of a new phase of my training!<br><br>I guess what was also getting to me that day was that it was the first time since being trapped in Nancy’s little game that I knew beforehand I’d actually be exposing my nude body to an audience. In all of my previous experiences there’d always been the hope that no one would see me that day. Through all of the naked car rides and t-shirt training sessions no one other than Nancy had actually seen me totally naked. Even during my first true public exposure at Sinful Delights in the mall I hadn’t known beforehand that it was going to happen. And even as late as the previous week I’d convinced myself that I was through playing Nancy’s game, but as I sat there in my car I knew there were no longer any illusions about what was going to happen that day. Lots of people were going to see me very naked in a very public place.<br><br>It’s difficult for me to describe to you what my state of mind had been that week after my nude strolls through the supermarket and home improvement store. I guess shock is the best word to describe it – I just couldn’t believe what I had done! Even worse, Nancy had laid out her plans for my summer and they included much more of the same. Not only had she enrolled me in summer classes at the college without my knowledge but she’d set me up on a “summer jobs” program where every Saturday afternoon I’d be expected to complete an assignment that I would pick out of a jar at random. None of them would involve wearing any clothes, of course.<br><br>I’d been in a daze for the first few days after that. Summer classes wouldn’t start for another two weeks and all of my friends had left town for the summer break so there was nothing to distract me from my own thoughts and fears about the future. After the initial shock had begun to wear off I started thinking things through for about the thousandth time. There just had to be some alternative other than becoming Nancy’s nude little show girl for the rest of my college years! I knew, of course, that there were ways out of it – lots of them, in fact. But the problem with all of them was that there was one inescapable fact that I just couldn’t avoid: I had cheated on my term paper. I didn’t know at the time that Nancy had entrapped me into doing it, but it wouldn’t have mattered if I had known. I’d taken the bait so I was guilty, guilty, guilty, and any plan that involved exposing Nancy’s perverted blackmail scheme would also expose my plagiarism and lead to my expulsion from college. Sure I could probably get Nancy fired in the process but that still wouldn’t have spared me from the consequences of my own actions and the shame I’d feel in admitting to my family that I was a cheat and a failure.<br><br>As angry, bitter, and mortified as I was by Nancy’s blackmail scheme I had to reluctantly admit to myself that I’d been offered a choice that any other student caught cheating wouldn’t have gotten. Anyone else would have simply been kicked out of school months ago. I know I have my faults but one of them isn’t blaming others for my own mistakes. Ultimately it had been my decision to pull that term paper off of the internet and turn it in as my own work, just as it had been my decision to submit to Nancy’s demands to avoid expulsion. Whenever I’d taken off my clothes at her command it had always been my choice. I knew it always would be.<br><br>As each minute brought me closer to my one o’clock appointment with Nancy, I knew my window of opportunity for escaping from her was closing. When Nancy had first revealed her plans for me all she’d held over my head at the time was a plagiarized term paper. Of course that had been bad enough, but the price for refusing her demands had already risen dramatically. She now had nude photos of me on her computer that were just one click away from being e-mailed to my friends and family and, on top of that, my potential problems with my college had also increased. I knew that Nancy had falsified my grades in order to increase my incentive to continue on with college (and her own plans for me) and my school’s strict honor code required me to report this to the administration. I couldn’t do it, of course, without the plagiarized term paper coming to light, but that didn’t really matter. I was still violating the school’s honor code by not turning Nancy in. Like it or not, she was drawing me even deeper into academic fraud.<br><br>I’d thought that I’d made the final decision the previous Saturday to give in to Nancy but the naked store walks and the revelation of her plans for my summer had come as a jolt. It was far beyond what I’d expected given my previous level of “training” and her promise to ease me into my new role gradually. It had forced me to rethink my decision. I knew that if I was ever going to escape from Nancy’s grip I had to do it very soon. The consequences would only become greater with each passing week, month, and year, and as those consequences grew so would Nancy’s demands.<br><br>It was nearly one o’clock by then and I had two choices before me: continue on as Nancy’s naked little puppet or drive right on past her house and regain control of my life, no matter what the cost. Unfortunately, I couldn’t imagine bearing the cost of either decision.<br><br>I started up my car engine that day still not sure which path I was going to take in the next couple of minutes.`
+                },
+                {
+                    title: "Chapter 2", 
+                    subtitle: "Nancy Johnson",
+                    content: `Nancy Johnson sat at her kitchen table and stared at the half-full glass of wine in front of her. She took a sip and looked up anxiously at the clock on the wall. It was 12:45 – just fifteen minutes until the lovely young girl would be showing up for the first of her assigned “summer jobs.” At least Nancy fervently hoped that the girl would show up... and that was the source of her anxiety.<br><br>Last weekend had been like a dream come true for Nancy. Watching as Wendy walked completely nude through the door of that supermarket had been as thrilling as she’d always dreamed it would be. She knew that it had been her patient but firm training that had given the girl the fortitude to do something that she never could have imagined doing on her own and Nancy was proud of both the girl and her own plan that had made that moment possible. But last weekend’s experience also made Nancy very, very nervous. This wasn’t about a one time thrill – she desperately wanted and needed a reluctant but obedient girl who would publicly exhibit her nude body anywhere and at any time that she demanded. All of Wendy’s previous training had been pre-scripted and carefully designed to move the girl slowly, but steadily, toward that goal. But last weekend had been different… it was the first time that Nancy had deviated from her patient plan and she was terribly afraid now that she might have blown it.<br><br>Nancy hadn’t really intended on pushing Wendy to take such a big leap last weekend, especially after the long break in her training. Her original plan, after ensuring that Wendy was once again on the hook, was to have the girl take a nude stroll through the same park where she’d done her t-shirt training. It would be an incremental step for her – there probably wouldn’t be that many people around and Wendy was familiar with the park and had already walked through it wearing nothing but a t-shirt. She’d even been naked there for a few minutes while convinced that some boys might be spying on her from the trees. Asking her to stroll through the same park, but without the t-shirt, would have been a relatively small, but important step in her training. But that plan had gone out the window when Nancy, in the heat of the moment, had suddenly upped the stakes.<br><br>The seeds of the idea had been planted earlier last Saturday morning while Nancy had been out grocery shopping. It’d become common now for her to envision a reluctantly nude Wendy in whatever setting that Nancy happened to be in at the time – a bar, a mall, a busy city street, a bowling alley – and the further Wendy progressed in her training the more intense those visions were becoming. That morning imagining Wendy walking naked through the grocery store had sent such an intense shiver of excitement and arousal through Nancy that if she hadn’t had a shopping cart for support her legs might have buckled beneath her. She did manage to collect herself and finish the shopping, but those intense feelings and images stayed with her even as she prepared for her meeting that day with Wendy.<br><br>And that’s when her carefully crafted plans had gone out the window. Instead of a gentle nudge Nancy had suddenly, and on a whim, shoved the girl out of the nest and forced her to fly. She still couldn’t recall the exact moment when the plan had changed in her mind and, in fact, could barely believe the instructions herself as they came out of her mouth. But once out, Nancy knew she couldn’t take them back or alter them. She could never give Wendy any reason to believe that her demands were negotiable or that she ever had any option but to obey them.<br><br>And it had worked! Within the hour Nancy was experiencing the very same fantasy she’d only been dreaming about earlier that day! The rush was so incredible that she’d upped the stakes again by ordering the girl to walk nude through a large home improvement store. And then, still giddy with excitement, Nancy had pulled out the job jar that she’d been intending to use later in Wendy’s training.<br><br>For the next 24 hours Nancy had been on an incredible high. This was all she had dreamed it would be, and more, as she had plotted, planned, fretted, and sweated about how to get the girl to this point. But she also knew now that any hope that all of this would cure her of her intense nude-in-public fantasies was fading. If anything, they were growing stronger. Now, though, she had a beautiful young girl to experience those fantasies for her and Nancy had discovered that living vicariously through Wendy was intensely exciting. She would have given anything to be able to trade places with Wendy – to be young, beautiful, and forced into public exhibitionism against her will. But since she could never have that, this would be the next best thing.<br><br>Any time she felt a pang of guilt about controlling the girl’s life she reminded herself of all the advantages that Wendy had that she never did, and never would. Besides her pretty, fresh-faced looks, Wendy was smart, personable and born into a wealthy and influential family. Nancy rationalized that she was actually doing the girl a favor by teaching her about the hard realities of life. She was Wendy’s mentor. The girl might hate their every moment together right now but someday she would thank her for all of this. She would look back on this as the most exciting time in her life – a time when she learned life lessons that couldn’t be taught in any classroom and discovered intense feelings and desires she didn’t realize existed. Yes, she was doing the girl a big favor.<br><br>But once the initial high of that day started to fade, Nancy began getting very nervous. She’d deviated from her patient plan and had taken a big risk in doing so. Had she pushed Wendy too far, too fast? Would the girl, now that she understood more fully what her life would be like until graduation, decide that being expelled would be the lesser humiliation? It was one thing to agree to Nancy’s demands in the heat of the moment, but what would happen after Wendy had had a full week to think things over? If the girl suddenly bolted then last weekend’s triumph would be a disaster.  Damn it! It had been a mistake to push her so hard and then give her a full week to think about things before her next training session!<br><br>Nancy thought back to the lessons she’d learned from her father, an avid fisherman. She hadn’t really liked fishing that much but it had taught her patience, and it had taught her the importance of setting the hook. If done properly the fish would have little chance of escape; but if attempted at the wrong moment the fish would be lost. Nancy knew she’d yanked the line hard last weekend but wouldn’t know for sure that the hook had been set until Wendy walked in the door today and removed her clothes.<br><br>Nancy drained the last of the wine and looked up at the clock. It was one o’clock. A shiver of fear knifed through her body.<br><br>Then she heard the knock at the door.`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "Wendy and Nancy", 
+                    content: `“Hello, dear,” Nancy said brightly as she opened the door. “Come on in.”<br><br>I followed her into the house and stood nervously in the living room. As usual Nancy had that cat-that-ate-the-canary look on her face and I wondered if she realized just how close I came to driving by her house without stopping. Does she ever have any doubts about how deeply she has her hooks in me? Probably not.<br><br>“Well, here we are again,” she said. “So how was your week, hon?”<br><br>“It was terrible,” I replied. “I can’t believe I actually did what I did last week and that I have to keep doing it. I almost didn’t come today.”<br><br>The smirk disappeared and a look of concern flashed briefly across her face that she tried to hide. “Yes, but you did come,” she said. “Anyway I thought we’d settled all of this last week.”<br><br>“So did I, but I’m not so sure anymore that expulsion might not be better than what you’re putting me through. Last week was too much, Nancy. You said that you were going to bring me along slowly and then all of a sudden you’ve got me walking naked through a supermarket? And that was after a month without any training at all!”<br><br>“What I said was that I wasn’t going to have you do anything that you couldn’t handle, and I didn’t. You handled it beautifully, dear,” she said. Nancy was attempting to maintain her air of confidence but a hint of nervousness had crept into her voice. “Besides, you’d already been nude in front of a crowd in Sinful Delights in the mall so was the supermarket that big of a leap? I don’t think so.”<br><br>“I think it was,” I said. I knew I was pushing my luck by confronting her but I was determined to not just automatically give in to her every demand. Last week had been traumatic enough for me to seriously consider the alternative, as awful as that would be, and I needed her to understand that. “Nancy, I’m here for the summer and I’m willing to continue my training. It’s just that I’d like you to maybe tone things down a bit for awhile. You’ll still have me naked in public settings, just not quite so public. That’ll give me more of a chance to adjust to my new status and prepare for more challenging scenarios.” I was intentionally using Nancy’s own language to attempt to make my case to her. God knows what I was suggesting wasn’t exactly my idea of how I wanted to spend my summer but right now I’d prefer taking naked car rides all day long to doing Nancy’s summer jobs program. Besides, any delay in the progress of my “training” would push the ultimate humiliations I knew that Nancy had planned for me further into the future. At least it would buy me some more time to figure out a way to get out from under her thumb without ruining my life.<br><br>Nancy stood there quietly for a few moments and I thought I might have actually gotten through to her for once as she pondered what I was saying. I had no doubt that she’d have me separated from my clothes this afternoon but maybe, just maybe, I’d be able to do something a little less awful than what she had planned for me today. “Wait here a minute,” she said finally and turned and walked out of the room. She soon returned with an envelope and removed some photographs from it.<br><br>“More blackmail pictures?” I said. “I’ve already seen plenty of them. A few more isn’t going to make any difference.”<br><br>“Just take a look at these,” she replied and handed them to me. I expected to see myself nude in some setting or another but I was surprised to see that I was very much clothed in these photos. They’d been taken at the Dean’s honor banquet where, as the top student in my class (thanks to Nancy’s manipulation of my grades), I’d been one of the guests of honor. Nancy pointed to a picture of my beaming father with his arm around my shoulders. “Doesn’t your father look happy and proud in these pictures?” I had to admit that he did. “And you might want to read this, too,” Nancy said as she handed me a newspaper clipping. It was from my local newspaper and it announced the academic honors received by local girl, Wendy Wilson. God, it hadn’t taken long for Mom to get that into the paper.<br><br>“Look at me, dear,” Nancy ordered and my heart sank as I saw the uncompromising look in her eyes. “Wendy,” she said, “at this moment in your life you’re at a very big crossroads and you need to understand that. At this moment you’re a top student and your family is rightfully proud of you. That’s not going to change unless you make it change. You’ll graduate from this college with high honors and will be able to write your own ticket after that. Your future will be assured. It’s all yours for the taking but it’s going to come at the price I’ve asked.” Nancy reached out now and placed a firm grip on each of my shoulders looking directly into my eyes. “Or, you can tell your parents that this was all just a big, fat lie and their little girl is really a fraud and a cheat. You can explain to them that you’ve been running around naked in public to avoid expulsion and then ended up getting expelled anyway and can’t get into another decent school now.” She then spun me around in the opposite direction facing away from her. “There’s the door, Wendy. Use it if you want to, but there’ll be no more discussions or negotiations. If you’re going to go, then go.” I checked back a sob and just shook my head. She turned me back around to face her again, a little more gently this time.<br><br>“The training wheels are off, Wendy, and we’re not going to put them back on. You’re not a novice anymore. We’ve moved on past the naked car rides and t-shirt training and you’re ready for the next step. You’ve already proven it. You’re not going to like it, and I don’t want you to, but you’re perfectly capable of doing what I’m asking and we both know it. And by the end of the summer you’ll be capable of even more than you are today. Now are you in or are you out, Wendy?”<br><br>I bit my lip as a single tear rolled down my cheek. “I’m in,” I said quietly.<br><br>A slight smile appeared again at the corners of her mouth. “Then I want you to take off your clothes for me now, Wendy. Every stitch.”`
+                },
+                {
+                    title: "Chapter 4",
+                    subtitle: "On The Road", 
+                    content: `Nancy glanced over at the lovely nude girl squirming nervously in the passenger seat and couldn’t help but smile despite the worried thoughts swirling through her mind. She thought back to Wendy’s first naked car ride and how the terrified co-ed had curled up into a ball on the seat and cried her eyes out. It seemed like a long time ago that Wendy had taken that first tentative step out of her comfortable world and toward a life of naked-on-demand public exhibitionism, but it had actually only been a few months. Wendy had progressed much faster than Nancy could have guessed that first day. She’d underestimated the girl’s fortitude, but Nancy also knew that she’d overestimated her own ability to maintain a patient course in bringing Wendy along. While that had helped accelerate Wendy’s progress, it had been at great risk to the long-term prospects for her plan.<br><br>Twice now Nancy had taken a chance on the spur of the moment and pushed Wendy farther than originally planned and twice she’d gotten away with it, although not without consequences. Besides last week’s nude store walks there’d been the last-second decision at Sinful Delights to have Wendy model the open-bust teddy for the crowd. That had led to her first true public exposure – an important hurdle to clear – but it had also resulted in a month’s break in training as Nancy gave the girl time to recover psychologically in order to keep from losing her.<br><br>So the last two times that Nancy and Wendy had been together she’d deviated from her plan on a whim and this worried Nancy terribly about her ability to pull this off over the long run. It was very important to maintain a pace that ensured that Wendy was continually progressing but could also handle her assignments without thinking that the alternative might be better. But the increasing intensity of her fantasies had caused Nancy to make mistakes and right now it was too close a call in Wendy’s mind for comfort. The whole plan was balanced on a knife’s edge.<br><br>The safest course of action today would have been to do what Wendy had asked: tone things down a bit for awhile to allow the girl to get back into something of a comfort zone and then start turning up the heat on her again like the proverbial frog in hot water. She’d seriously considered doing that for a few moments but then ultimately rejected it for a couple of reasons. The first was that it would set a dangerous precedent and give the girl the idea that her demands were negotiable. Nancy couldn’t allow that because some of her plans for Wendy down the road were truly outrageous and she couldn’t let her think that she could balk at them and get away with it.<br><br>The second reason for rejecting it was purely selfish: last week had been thrilling for Nancy and she wanted to experience it again and again – not return to milder exhibitionist excursions. Eventually Wendy would become more accustomed to the relatively brief but intense assignments planned for this summer but for now they’d be pushing her to her current limits. Because of that, this was a very dangerous time.<br><br>The prospect of further verbal confrontations with Wendy didn’t bother her much; she knew she’d prevail in any face-to-face encounter with the girl just as she had today. It was the fear that the girl would just suddenly bolt town that had her worried. If that happened she didn’t know what, if any, action she could take to get her back. If push came to shove Nancy doubted that she would actually follow through with her blackmail threats. She’d grown fond of Wendy and didn’t really want to ruin her life; she just desperately wanted her cooperation for a few short years. Besides it would threaten Nancy’s own career if the blackmail scheme ever came to light, especially now that she’d been manipulating Wendy’s grades. If Wendy ever called her bluff she’d probably have no choice but to let her go. She could never, ever give the girl the slightest hint of that, though.<br><br>This had always been the weak spot in Nancy’s plan and one that had worried her from day one: could she possibly carry off a bluff for more than three years? Maybe, but it was no slam dunk, and Nancy couldn't afford any more missteps. Wendy was a smart girl and might eventually figure out that Nancy couldn’t afford to have the plagiarized term paper come to light any more than Wendy could. Her threat to e-mail nude photos to Wendy's friends and family might keep the pressure on her for awhile, but since Nancy planned on eventually exposing her to friends and family anyway that wasn’t a permanent solution either. What she needed was more leverage to use against the girl that would guarantee her continued participation indefinitely. Finding that leverage would have to be a priority.<br><br>Nancy was still mulling things over as she turned down a street running through a quiet residential neighborhood and pulled to the curb in front of one of the houses. Wendy had been silent since leaving the house, lost in her own thoughts, but now she spoke up. “Nancy, what are we doing?”<br><br>“We’re picking someone up. Be a dear and run to the front door and ring the bell, will you?”<br><br>“What? Who is it?”<br><br>“It’s a friend. You’ll recognize her. Now go.”<br><br>Wendy began to open her mouth to object and then thought better of it. Nancy forgot her worries momentarily as she watched the nude girl look around nervously and then open the car door and scamper across the lawn to the front door.`
+                },
+                {
+                    title: "Chapter 5",
+                    subtitle: "Margaret", 
+                    content: `“Oh, Jesus, you’re naked already,” the woman blurted out with a short laugh. I recognized her immediately... it was Margaret, the owner of Sinful Delights where Nancy had forced me to put on an impromptu lingerie fashion show for mall shoppers. I guess I should have known she was in cahoots with Nancy in all of this, especially since she’d provided her with photos of me in various states of undress taken by hidden cameras in her changing room. I stood outside the door not sure exactly what I was supposed to do or say and looked around nervously again for prying eyes from the neighborhood. The woman poked her head out the door to check for the same thing and then pulled me by my arm into the house. “Get in here before my reputation in the neighborhood is totally ruined,” she laughed. “My neighbors already think it’s scandalous enough that I run a lingerie store without them seeing naked girls showing up at my doorstep.” I got the feeling from the way she said it that she wasn’t really all that worried about the prospect of scandalizing the neighborhood.<br><br>Margaret was middle-aged – a few years older than Nancy but more attractive. It was obvious that she’d been a beauty in her younger days but, to her credit, she hadn’t tried to mask the graying hair with dye or the lines around her eyes with excessive makeup or plastic surgery. “Well, I guess Nancy does have you well trained, doesn’t she?” she said. “I didn’t expect you to get naked until we got there.” Her eyes pored over my body as I stood skittishly with my arms crossed just below my breasts. “I’d forgotten how perfectly proportioned your body is,” she said. “You could have a career as a lingerie model.”<br><br>“No thanks,” I snapped. “Been there, done that.”<br><br>“Probably not for the last time, though,” she chuckled. “I’ve given Nancy an open invitation for you to give us a repeat performance anytime. You actually boosted my sales quite a bit that day.”<br><br>I didn’t really want to contemplate repeating that scenario and tried to change the subject. “So why am I here right now anyway? Nancy says we're picking you up?”<br><br>“Didn’t Nancy tell you? I’m coming along with you today.”<br><br>“No, she didn’t. But then she doesn’t exactly keep me informed about all of her plans for me.”<br><br>“She probably figures it’s better for your psyche that way. I’m going to be your official photographer today. Well, videographer, to be more precise.” She walked to the sofa and picked up a nylon tote bag from the end table. “I guess I’m ready to go,” she said as she pulled a digital video camera out of the bag. “I’d like to get started on the way out, though. I’m going to film you walking back to the car.” Of course. God, I hated this but I assumed I had no say in the matter. She poked her head out the door again looking around for nosy neighbors, pedestrians or cars passing through the neighborhood. I could hear a lawnmower running in the distance but apparently there was no one nearby. At least I hoped so. “Okay, the coast is clear,” she said. “Go for it.”<br><br>I took a deep breath and stepped out the door retracing my steps back across the front lawn aware that Margaret’s camera had a prime view of my naked backside as I walked. “Hop into the backseat, dear,” Nancy said as I opened the passenger door. “Let Margaret ride up front.” I sighed and opened the rear door just as I caught a glimpse of a car hood turning a corner towards us a couple of blocks away. I crawled quickly into the backseat and shut the door, not sure if I’d been seen or not. I sat upright in the seat without attempting to cover up which was how Nancy typically made me sit while riding in the car. “Get down,” Nancy hissed from the front seat.<br><br>“What?”<br><br>“It’s a cop. Get down.”<br><br>I ducked down and slid onto the floor of the back seat, my heart thumping like crazy in my chest. Oh my god, this had always been one of my biggest fears! What was I going to do if he’d seen me and stopped to investigate? I could hear the car drawing nearer and I closed my eyes and held my breath as if that would help keep me hidden. The car slowed down as it pulled alongside our parked car, just inches from where I laid on the floor. I could hear the sound of tires rolling along the pavement as it cruised slowly past us, but thankfully it continued on down the block without stopping. I don’t think I breathed again until I was startled by the sound of the front passenger door opening as Margaret slid into the front seat. “Holy shit, that was close,” she said as she looked back at me lying on the floor. “This whole thing is starting to make me nervous, Nancy.”<br><br>You’re nervous? Try trading places with me you bitch, I thought to myself. I was ready to strangle them both. “It’s just part of the excitement,” Nancy replied. “Right, Wendy?” I cursed her beneath my breath but didn’t reply. “Hop back up into your seat, dear,” she said. “He’s gone.”<br><br>I reluctantly complied looking down the street just to make sure of it myself. “I wonder if one of the neighbors saw Wendy and called the police,” Margaret said.<br><br>“I doubt it,” Nancy replied, “otherwise he would have stopped. I think it was just unlucky timing on our part. Or maybe we should call it lucky timing. If he’d turned the corner a few seconds earlier he would have seen our little girl in all her glory.”<br><br>My heart was still racing from the close call and I decided to confront her with something that had been on my mind more than once. “Nancy, what am I going to do if I ever actually run into a cop?” I asked.<br><br>“Well, if it’s a straight male or a gay female, which covers about ninety-seven percent of the cops in this town, they’ll be more likely to ask you for your phone number than arrest you.”<br><br>“I’m serious, Nancy.”<br><br>“So am I. A man is much more likely to be arrested for indecent exposure than a woman. I researched it when I was still trying to force myself to get naked in public. It’s much easier for a female to get away with public nudity, especially for a girl who looks like you.” Nancy turned around in the front seat and looked back at me. “But if you do encounter a police officer – and I’m sure you will at some point – then just be polite and promise to put some clothes on. Do that and you should be fine. Whatever happens, though, don’t you dare say anything about me.”<br><br>I’m not sure I was really comforted by that answer but I guess there was probably some truth in it. Still, the idea of actually being confronted by a cop or even arrested was terrifying to me. I mean, I wasn’t exactly raised in the ‘hood so the most experience I’ve had with the law was saying hi to the security guard who worked at my Dad’s country club.<br><br>I know I must sound like a spoiled rich kid to you, born with a silver spoon in my mouth and all that. I guess I do come from a privileged background, but I really don’t think I’m spoiled or anything. My parents were stricter than a lot of my friends’ parents were and they didn’t always give me everything I asked for, although I certainly didn’t go without either. My family is very achievement-oriented, though, and my parents expect a lot out of their kids. I’m the youngest in my family and my older brother and sister had already graduated from college and launched successful careers. The same was expected of me and my parents would be absolutely devastated if I was kicked out of school. I don’t know if I could ever look them in the eye again if that happened. Of course they wouldn’t exactly be thrilled if they found out I was running around town without any clothes on either so I don’t know how I’d be able to explain that to them if it ever came to that.<br><br>I guess coming from such a sheltered background hadn’t really prepared me for what was going on in my life right now or in dealing with someone like Nancy. More than a few times I’ve thought I was being dumb and naïve for going along with Nancy’s demands. I mean, wouldn’t she get in trouble too if she tried to have me expelled and I told the administration about her blackmail scheme and the altered grades? Probably, but I didn’t get the impression that she cared all that much about her job anyway. At least she doesn’t seem to care about it as much as I care about the possibility of getting expelled. I wasn’t willing to take the risk that she was bluffing and wouldn't really follow through on her threats. Not yet anyway.<br><br>I knew there was no doubt that I was going to go through with Nancy’s awful assignment that afternoon. Nancy was right about one thing: the naked store walks had proven that I could bear the humiliation and do it when the time came. The inevitability of what lay ahead sent a shiver of fear, anxiety, and anticipation knifing through me. I knew my body was also exhibiting unwanted signs of arousal and I felt flushed as I looked up and saw Margaret pointing the video camera at me. “She’s so cute, isn’t she?”<br><br>Nancy nodded with a smile as she put the car in gear and pulled away from the curb, beginning the final leg of the journey to my ultimate destination for the day.`
+                },
+                {
+                    title: "Chapter 6",
+                    subtitle: "Lake Rutherford", 
+                    content: `My heart sank as we pulled into the parking lot and drove slowly past the rows of cars, trucks, and SUV’s parked there, killing any hope that the lake wouldn’t be as crowded as I feared. It probably wasn’t as packed as it would be during the dog days of July and August but it was plenty crowded enough for my tastes, considering Nancy’s plans for me.<br><br>Lake Rutherford was located about a thirty mile drive north of town and was a popular destination during summer months for swimmers, sunbathers, boaters, and fisherman. It had taken about an hour to get here from Margaret’s house, which had given me plenty of time to work myself into an even higher state of anxiety. Ever since reading the assignment card drawn from Nancy’s summer job jar last Saturday I’d been anxiously watching weather reports hoping for a cool or rainy day that would hold crowds down on the beach. No such luck, though – it had turned out to be a warm and sunny day.<br><br>I’d been to the lake once previously last September, not long after starting school. Some classmates had talked me into coming here one day after class to get a swim in before the weather turned cold and we’d partied on the beach until the sun went down. That had been a fall weekday so there weren’t that many other people at the lake that day. I figured it would be a lot more crowded on a June weekend and, by the looks of the parking lot, I was right. Thinking back to that day reminded me of when I’d been just another carefree co-ed looking forward to the fun and excitement of her college years. That already seemed like ages ago and that girl was long gone now.<br><br>One of the many worries tumbling through my mind on the ride over was about the possibility of running into someone I knew during my nude stroll along the beach. Nancy had told me that this phase of my training would involve relatively brief nude outings in front of anonymous strangers, but I wasn’t really convinced that this assignment assured my anonymity. I mean, I’d been here with fellow students before, hadn’t I? The lake wasn’t really a big college hangout or anything, and a lot of students were out of town for the summer, but it wasn’t outside the realm of possibility that someone I knew would be here. At least the odds of it were greater than they had been last week at the two stores located all the way across town from campus.<br><br>Nancy continued cruising until she reached the far end of the parking lot where relatively few cars were parked and pulled into a spot on the edge of the lot. She shut off the engine and turned around to face me in the backseat. “Well, here we are, dear. Are you excited?” I didn’t answer her but shifted nervously in my seat. “I think she is,” Margaret laughed. “She’s on high beam.” I looked down at my nipples and knew my body was betraying the fact that the closer I got to my fate the more aroused I became. When I looked up I saw Margaret pointing that damn video camera at me again.<br><br>Nancy grinned and nodded. “Wait until you see her in front of a crowd. She really has to struggle to contain her arousal.” God, I hated listening to them talk about me like I was some kind of exotic zoo specimen. Ladies and gentlemen, please observe the physiological responses of this female of the species named Wendy Wilson as she’s taken out of her natural environment and exposed to unusual external stimuli. Curiously, her body responds to humiliation by exhibiting physical changes normally associated with the mating ritual.<br><br>“Well, I’m sure she’s anxious to get this over with, so let’s get started,” Nancy continued. “Hop out, Wendy, and I’ll give you the details of the plan.”<br><br>I looked around the parking lot and didn’t see anyone nearby so I shoved the door open and stepped out onto the pavement. Although I still hated it I noticed that it was getting somewhat easier for me to get out of the car now at Nancy’s command: just another small sign that Nancy’s incremental progression plan was working all too well. I shut the door and waited as Nancy and Margaret exited the car. I was shielded by the car from the rest of the lot and behind me were woods, so I half-expected Nancy to order me out into the open. She didn’t, though, as she came around the car and looked me over.  She then reached into the tote bag that Margaret had brought along and pulled out a small clear bottle of some type of liquid. “The sun is bright today, Wendy, so I think we should protect your skin. Why don’t you rub this lotion on your body before we get started?”<br><br>“That’s okay,” I said. “I won’t be out here that long, right?”<br><br>“That’s true, but we don’t want to take any chances with that gorgeous skin of yours. Go ahead and put it on.”<br><br>I took the bottle from her and looked it over; there was no label on it but it didn’t look like sunscreen to me. More like some kind of a body oil. I sighed, knowing I didn’t have a choice in the matter, and poured some into my hand and began rubbing it on my shoulders. Whatever it was didn’t really absorb into my skin but instead left an oily sheen on my body that made my skin glisten. Margaret was taping all of this, of course. “Make sure you don’t miss any part of your body,” Nancy said. “If you can’t reach a spot I’ll be glad to help you,” she chuckled.<br><br>“No thanks,” I replied as I rubbed the lotion across my breasts, down my stomach and over my thighs. I knew the show I was putting on for Margaret’s camera would produce a video as embarrassing as the one of my nude stroll through a public beach – maybe more so. I finished oiling up the front of my body and reached around to begin rubbing it on my back. Nancy motioned for me to turn around and I complied, giving Margaret’s camera a clear view of the process. I arched my back in order to reach the upper areas of my lower back and then began rubbing it on each of my rear cheeks. When it came time to get the back of my legs I had no choice but to bend over at the waist and give Margaret’s camera a full rear view that had to be very revealing. When I finally finished the embarrassing show I handed the bottle back to Nancy. “There, are you satisfied?”<br><br>“Almost,” she said. “There’s a spot on your back you weren’t able to reach. I’ll get it for you.” She poured some oil onto her hands and came around behind me and began rubbing it across my back. Then she reached around and began kneading my already well-oiled breasts teasing each of my nipples with her fingers until they stood out even more prominently than before. She finally gave me a sharp slap across my butt. “There we go,” she said, “all done.”<br><br>I looked down at my body and saw that it glistened with an oily sheen that would accentuate my nudity and add a humiliating new dimension to my walk. Nancy smiled broadly as she looked me over. “I think you’re good to go. Are you ready to hear the plan?”<br><br>God, no, I thought to myself.`
+                },
+                {
+                    title: "Chapter 7",
+                    subtitle: "The Long Walk", 
+                    content: `Okay, Wendy, you can do this. You’ve done this kind of thing before and gotten through it. This’ll all be over in just a few minutes and you’ll be on your way home. It really won’t be that bad.<br><br>I knew, though, that my body wasn’t buying the internal pep talk that my mind was giving: my trembling arms as I grasped a tree for support were dead giveaways.<br><br>Margaret had gone down to the lake to find a good spot to begin filming from while Nancy had driven the car to my ultimate destination – a smaller parking lot about a mile away – leaving me naked and alone. I was hidden now in the woods just beyond the parking lot trying to build up the courage to do what I knew I had to do. “It’s just a little walk from Point A to Point B,” Nancy had said. “What’s so hard about that?”<br><br>“Oh, I don’t know Nancy, maybe the fact that there are dozens, or probably even hundreds, of people between A and B and I’m totally naked and oiled up like a pole dancer.”<br><br>“Yes, there is that,” she’d replied with that maddening little smirk of hers.<br><br>It wasn’t just a simple walk from A to B anymore anyway. Nancy had thrown in a little task I was to perform along the way that would add to both the time I was exposed and the humiliation factor. It was my “punishment” for having challenged her earlier today. I guess I had no choice but to follow Nancy’s instructions to the letter, though.  If I didn’t she’d promised to march my naked little ass through a store on the way home.<br><br>I thought again about the bizarre turn my life had taken to find myself in the position I was in now: totally naked and miles from my home or my clothes and a mile’s walk away from the only transportation I had to get back to either. Why me? Why was I the one who had to live out the naked-in-public fantasies of some manipulative nut job? There are plenty of girls who love exposing themselves for nothing more than a set of cheap plastic beads so why couldn’t one of them be here in my place? I knew the answer, of course: it was precisely because I wasn’t a Girls Gone Wild type that Nancy wanted me for this. The more uncomfortable and embarrassed I was about displaying my nude body to an audience the more she got off on it.<br><br>My instructions were to wait about ten minutes before starting out so Nancy and Margaret could get into position. I didn’t have a watch, obviously, but I knew my time had to be almost up so I peeked out of my hiding spot into the parking lot. On the other end of the lot a young couple lifted a cooler from the bed of a pickup truck and I watched as they disappeared down a set of stairs that led down to the beach. The lot was empty now, but not likely to remain that way for any length of time. If I was going to do this now was the time. I took a deep breath and tentatively placed one foot onto the parking lot pavement and then the other. I stood for a few moments on the edge of the lot trying to compose myself and work up the courage to start, the internal pep talk starting up again. But it wasn’t words of encouragement that finally got me moving but Nancy’s threats of what would happen if I didn’t. I began walking.<br><br>The first few moments of being fully exposed nude in a public setting would always be the most surreal for me. No matter how many times I did it my brain would always scream “What are you doing? You’re naked! Someone will see you!” I guess it’s probably like that whenever skydivers exit that perfectly good airplane; the mind immediately protests that you’re doing something you really shouldn’t be doing. With each step I took away from the relative sanctuary of the woods the more exposed and vulnerable I felt. I was committed now, though; once I started there was to be no hiding or covering up. The only way out of this was through it.<br><br>As I walked past the rows of parked cars I tried to put out of my mind that the people from these vehicles were all in the direction I was heading. My senses were fully heightened now and I was keenly aware of the warmth of the sun on my naked skin, the scrape of the pavement on my bare feet, and the slight bouncing of my breasts with each step I took. As I walked the feelings of helplessness and utter vulnerability washed over me and with them came the anxious excitement and unwanted sexual arousal that always accompanied those feelings. How could I hate this so much yet still get off on it? Did I really have a submissive streak like Nancy said?<br><br>The parking lot was on a hill overlooking the lake and just ahead now were the stairs that would take me down to the public beach area. As I descended the sound of people enjoying a sunny day at the lake began wafting through the trees ahead, although my view of the beach was blocked. At the bottom a narrow dirt path led through the woods and as I walked along it the lake began emerging from the trees. Several boats came into view now and I stopped for a minute to gather myself. This was the last relatively shielded area and in a few more steps I’d be fully exposed. I stood there for maybe a minute, unable to move forward but knowing the consequences if I tried to go back. It was finally the sound of voices coming from the parking lot behind me that got me moving. I began walking again and emerged from the wooded area into view of the boats on the lake and the beach area up ahead.<br><br>The dirt path continued along the edge of the lake on my right with the side of the hill on my left leaving me with nowhere to hide without diving into the lake. I kept my eyes glued to the ground ahead of me unaware if I’d been spotted yet but just trying to maintain a steady pace. I kept hoping that the auto-pilot that had helped me get through some of my previous assignments would kick in, but no such luck today; I was fully conscious of my nudity as I walked. I heard the sound of voices directly ahead and I looked up briefly to see a family of four walking toward me. “What the hell…” the woman said as I walked past them, my face burning in shame. Okay, you’ve been seen, Wendy. Just keep going and get this over with.<br><br>The main beach area was still maybe fifty yards ahead and I kept moving steadily forward. There was still no sign of Margaret but I knew she had to be up ahead somewhere, video camera at the ready to capture my naked stroll in living color. A loud whistle pierced the air followed by a whoop and I knew I’d been spotted again. God, this was so humiliating!<br><br>The area between the lake and the hill began to widen now and the recreational area just ahead featured a grassy area with picnic tables and barbecue grills on the left. To the right was the beach itself, a narrow strip of sand that was maybe thirty feet wide. The path I was on divided the picnic area from the beach which meant there would be people on each side getting an eyeful of a very naked me as I passed through.<br><br>“Damn, check this out!” I heard an excited voice say. I looked up to see three teenage boys approaching me. “Man, she’s hot!” “What are doing anyway?” another asked. “Did you lose a bet?” I just bit my lip and nodded hoping they would go away and deathly afraid that they would try to touch or grab me. They didn’t try anything, though, but I could hear them walking along behind me, talking to each other about my “perfect ass.” I was at the beach area now and I glanced up briefly again to see dozens of people nearby looking at me, some of them with cameras already out. On my left I spotted Margaret capturing my little stroll on her video camera. As I walked I heard laughter at my expense mixed with remarks that ranged from shocked to catty to indignant to amused. I’m sure my face was flaming red by now and the oil on my skin glistened in the afternoon sun. I didn’t think it was possible for this to be much worse than my two store walks last week, but it was. And I wasn’t even halfway through it yet!<br><br>That’s when my worst fear came true.<br><br>“Wendy? Wendy Wilson? Is that you?”<br><br>My head snapped around in the direction of the voice and I saw a middle-aged woman sitting with a teenage boy and girl at one of the picnic tables. I recognized the woman immediately – it was Mrs. Clayton, one of the professors at my college! She’d been my teacher for two of my business courses this past year and I would have her again for a Business Statistics course that Nancy had signed me up for this summer.<br><br>My arms came up instinctively to cover myself but then my training, and Nancy’s warnings, kicked in and I let them drop to my sides again. I resisted the almost overwhelming urge to run and walked timidly toward the table. “That is you, Wendy,” she said as I approached. “What on earth are you doing?”<br><br>“M-Mrs. Clayton… I… um, I’m…” I couldn’t force any more words out and didn’t know what to say even if I could.<br><br>“Are you doing some kind of stunt or dare?” I just nodded my head. “I suppose that’s why you’re oiled up like a stripper, too. Good Lord, Wendy, you didn’t seem like the type.”<br><br>“I’m not,” I blurted out. “I mean I don’t normally do stuff like this. I’m just…” My words trailed off again not knowing how to finish.<br><br>“Who put you up to this, anyway?”<br><br>“No one. I mean just some friends. As a dare.” I looked over at the teenage boy and girl sitting at the table with Mrs. Clayton. The boy had a grin on his face and his eyes roamed over my body. The girl’s eyes were throwing daggers at me.<br><br>“Jason!” Mrs. Clayton barked at the boy. “You’re with your girlfriend for god’s sake.” The boy averted his eyes and looked down sheepishly at the picnic table. My teacher turned back to me. “This is my son Jason and his girlfriend Melissa. They’re starting college in the fall so you’ll probably be seeing them around campus.” Great. Just fucking great. This was getting worse and worse. “I saw that you signed up for summer school so I’ll be seeing you in class in two weeks, Wendy. If you have something you need to talk to someone about please stop by my office, okay?” Her voice was sympathetic and she obviously sensed that I didn’t want to be out here making a spectacle of myself. Not that it took any great insight or powers of observation to figure that out.<br><br>“I’m fine… I’m okay,” I told her. “This is just a lark. I need to go, though.” I turned and stumbled back onto the path, dazed and humiliated from the encounter. God, one of my favorite teachers thinks I’m a total flake now! And with her son and his girlfriend starting college in the fall how long would it take before the whole school knows about this? The girlfriend especially looked like she couldn’t wait to ruin my reputation on campus. So much for the anonymity Nancy promised for this phase of my training.<br><br>I continued down the path just aching for all of this to be over with and trying vainly to block out the rude comments, laughter, and catcalls that followed me. If all I had to do was finish walking to the car that would be bad enough, but I still had one more task to complete that would make things even worse for me than they already were. It was Nancy’s punishment for challenging her this morning and I was damn tempted to say the hell with it and go back and ask Mrs. Clayton for some clothes and a ride home. I couldn’t, though... all of this would have been for nothing if I did. I’d come this far so I was going to finish.<br><br>I was nearing the end of the beach finally and up ahead I could see the stairs that led up to the parking lot and Nancy’s car. I also spotted Nancy for the first time staring at me with a shit-eating grin on her face, her own digital camera in hand. And at the very end of the beach I saw the place where I would be performing my final humiliating task: an open-air beach shower.<br><br>The teenage boys were still with me as I approached the shower and I’d picked up a few more followers along the way as well, including a middle-aged woman who kept running ahead of me to take pictures, giggling incessantly the whole time.<br><br>The shower was just a pole planted in a concrete base with a single shower head and an unobstructed view from the beach.  I turned the shower handle and put my hand under the stream of water emerging from the shower head. It wasn’t freezing, thankfully, but it wasn’t exactly warm either. At the base of the shower pole I saw the plastic bottle filled with body soap that Nancy had told me would be there. I was supposed to wash my body thoroughly to remove all traces of the body oil – couldn’t have the stuff messing up the interior of Nancy’s car, you know. I had to get all of it or Nancy promised I’d be doing a very public car wash before we got home.<br><br>I stepped into the shower and gasped as the cool water streamed over body. I stuck my head under the water to wet my hair and then picked up the body soap and squeezed out a handful. A crowd was gathering now to watch the show, many with cameras and video recorders. Both Nancy and Margaret were there, too, and for a moment a flash of anger went through me as I thought about what they were forcing me to do. I’m not a hateful person at all but I have to confess that there were times I couldn’t help but wish that something bad would happen to Nancy that would prevent her from continuing on with our little games. Nothing that would permanently hurt her or anything like that; maybe just a mysterious lingering illness that lasted only until I was safely graduated and far away from her.<br><br>I rubbed my hands together to form a soapy lather and began washing my face and neck. The crowd murmured as my hands moved down to my breasts and began lathering them, my nipples feeling like hard little nubs from the cool water and the arousal that was building inside of me. God, I was getting turned on by this and I hated it! Why did my body react like this to having to perform such a private act in public? I knew by now that there was no way to control the way my body reacts to public exposure but I just hoped my arousal wasn’t apparent to others. But the feeling of utterly feminine sexual vulnerability kept growing inside of me and when my soapy hands reached my inner thighs I let out a gasp. I had to stop for a moment to collect myself and I turned my back to the lustful eyes but it did me no good – the shower was completely surrounded by people now. I put my face into the stream of water and let it run down my body rinsing off the soap. I was dangerously close to orgasm and hoped that the cool water would help me calm down, but the thought of all those eyes poring over every inch of my body kept stoking the fire. I stood under the water for maybe a minute before I had calmed down enough to continue. I have to get this over with, I thought, or I’ll be out here forever.<br><br>I continued soaping every inch of my body in front of the crowd, always on the edge of climax it seemed, but able somehow to keep from going over the precipice. It had to be obvious to the crowd, though, what I was going through and the humiliation only added to the intensity of the experience. When I was finally certain that I’d washed off all of the oil I turned off the shower. As I rubbed the water from my eyes some of the crowd began to applaud. I looked down and saw beads of water running down the goosebumped flesh of my breasts and my nipples were rock hard.<br><br>Okay, Wendy, you’ve done everything Nancy asked so it’s time to get the hell out of here. You’ve got to get away from all of these eyes.  The crowd parted to let me through and I walked back onto the path to finish the last leg of my journey. I was afraid some of the people would follow me all the way to Nancy’s car but it seems like they knew the show was over and only a few stragglers trailed behind me. By the time I climbed the steps and reached the parking lot even the teenage boys had returned to the beach. I spotted Nancy’s car nearby and walked to it. On the roof was a towel she had left for me and I toweled myself off before getting into the unlocked rear door.<br><br>I was shaking still from the intensity of what I’d just been through and realized I was still intensely aroused. I checked out the window, seeing no one in the parking lot and no sign yet of Nancy or Margaret. I let my hand slip down into the moist region between my thighs and began rubbing my clit. Oh God, I can’t believe I’m doing this, I thought, but there was no going back now. I closed my eyes and began moaning audibly as the vision of all those eyes on my nude body kept replaying in my mind. I kept stroking faster and faster as my left hand caressed my breasts, a wave of arousal coursing through my body. I don’t think my body had ever felt this alive and sensual and when the wave finally crested I arched my back and a loud guttural moan escaped from my lips. I slumped back into my seat as my breathing began to calm and I opened my eyes. Standing outside my window was a beaming Nancy.  Alongside her was Margaret with her video camera pointed at me.<br><br>Oh my God! How long had they been out there? How much of this did Margaret get on video? There’s no way I could ever allow anyone to see that tape!<br><br>The front door opened and Nancy slid into the front seat.  She turned back to me with a huge grin on her face. “I own you now, Wendy. You know that don’t you?”<br><br>I collapsed into my seat in exhaustion and despair. What did I just do? She did. She did own me now.`
+                },
+                {
+                    title: "Chapter 8",
+                    subtitle: "New Discoveries", 
+                    content: ``
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').innerHTML = `by ${storyData.author}<br>Based on Falcon’s Story`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>
