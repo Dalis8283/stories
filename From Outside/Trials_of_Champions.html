@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>Trials of Champions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #F6EFE4;
+            --line-color: #DDDDDD;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "Trials of Champions",
+            author: "Spunk N. Wagnels",
+            chapters: [
+                {
+                    title: "Universe",
+                    subtitle: "PROLOGUE - Saturday in the Park",
+                    content: `Summary: <i>The US Olympic gymnastics team plays catch-up to the rest of the world with nude competition, only some competitors have a harder time getting over the embarrassment than others.</i><br><br>Keywords: <i>humiliation, exhibitionism, voyeurism. The following is adult fiction intended for legally mature adults to view at their discretion, where and when it is legal to do so.  Similarity to persons living or dead is coincidence.  The author reserves all rights. Permission is granted to archive in places where adults can legally view it free of charge, and as long as no words are changed, including this disclaimer.</i>`
+                },
+                {
+                    title: "Chapter 1", 
+                    subtitle: "",
+                    content: `"This just in," the radio alarm starts up and wakes Libby at 3:00 in the morning in the not so distant future. "The US Olympic committee announced late last night that it would now allow its gymnasts to compete with optional attire as have the rest of the competing countries in recent years." Libby sat up with her eyes wide open staring off into space.<br><br>She had to get up and get to her early morning workout on time because Coach Monika, her instructor, did not tolerate tardiness. If Coach Monika were to make the effort to get up early and be at the Center for her coaching assistants and students, then she expected respect and appreciation for that effort from them. "I can't do this." She thought, "I can't perform in front of people, the cameras, the world, topless and nearly naked." But get out of bed she did as she had done mechanically every day for years. She looked at herself in the mirror before pulling her leotard up. She looked at her jutting breasts and cried, 'no' in her head before she put the shoulder straps in place, "I just can't do it!" When she arrived at the Center she saw her teammates huddled in brisk conversation outside waiting for someone with a key to let them in. As she approached, she was grabbed by up her upper arms and dragged into the agitated discourse. All of the competitors were voicing their positions on the announcement. Some were relieved that they could now compete on a level playing field with the rest of the world-class competitors; some knew they were too young to make the team because American television would not televise any events with American competitors under the age of eighteen; And, some were horrified at the thought of having to compete in just their skin to win. After the Romanians shocked the world by competing in transparent topped, backless uniforms with the best team they had fielded in years sweeping the medals, the world gymnastics community had decided that it would be okay to allow optional attire in the competition. Since that time some of the competitors competed topless all together. The judges gave extra credit in their marks initially for the courage to compete nearly nude in public, and then decided that it would sanction it because in assessing the performances, the view of the musculature in performing the feats was just as important as the actual movement itself. The boys laughed at the girls' concerns. They didn't mind going topless. They were proud of their physiques.<br><br>The girls, however, were concerned and were chattering like a henhouse trying to understand and make their decisions about it as quickly as possible. Finally the commotion stopped for the moment as the custodian arrived and let everyone in. It picked up again inside until coach Monika Solhiem arrived and everyone proceeded to a section of the bleachers to hear her announcement on the topic. She stood before her assistants addressing the closely huddled girls clasping hands and the boys behind them sitting open, confident, and excited about the humiliation and embarrassment the girls might be put through for them to witness.<br><br>She said, "So I see you have all heard the announcement from last night. Finally, our bonds have been lifted and we can compete with the world again."<br><br>"But Coach Monika, We can't... what would our families say?"<br><br>"Gretchen, I understand. You are going to have to decide whether you are going to stay in the hobbyist ranks or compete in world-class ranks. I don't think the Federation will reverse this. Television ratings are up, endorsements are flooding to those who compete sans vestments, and those who are doing it and winning don't want to lose that edge to clothed competitors again. Now, Avery, Prill, and Susan, you are excused from practice and will now practice with Hans Cloucher in the next group."<br><br>"But Coach Monika, why can't we...?" Prill protested.<br><br>"Pricilla my dear, you three are under eighteen and the networks will not televise your events, so the Committee has decided to only field teams of competitors eighteen years or older. I'm sorry. These are the rules being handed down to me." Monika continued to explain and answer questions until the questioning showed a certain acquiescence to the situation.<br><br>"I don't think I can do it," Libby confessed.<br><br>"It will just take some desensitizing and you'll be fine with it," CoachMonika advised.<br><br>"But, what can I do to desensitize?" Libby asked.<br><br>"Leave that to me girls. Okay, now peel down your tops and let's stretch." Coach Monika directed.<br><br>"Why don't you lead the girls by example Coach Monika" A boy tried to say anonymously from the back, but she knew it was Thomas.<br><br>Coach Monika felt on the spot. The girls looked up at her as if she would be making their decision by what she was to decide to do right now. "Okay, everybody take your clothes off." The girls looked at each other in fear. "You too back there," she said referring to the boys. The boys had smiles that were now collectively wiped from their faces. "For right now, I want everyone down to their underwear, jockstraps, or whatever."<br><br>When she saw everyone starting to disrobe, Monika turned to her assistants to direct them to disrobe and started to unbutton her own blouse. Her assistants were not too pleased with this development. The boys were in obvious glee at the prospect of seeing them in their underthings. The assistants felt that they would lose the respect and authority they would need to bark instruction and orders to the students to get them to perform per the program. Even the custodian seemed to be finding things to do in the gym more so now than usual. One by one, all of the girls were down to their underwear that had them on. Those girls and the one assistant, Rachel, that didn't wear bras, were now covering their breasts with their arms.<br><br>Although red-faced, Coach Monika stood in her stretch pants and see-through bra, her legs akimbo, her fists on her hips, and her nipples poking through staring down the boys who were ogling everyone they saw. "Boys, I said down to the jock straps. Now off with the shorts." The boys had pained expressions at this. "It is down to the straps now or no straps at all if you delay."<br><br>The girls looked on with smirks and the boys had a turn at feeling humiliated and embarrassed. By taking their time before, they were now on display for the process of taking their shorts off. The boys sat down trying to minimize the view the partially clad girls had of their harnessed packages. The one boy who did not wear anything for whatever reason was Thomas who now sat mortified with his hands tightly clasping his genitals.<br><br>"Okay, everybody down from there. I want you to take an extra ten minutes to stretch. With the distractions that are present here, I don't want any accidents or injuries." Coach Monika instructed. Then she huddled with her assistant instructors. After dividing up the duties she addressed Ms. Rachel with a wink; "I want you to give that Thomas an extra 'hard' workout today."<br><br>As they all stretched, Coach Monika walked in and around them talking about the program, their stretching and how they were to conduct themselves, "and this is sanctioned by the world body, so I want you to view this as a natural thing. Think of it as a nude beach. People walk around totally naked and the men don't get boners." Some of the boys covered their mouths to hide their laughs, but not Thomas he was genuinely worried since he had no way to harness a stiffy if it should arise.<br><br>"Get a good look at each other now, because I want your minds on your workout exclusively when we are through with this." Each time she would punctuate a statement she stood straddled over one of the boys' legs inviting them to look up at the underside of her pint sized breasts atop her slim athletic body. "Okay, now we do some sit-ups and push ups."<br><br>The group collectively groaned. She stood by Thomas as she announced, "partner up."<br><br>When everyone had a partner except Thomas, she stepped aside. "Okay, Ms. Rachel, it looks like Thomas needs a partner." Ms. Rachel knelt down at Thomas' feet and held his insteps for sit-ups. He tried to do them with his eyes closed, but he felt compelled to look to see her expression at having a close up view of his genitals hanging between his parted legs only to find that his eyes would get stuck on her blushing breasts capped with turgid gumdrop sized nipples. Despite his physical exertion, Ms. Rachel's proximity, her woman's aroma, and the sight of her firm breasts close enough for him to reach out and touch, were causing his wiener to shift from hanging down to flopped up into the crotch made by his bent leg and lower abdomen. He could feel his nuts churning and scrunched up his eyes to avoid any further accidental glimpses. Ms. Rachel made him do a double set as the others switched partners.<br><br>"Okay, good. Now we do pushups," Coach Monika directed. Ms. Rachel stood by Thomas in a half-kneel crouch ostensibly to adjust his form, but in reality, she was curious how he was going to manage doing full complete pushups with his dick hardening and pointing straight toward the floor. He wondered the same thing. As he lowered his body to the floor, the tip of his cock hit the mat straight on. Something had to give and the position of least resistance was to let it slide forward up under his belly, only this caused him further arousal as the mat grazed the underside of his cockhead. The dilemma was not lost on Coach Monika as she had them all do extra sets until Thomas whelped a frightened gasp and collapsed shuddering like a fish out of water for a moment as he emptied his jism between his stomach and the mat. When he didn't get up for the workout, several girls came to his side thinking he had injured himself doing the exercise, but Ms. Rachel assured them that he would be okay after a brief rest and to go get on with their workouts. Coach Monika gave Ms. Rachel the okay with her expression and a nod of her head that Thomas could be excused. He got up when the fewest teammates were looking, gathered up his clothes, went to the locker room to clean up, and got dressed to leave for the day.<br><br>The practice was tentative circuit training as the girls learned how to perform without the natural support of their clothing. Landings were problematic for those that wore no bras and it was just as interesting to watch someone else going through the discovery process as it was for themselves, so not as much progress was made as normal.<br><br>When they were through and about to leave, Coach Monika gave each of them a letter to give to their parents or sponsors. They were in unsealed envelopes so each girl read them before taking them home. In it Coach Monika outlined a program that each gymnast should go through to desensitize him or herself to the nudity they would most likely be performing in. Parents and sponsors were encouraged to require their gymnast to wear nothing more than underpants around the house. If guests should come to the house, then they should not be allowed to cover up. Having their families, or the people they were staying with, seeing them nearly naked all of the time would handle the first tier of shame they would irrationally feel. It went on to explain that chance encounters with guests would help them become comfortable with being that way in public. Then it closed with a promise of more instructions to follow.<br><br>'Oh my god. I can't show this to my sponsors.' Libby worried. 'I can't let them see me nearly naked like that.'<br><br>"Now, if I hear that any of you neglected to pass this letter on to your sponsors, I'll have no alternative but to let you go from the team. You all know what a privilege it is to be training here and there are many waiting for the opportunity to take your places." Coach Monika warned. "Now go and think of this as a new adventure."<br><br>Libby drove home in silence. Her sponsor, Rebecca Woodcock, sensed that Libby had something heavy on her mind and probed, "Tell me Dear, what's the matter?"<br><br>"Oh nothing." Libby tried to stall.<br><br>"Com'on, something is bothering you. What is it?"<br><br>"Here, this should explain it." Libby finally said and then handed her the letter but held on and tugged back as Mrs. Woodcock tried to take it from her. When Libby finally let it go she felt like she had given up her last defense.<br><br>"Okay, thank you. Let's read it when we get home."<br><br>When they got home Libby ran to her room and shut the door.<br><br>"Frank, come here. Read this." Rebecca said handing him the letter.<br><br>Frank's eyes lit up as he read and reread the instructions, then looked serious as he said to his wife, "I think this Monika whatever her name is a very wise person to suggest this."<br><br>Rebecca took the letter back from him. "Libby. Oh Libby, can you come down here?"<br><br>Libby came downstairs in a long, full terrycloth robe drying her hair with a towel.<br><br>"Libby, have you read this?"<br><br>"Yes Ma'am."<br><br>"Do you comply with your coach's instructions?"<br><br>"Ah, yes I do Ma'am."<br><br>"Well then, why are you wearing that robe?"<br><br>"Oh, the robe?" Libby had nowhere to go with this and felt like a cornered animal.<br><br>"Yes, the robe. The sooner you start on the desensitization program the better, don't you think?"<br><br>"But Mr. Woodcock?"<br><br>"That's the point of it now isn't it my dear?"<br><br>Libby blushed several shades of red and opened her robe just enough to wrap her towel around her waist while the Woodcocks looked on side by side. Then looking down she let the robe fall from her shoulders down her back. Mr.Woodcock stepped back out of his wife's peripheral view so he could soak in the view of Libby's well-developed athletic body.<br><br>"Now that's better. That wasn't so hard was it?" Mrs. Woodcock asked.<br><br>"No." Libby conceded and then turned and headed back to her room to get ready for school.<br><br>Mrs. Woodcock turned to look at her husband whose expression instantly turned from lecherous to serious. She patted his chest as she went off to the kitchen.<br><br>Libby was attending a local community college. All of the effort she had made and competitions she competed in to join the national team had moved school down her priority list so she was finishing up high school in a GED program. As she sat in history class, the stories about spoils of war, pillage, and slavery in ancient times faded in and out of her daydreams. She daydreamed what it would be like if the members of this class were to see her naked, or mostly naked as she performed her routines in competition or was sold by slavers in the streets. Suddenly she was aware that she was probably the subject of someone else's daydream when she looked over at a young man staring at her. She had kind of fancied him too from a distance, but boyfriends and world-class competition don't really mix unless both parties are on the exact same program. The boys in her program were either too age regressed for her or maybe swinging the other way, so she contented herself with focusing on her gymnastics at the expense of romance. At the end of classes, she saw him waiting for her.<br><br>He approached her and introduced himself, although she knew his name was Mike. Mike disclosed he was having some problems concentrating in History and thought maybe they could compare notes. Libby agreed to let him walk her home. When she got there, both cars were gone so she invited him in with the caveat that he leave as soon as her sponsor returned.<br><br>Inside they sat on the couch and got to know each other a little better through conversation. Libby didn't hear Mrs. Woodcock roll in and was surprised when she entered the front hall from the back. Libby and Mike stood up and Libby fumbled with introductions.<br><br>"I see. It's nice to meet you Mike. And Libby, have we forgotten something?"<br><br>Libby's blood suddenly froze. "Ah Mike was just leaving. Weren't you Mike?" She said as she pushed him to the front door.<br><br>"Now Libby, that seems kind of rude. Mike would you like something to eat or drink?"<br><br>"Mrs. Woodcock. I think Mike needs to go. I've got a lot to do."<br><br>"Nonsense. You get ready while I take Mike into the kitchen to see what he would like."<br><br>Libby didn't know what to do. There was a guest in the house, a boy she could generate feelings for, and now her program called for her to be naked to her underpants in the house whether he was there or not. She stood with indecision long enough for Rebecca and Mike to return to find her in the same place.<br><br>"So Mike," Rebecca said, "did you know that Libby is a nationally ranked gymnast?"<br><br>He shook his head "no" and looked toward Libby.<br><br>"Yes, and now that they will be competing in uniforms like the rest of the world's top gymnasts, she is in training for being nude in front of people, aren't we Dear?"<br><br>"Ah, yes Ma'am."<br><br>"Then, get on the program, and do it promptly, or we'll take it beyond the one last covering, if you know what I mean." Her sponsor ordered.<br><br>"Yes Ma'am." Libby conceded and started a non-erotic striptease in front of the shocked guest Mike.<br><br>"So Mike, what do you think of the star gymnast now?"<br><br>"Ah Mrs. Woodcock, ah Libby, you are beautiful."<br><br>Libby blushed. She did not expect to be complemented.<br><br>"So Mike, come in and tell me a little about yourself while Libby brings in more refreshments." Rebecca said communicating with Libby nonverbally. Libby turned and left the room feeling both pairs of eyes devouring her naked skin as she left from their view. She looked down and was puzzled by how hard her nipples had become. She touched them and they were more sensitive than she had ever remembered them being. She mixed some lemonade and returned with the glasses on a tray at a level to hide her telltale nipples from view. When the glasses were taken from the tray, she held the cold metal flat to her chest.<br><br>"Libby dear, show Michael and me some of your gymnastics moves."<br><br>Libby was aghast at the thought, but then realized that this was it. This was the program she needed to be on to get over her inhibiting modesty, so she removed the tray apprehensively and stood before them in her nudity and decided to do a back bridging walkover. The two applauded asking for more. Then Libby did a forward handstand from a standing position to more applause. Pushing her limit, she extended her legs out to the sides giving her audience a view of a wet spot that had appeared between her legs she had now became aware of at the same time they did. So, she brought her legs together and finished the handstand forward to a standing position again. Mike gave her a standing ovation and Rebecca applauded looking pleased.<br><br>Libby excused herself insisting that she needed to get some work done. Mike left thanking his hostesses and Libby went upstairs to calm her racing heart and debrief what had just happened. She looked at herself in the mirror. She was flushed all the way down to the tops of her breasts. Her half grapefruit-sized breasts were heaving with each breath. Her hard nipples were begging to be touched and touch she did causing her body to shudder. She bent her legs in a plie to touch her moist spot. It sent more quivers through her body. She had never felt this sensitive before. She got deeper in her plie and pulled aside her underpants to look at her glistening crotch in the mirror. She arched back and supported herself with one hand on the floor while she stroked her crotch with the other. The shuddering was making it difficult to keep her balance but she knew that if she kept it up that there would be relief, a relief like no other that she had ever achieved. She lowered her backward arch to the top of her head so she could touch her breasts at the same time. Then with whimpering she could not control, there was a knock on her door and it swung open. Libby collapsed sweating and panting onto her back to the floor.<br><br>"Oh. Don't you gymnasts ever take a rest?" Mrs. Woodcock exclaimed. "I'll talk to you after your workout."<br><br>Libby was fried like she had been electrocuted. Here she was about to reach a moment of pleasure she had never experienced before and Mrs. Woodcock had caught her in the act of pleasuring herself. 'Did she say what she said to not embarrass me, or is she really that dense?' Libby wondered. So with her body ready for more but her mind's thoughts interfering with the circuitry, she picked herself up, splashed cold water on her face, toweled off, and went downstairs to talk to Mrs. Woodcock.<br><br>"Here I am, Mrs. Woodcock. You wanted to talk?"<br><br>"Yes Libby, I do. What are we going to do to have you comply with your coach's assignment?"<br><br>"I'll remember, Ma'am. I just forgot."<br><br>"Forgot, or were you trying to sidestep the assignment when I wasn't here to enforce it?"<br><br>"No, really, I just forgot."<br><br>"Humm. I think we should have you take your clothes off outside before you come in. What do you think?"<br><br>"But Mrs. Woodcock, people would see me..." Libby knew that line of objection was a dead-end.<br><br>"Yes, they will see and they can help me enforce it if I tell them to watch for you when I'm not here."<br><br>"Oh Mrs. Woodcock." Libby moaned. "I'll remember. You really don't need to get others involved."<br><br>"We'll see. For now, I want you to shove your clothes through the mail slot before you come in. That way I know you will be honoring the assignment from the moment you are inside to when you leave."<br><br>Libby thought for a moment. Coming back from practice when others are heading out to work would be a problem and coming home from school at early evening rush hour could also be a problem, but if she just stayed inside for the rest of the time, she should be okay.<br><br>"I don't see what all the fuss is. You have an incredibly beautiful body."Mrs. Woodcock observed.<br><br>Libby's nipples tingled and she tightened her knees together to squelch a rising tide between her legs.<br><br>"You have been performing before thousands of people all of your life in little more thanwhat a full one piece bathing suit would cover. I just don't see why we don't have you go without your underpants as well just to accelerate the desensitization process."<br><br>"Oh no, Ma'am. That won't be necessary." Libby implored her, now holding her pussy tight to stop it from getting any more excited.<br><br>"Well, maybe we could compromise somehow like new higher cut panties or wearing heels around the house or something." She said out loud to Libby then under her breath to herself, "I think Frank is going to give me some tonight." Then she got up from the table and left Libby alone to ponder her lot.<br><br>Libby absentmindedly stroked her pussy through her underwear as she sat pensively elbow on the table with her chin in her hand. Mrs. Woodcock was making noise upstairs, so she slouched back in the seat to tweak her nipples and stroke her pussy in earnest. She brought herself up to a feverish pitch again and then heard Mr. Woodcock's car starting to roll in. Could she finish before he made his way to the dining room or should she stop now? She wondered.<br><br>She sped up trying to beat the train to the crossing and then she heard the door open. Mr. Woodcock was obviously eager to get into his house. He walked briskly around the main floor and stopped when he came upon Libby hiding her red face as if in deep thought.<br><br>"There you are. Did everything go okay today with your new regimen?" He asked as if concerned.<br><br>Libby looked up to see him going over her body with his eyes. "Yes Sir, everything has been just fine." She was hoping he would leave her be for the moment but he stood there staring trying to think of something else to say.<br><br>"Honey, is that you?" Rebecca said coming down the stairs.<br><br>"Yes Dear. Just checking in with Libby here." Then when Mrs. Woodcock entered the room he asked, "Did we follow the new rules today?"<br><br>"Yes, she was very cooperative, except..."<br><br>"Except for what?"<br><br>"Except she had a guest over and forgot to undress per the program."<br><br>"Oh my. What are we doing about that?"<br><br>"I've had a talk with her and she is agreeable to new procedures to see that it doesn't happen again."<br><br>"Well, maybe she could do her evening exercises and stretches downstairs with us while we watch the TV as a way of making it up."<br><br>"Libby. Did you get that?"<br><br>"Yes ma'am." Libby said resigned.<br><br>Libby ate before the Woodcocks and ended up serving them their dinner at the table. Mr. Woodcock got red-faced every time Libby got near enough either serving or clearing for him to touch her. Mrs. Woodcock sat with the anticipatory glow of a new bride on her wedding night. After dinner they all retired to the living room where Libby began her evening exercises and stretches. Mrs. Woodcock cuddled next to Mr. Woodcock not paying much attention to anything in particular while Mr. Woodcock stared transfixed on Libby going through her paces.<br><br>Libby was growing more comfortable with her situation and decided to have a little fun by focusing her stretches in provocative poses for Mr.Woodcock's benefit. His breathing became irregular and she could make his eyes nearly pop out of his head with certain crotch shots and breast poses.<br><br>When Mrs. Woodcock noticed he had tented his trousers, she announced that it was time for bed and hurried him off to their room. Libby was fascinated by the effect she had on him and was as sensitive and horny as she found herself earlier. She put on some music and started to dance around the room expressively to the music. She was feeling less inhibited than she would find herself even in clothing. Her exaggerated movements had her dancing up onto the furniture and every once in awhile stopping to listen for footsteps coming her way. Finally she could take it no longer and started to hump the round leather arm of Mr. Woodcock's favorite wingback chair. Nothing was going to stop her now. This time she was going to conclude what she started whether an audience appeared or not. She couldn't control her whimpering and she didn't dare turn the music up any louder. She tried to place a hand tightly over her mouth to stifle the utterances coming from her sexual fervor. She tried biting her forearm, but the only thing that worked was taking off her panties and gagging herself with them while experiencing the exquisite sensation of humping the slick leather arm directly on her slippery twat. As she was about to cum she switched to the other arm to possibly prolong the tension a few more seconds on the cooler drier leather, but in moments it too was as warm and slick as the other one. Finally, she just sat down in the chair all together with her legs dangling over the arms and frigged herself to a welcomed conclusion relieving the tension she had built up during the day.<br><br>When she woke up, she found herself slouched, spread open in the chair with the lights still on and the music off. She stole her way upstairs and crawled into bed for a couple of precious hours sleep before that darn alarm would go off again.`
+                },
+                {
+                    title: "Chapter 2",
+                    subtitle: "", 
+                    content: `"How about that decision listeners" the three o'clock alarm went off. "I for one will now call women's gymnastics my favorite sport, unless skaters start doing the same thing."<br><br>"Oh god," Libby bemoaned, "why can't everybody just give it a rest?" Libby got up, put on her workout clothes, and went down stairs to meet her sponsor in the hallway for the ride to the Center.<br><br>"What's this?" Mrs. Woodcock said acting disappointed.<br><br>"What's what?" Libby responded confused.<br><br>"You're dressed."<br><br>"Yes, in my workout clothes. It's time to go to the gym." Libby explained.<br><br>"I can't believe you would violate your coach's first rule and right before going to class."<br><br>"But, I'm ready to go out the door. It's time for my workout and these are my workout clothes." Libby explained.<br><br>"The instructions from Monika Solheim specifically said that you are to wear nothing more than underpants while you are in the house regardless of the circumstances or who may be present. I think we should step up the desensitization or you may never be properly prepared for competition."<br><br>"No Ma'am. Please. I guess I didn't fully understand the instructions."<br><br>"We'll see. You are not to be late so we need to go. We'll discuss what to do about helping this sink in after practice."<br><br>"Okay." Libby said meekly, wondering what could be worse than it already had been.<br><br>When they got there, the Center was open and her teammates were already inside. It seemed the custodian was a little more on the ball or was a little more eager this day and got the place open early. The girls exchanged reactions to their assignments from yesterday and the boys generally joked about it. When the coaching assistants arrived they had what appeared to be knowing smiles but did not engage any of the students in conversation. When Coach Monika arrived all conversation stopped and everyone obediently moved to the regular section of the bleachers for a briefing before training.<br><br>"Stop!" She exclaimed. "What do you think you are doing?"<br><br>Everyone looked puzzled.<br><br>"What is with all of these workout clothes?"<br><br>Nobody dared answer.<br><br>"We have a lot of work to do, and I'm not speaking about training for your art. I'm talking about getting comfortable being nearly nude in front of anybody who might happen to see you. Sit."<br><br>The collective daze was broken for an instant while everyone took a seat.<br><br>"In Europe people grow up feeling natural about nudity, at least more so than here. They have been cleaning up in competitions for years even though we have had the talent to win. We have to get you all completely comfortable about performing naked in front of large in-person audiences and by cameras all over the world just to have your talent and hard work get an even chance against theirs. If you don't want to be champions just get up and leave and make room for those that do."<br><br>Everyone looked around at each other but nobody left.<br><br>"Okay, now take off your clothes. I mean every stitch this time. The last one with anything on will have to step forward and do my bidding."<br><br>Clothes flew off of bodies and got mixed up or fell down under the bleachers.<br><br>When everyone was totally nude, coach Monika asked Gretchen to come forward. Gretchen wanted to protest because she wasn't the last one, but thought the better of making a scene. "And I'll have Thomas come forward." "Me?" Thomas said stepping down from the bleachers holding his genitals ostensibly for support, but actually to hide them from view.<br><br>"Today I have the costumes you are going to compete in." She shook out a sheer leotard and then handed it to her assistant Rachel to hold up. Then she shook out a deeper cut version and told Thomas he could try it on. "Now these are copies of the team uniforms to be used for practices so you will be more comfortable in the real thing during competition.<br><br>Thomas was thankful he could step into something that would be more coverage than his hand. What he found was a completely sheer, body hugging weightlifter's type uniform scooped down in front, on the sides, and in the back. The suit acted like a jockstrap by hugging his cock and balls up and out behind a form fitting opaque stretch nylon patch.<br><br>"This," coach Monika explained, "is a leap ahead of the other male competitors' uniforms as you can see, but we need to get noticed again on the world stage. There can't be any complaints by the judges because these are designed to view the musculature just fine."<br><br>"And everything else about him." Teammate Jill said to Libby, nudging her with her elbow.<br><br>"Ah, Jill. Why don't you come down here and join Gretchen for this next presentation?" Coach Monika requested.<br><br>Jill came down and stood sheepishly with her hands clasped in front of her pubic area.<br><br>"Okay girls. This is what you are going to be wearing." She gave one uniform to Gretchen and the other to Jill. The girls pulled on the completely transparent, body-hugging leotards, only Jill's didn't come up far enough to cover her breasts. She felt suddenly exposed even though she was totally naked just moments before. She tried to will her erect nipples to calm down but she couldn't. The costumes had a nylon modesty panel along the crotches, but no padding so the relative puffiness of their vulvas was completely on display.<br><br>"As you can see girls, these will meet or surpass what you have seen on the floor by any other teams, For those of you who choose to leave your breasts free like Jill here, you'll probably get higher marks for the courage of doing so, but the bigger breasts like Jill's here," coach Monika continued and surprised Jill by hefting her breast in front of her teammates, "the sooner you will lose your perk in them if you allow them to flounce around.<br><br>It will be your choice which costume you wear during the competitions, the one Jill is modeling or the one Gretchen is modeling."<br><br>"You've got to be kidding." Libby said incredulously to herself. "I can't be seen by the world in something like that. The other teams at least have bottoms that cover them like full underwear. These are downright scandalous."<br><br>"Are you sure these will be accepted by the Olympic governing body? They really don't cover anything." Libby said to her coach.<br><br>"Come down here and try yours on. They have already been run past the powers that be and we'll be fine. We'll be more than fine. This year, boys and girls, is our year."<br><br>With that everyone came down and grabbed a costume to wear. Only one covered the breasts and that was the one Gretchen was wearing and she needed the support the least of all the girls. The chatter went up as they each commented on them pro and con. Meanwhile, some people were setting up some equipment off to the side.<br><br>"Okay everyone. It looks like we were long on one style and short on the other. We'll take care of that tomorrow. Now that you have a uniform, we are going to gather for some team and individual photos." Coach Monika directed.<br><br>Very few of the competitors were comfortable with their nudity in this short period of time. They were just starting to feel comfortable around members of their households and their teammates in class. Now they were faced with having a permanent record by posing their naked developed bodies in front of cameras for all time and everyone to see. They were gathered up into a group. The boys tried to hide behind the girls, but the girls in front of each boy were asked to kneel down on one knee.<br><br>When the group shots were finished, they were broken off into smaller groups for individual publicity shots. The girls were made to leap into arabesques, hang from uneven bars, stick landings, and such for publicity photos in each of their events. Libby found that this stimulated her like the events of the day before and hoped she would have enough time before school to take care of it.<br><br>Not much in the way of practice happened as the whole time was taken up with publicity duties. When the students were ready to leave, Coach Monika asked to speak to the parents and sponsors who were present to drive their competitors home. The students waited in their respective cars while their coach met with them.<br><br>"Okay then." Mrs. Woodcock said as she fastened her seatbelt. "How was your workout today?"<br><br>"It wasn't really a workout. We got our new costumes and had publicity photos taken."<br><br>"I know. So what did you think?"<br><br>"About what?"<br><br>"The costumes, the attention, everything."<br><br>"I'm trying to be excited, but..."<br><br>"But what Dear?"<br><br>"It's just that those costumes, well I can't see America's grandmothers sitting around the TV watching us go through our routines without having a hissy fit."<br><br>"So you think older people are too prudish to keep up with the times?"<br><br>"No, well, I guess so. Didn't you see what we are going to wear in competition?"<br><br>"Yes I did. And I think the rest of the world better watch out when you pretty girls do your stuff."<br><br>"Thank you Mrs. Woodcock." Libby acknowledged but felt a rising sensation in her groin and in her sensitive nipples just grazing the lining of her windbreaker with each bounce the car made. "So, what did you and Coach talk about after the session?"<br><br>"We talked about what kind of progress we thought she might see within a couple of days. She mentioned that she felt you and maybe Jill and a couple of others may need to play a little catch up to start feeling as comfortable as the rest are now."<br><br>"But it's only been one day."<br><br>"Yes, but with the right attitude, it shouldn't even have to take a day. The goal should be competing and winning. What you have to do to win, as long as it isn't illegal or fattening, should be welcomed by the most serious of competitors."<br><br>"She thinks I have an attitude problem?"<br><br>"I guess you could say that. She doesn't think you are embracing this new tactic with as much energy as some of the others. She thought that maybe there would be some additional things I could do with you like Jill's sponsor will be doing with her."<br><br>Libby gulped. "Like what?"<br><br>"Like having friends and neighbors over. We could consider it a 'coming out party’."<br><br>‘Oh god.’ Libby thought in silence.<br><br>"One way or another, you'll need to be completely comfortable with your body in front of strangers so you can get on about the practice of being the best at your craft. And the sooner you get over this hump, the sooner you can get back on track for Worlds."<br><br>Libby sat stunned. She thought there would be more time, more time to adjust. But the people controlling her progress were expecting her to turn on a switch and be a new person just like that. ‘Maybe I don't have what it takes to be a champion.’ She thought, and then tried to erase the negative thought as she had been taught to do.<br><br>When they got home she was deep in thought as she started to enter the house.<br><br>"Ah hem. We really are going to have to up the dosage here." Mrs. Woodcock scolded.<br><br>Mrs., Woodcock went inside and closed the door. "Your clothes through the slot first please." She said to Libby through the door. Libby squeezed the workout clothes she had under her arm through the mail slot first. Then she took off her jacket and slid it through waiting for the door to open. The training costume did nothing to ward off the nippy chill of the early morning. She rubbed her hands together and padded in place thinking Mrs. Woodcock was picking up the clothes and folding them first. As cars would go by they would slow down and honk or holler. She didn't dare turn around to have eye contact with any of them.<br><br>Finally she called out, "Please let me in; I'm freezing out here."<br><br>"Not everything has come through the slot yet, Dear."<br><br>"Oh god," she said as she peeled the leotard off. "What difference does it make really?" She realized. "It makes me look naked to them already." And then she slid the last covering through the slot. A good minute later she was let in.<br><br>"I'm fixing you some hot chocolate."<br><br>"That sounds good. I'm just going to go upstairs and get some underwear."<br><br>"No, I don't think that would be a good idea."<br><br>Libby looked at her worried.<br><br>"I think we should amend it to be no covering of any kind while in the house. That is just until you feel completely comfortable with your nakedness around people. Don't you think?"<br><br>Libby considered the talk in the car, how her attitude was being viewed, and thought better than to argue.<br><br>"Okay then." Mrs. Woodcock said as she handed Libby the cup of cocoa.<br><br>"Another idea Monika had for those of you that are reticent about the changes is to exaggerate the discomfort so that the normal situation will seem easier."<br><br>Libby stopped sipping and looked up at her sponsor waiting for the other shoe to drop.<br><br>"Monika is going to tell both the boys and you girls tomorrow that you should rid yourselves of pubic hair until after the competitions, because any signs of hair sticking out of the modesty patches will detract from the artistry of your bodies and draw the wrong kind of attention to you. I think it is a good idea for another reason."<br><br>"What's that?"<br><br>"Monika also suggested that we do things that will have you more conscious of your nudity to help the desensitization process."<br><br>Libby looked apprehensive.<br><br>"I think we should go upstairs and shave you now."<br><br>Libby gulped.<br><br>"I'll help you. Then when we are through, we'll find some heels you can wear to enhance your femininity."<br><br>"Heels?"<br><br>"Just in the house for now."<br><br>Libby took her time finishing her cocoa while Mrs. Woodcock stood by patiently. Finally she joined Mrs. Woodcock in the master bathroom. It was the first time she had been in it since she was given a tour of the house when she first arrived. It made the embarrassing process she was about to go through seem special in a way.<br><br>"Sit back here," Mrs. Woodcock instructed, "while I clip away what we can >with scissors. Then we'll lather you up and carefully shave off the rest."<br><br>Libby whinnied for a moment of anticipation.<br><br>"Don't worry, I'll be very careful."<br><br>"Yes Ma'am."<br><br>Libby's head felt feverish; her nipples pained from engorgement and she worried that Mrs. Woodcock might see what felt like a river flowing from her twat.<br><br>"There," Mrs. Woodcock declared as she stroked Libby's vulva against the grain of where a young bush of hair once grew. "You feel." She said as she kept stroking until Libby replaced her hand with her own. Libby started to moan. "See how smooth it is?" Libby groaned again. "Let me feel it once more." Mrs. Woodcock took over the stroking again. "Oh missed a spot." Then she took the razor to a slightly rough spot and went back to checking for smoothness. "I think I have everything. You check again." Libby took control back and stroked her pussy as if looking for missed spots but couldn't help keeping a finger on her clitoris. Then came unexpected convulsing and utterances, which she was embarrassed herself to hear, and with momentary abandon she stroked fast and furious for several seconds until she climaxed in front of her sponsor.<br><br>"Oh? Oh? Oh my god. I'm so embarrassed." Libby exclaimed wide-eyed and totally humiliated by what had just happened.<br><br>"Oh Dear, think nothing of it." Mrs. Woodcock said as she embraced Libby's nude limp form into her own body. "It was only a natural response to the attention we gave your body there. You see? This is what we need to help you with, feeling completely natural about your body. When you can do something like that in front of strangers, you can perform your routines in the team costume and not be distracted by anything about it. You'll be able to perform to your talents and we will all be admiring it beyond your wildest dreams."<br><br>Libby listened to the tone and sincerity of what her sponsor was saying more than the content and started to pull herself together.<br><br>"Now let me help you get dressed for school."<br><br>Libby thought that strange, but was too drained to protest.<br><br>"Take your shower and I'll find some things for you."<br><br>"Yes Ma'am."<br><br>Libby stood on the toilet to see what she looked like between her legs in the mirror. She thought about how she wanted the hair to grow in when she was younger and now it was back to looking like it did then. The more she looked though, the more she liked the cleaner look. In the shower she basked in the falling water massage. By the time she washed her crotch she had momentarily forgotten about the fact she had no hair there. She started to get into the feel and decided that one climax that morning would be enough and stopped.<br><br>When she came out of the bathroom, Mrs. Woodcock was waiting with lightweight clothes that were a half a season too early. "Now, before we put these on downstairs in the hall, I want to cover one more thing."<br><br>Libby stood with her hands folded in front of her pubis and most of her weight on one leg.<br><br>"I think we need to have you stand for attention."<br><br>"Like this?" Libby said as she tried to show her cooperation.<br><br>"No, not 'at attention', for the attention your beautiful body should be getting."<br><br>Libby relaxed a minute while Mrs. Woodcock approached. She gently kicked Libby's feet about shoulder width apart, crouched down and turned her toes out on forty-five degree angles, put her hands on Libby's shoulders to bring them back and scooped Libby's hands around to the back and placed each palm on a butt cheek.<br><br>"There. I want you to stand like that anytime you are not serving someone or shaking their hands. Soak in the admiration they are going to have for your beauty and let it pass into you for inner strength that you will use when you need to perform. What do you think?"<br><br>"Ah, it's all new to me." Libby said not wanting to commit to a real answer.<br><br>"Yes it is. Leave it to me. We will get you ready in time so Monika will keep you on the team. Now, if you are ready to go, I'll meet you downstairs in the hall and you can get dressed."<br><br>Libby wasn't used to the new routine yet, so she gathered her school things and followed her sponsor to the front door. When she took the clothes, she couldn't find any under things. Mrs. Woodcock could tell the next question coming and said, "Try it this way today. It will help you be more conscious of your body and give you an opportunity to adjust to the attention a beautiful body like yours naturally attracts."<br><br>Despite the potential for embarrassing moments at school, Libby was feeling more and more comfortable leaving this program in her sponsor's hands. She put on the translucent white sleeveless blouse and short flaring lemon yellow skirt with some naughty excitement. A gust of wind, following her up some stairs, bending at the waist to pick something up and her secret would get out. Any glimpse from the side into the armholes of her blouse would confirm to anyone that they were really seeing what they thought they were seeing under it.<br><br>When her shoes and windbreaker were on, Mrs. Woodcock offered, "Would you like me to drive you today?"<br><br>"Yes that would be nice. Thank you."<br><br>As she was dropped off Mrs. Woodcock reminded, "It won't do you any good if you leave your jacket on all day. Would you like me to take it back for you?"<br><br>"Ah... Ah..."<br><br>"Here, let me take it back for you. You can jog home to stay warm." Her sponsor said as she helped remove the windbreaker from Libby's shoulders.<br><br>During the day Libby found it hard to concentrate on her school subjects.<br><br>In a private moment in the bathroom she had the realization that this was just the distraction she would have to experience to get over her inhibitions in order to reach her personal and the nation's goals for herself, her teammates, and her country. The worst part was the doubt that she would be able to do it in time to stay on the team and contribute.<br><br>Between classes it was easy to break off the conversations the boys were trying to have with her, but the end of the day was a different matter. A couple of students recognized her from a competition on TV and she was mobbed by their questions and well wishes. She was trapped. She couldn't move until enough of them were satisfied that they would create a gap for her to move through. Then Mike came to the rescue.<br><br>"Need someone to walk you home?"<br><br>"Hi Mike. Thanks for rescuing me. No, I think I'm just going to jog home to stay warm."<br><br>"I should say. That is quite an outfit you are wearing today."<br><br>Libby blushed.<br><br>"At least you are wearing an outfit today."<br><br>"Mike! Not here. Please."<br><br>"What's up with that anyway?"<br><br>"Mike, I've got to go. Can I tell you about it another time?"<br><br>"I haven't been able to think about anything but you since yesterday. You are so beautiful... and talented of course."<br><br>"Okay, jog with me a little ways."<br><br>"Cool."<br><br>Libby didn't see him wave along some buddies laying back.<br><br>Mike held his book bag as well as Libby's as they jogged. He tried to see bounce in her blouse, but Libby's firm half grapefruit sized breasts did not cooperate with his efforts. He was treated though to her hard nipples poking through the material pushed against her by the wind. A block from her house she stopped and asked for her book bag back.<br><br>"Aren't you going to invite me in?" Mike asked with a sad puppy dog face.<br><br>"I can't, not today."<br><br>The troop then caught up with them. "Hey Mike, are we in?" One of them asked.<br><br>"Hey guys not today, right Libby?"<br><br>"Right, I've got to go. Thanks for carrying my bag."<br><br>"How about a peek then?"<br><br>"A what?"<br><br>"You know a Mardi Gras flash. For old times sake."<br><br>"Old times sake!?"<br><br>"Yeah, how 'bout it?"<br><br>"I don't think so, apparently you're not the kind of guy I thought you were. Good bye." She said in a huff and left.<br><br>Mike caught up with her again. "How about just I go in, snap a few pictures, and leave. These old boys will never believe me that you flashed me your tits yesterday."<br><br>"No pictures. It is different today from yesterday."<br><br>"How do you mean?"<br><br>"I'll tell you some day."<br><br>Mike grabbed her arm and turned her back around. "Hey you owe me. I rescued you today, remember?"<br><br>"Wait here. Let me see if my sponsor is home. If she isn't I can't get in anyway."<br><br>"Okay."<br><br>"If you come around before I come back and get you, then the deal is off. Understand?"<br><br>"Okay, got it."<br><br>Libby proceeded on to the house. The good news was that Mrs. Woodcock's car was there so she would be able to get into the house. The bad news was that she would be able to get into the house. She looked around for any cars, Mike or his pals and took off her blouse and then fed it through the mail slot. Next, she let down her skirt and fed it through the door. She looked again and then remembered she needed to let Mrs. Woodcock know she was there, so she rang the doorbell and knocked. When that didn't bring her to the door, she rang, knocked and called out her name.<br><br>She was so intent on getting in that she didn't realize Mike and his buddies had snuck up around behind her. She turned in surprise and tried to cover her breasts and freshly denuded pussy. "Mike! Go away! This isn't fair."<br><br>"Fair? What's not fair about it? You're the one who took off all of her clothes. We didn't force you. We are just here to appreciate it."<br><br>"Go away, please!" She implored them.<br><br>"Not until you let me take a picture." Mike offered.<br><br>"No I can't."<br><br>He aimed. She put the hand from her breasts up to block the lens while she looked away and then Mrs. Woodcock appeared out of nowhere.<br><br>"Hi boys."<br><br>Mike put the camera away.<br><br>"Hey Libby. Is this anyway to greet our guests? Why don't you stand for attention like we discussed?"<br><br>Libby slowly unwound her cover and stood up straight trying to look proud, but couldn't look any of them in the face. If she had, she would have seen them with eyes bulging out of their sockets.<br><br>"Okay Boys. Get enough of what you came for?"<br><br>"Yes Mrs. Woodcock." Mike said sheepishly and embarrassed. Then he turned his crowd around and headed off before Mrs. Woodcock could shame him any more.<br><br>"Let's go inside and warm you up." She said to Libby as she rubbed her arms up and down for warming friction before putting her key in the door.<br><br>"Where were you? I knocked and rang and yelled for you."<br><br>"I was next door. I would have been right over except I wanted to see how you would handle the presence of strangers."<br><br>Libby looked down away from eye contact.<br><br>"I think we both learned how much work we have to do and in such a short period of time to save your spot on the team. I agree with you drawing the line at picture taking considering what those pictures were for, but before that point, those boys were no different than anyone else, until they tried to act in any way that was out of line. Do you get my point?"<br><br>"Yes ma'am, I'm getting it. It's just that..."<br><br>"'Just that' what?" Mrs. Woodcock challenged. "You are still on the side of caring about people seeing you in your natural state. You still have that mountain to cross."<br><br>"But how?"<br><br>"You are going to have to decide, and soon, whether a world title is more important than a little modesty or not. If you think about it, we all have bodies. They are all pretty much the same except we as a people are pleased to view some of them more than others. You my dear, are blessed, and you've worked hard I'll admit, with such an exquisite body that is very pleasing to just about everybody's eye. The rest, screw them. They don't matter anyway; they'll never be in your life."<br><br>"But those boys were cads."<br><br>"Their caddier side came out because you fought them for what you have already given freely to others. Don't you think they would have been different if you acted pleased and flattered that they liked what they saw and invited them in for a few minutes of eye candy? Don't you think they might have acted more appreciative, polite and left when you asked them to go?"<br><br>"Well maybe."<br><br>"Sure they would, just like Mike did yesterday. We are increasing the size of your audience tomorrow night. Jill is going to come over to join you too. How you handle yourself will be a big step to determining your world class competing future you'll see. Finish that cocoa, and when Frank comes home we'll do an exercise to help you for tomorrow night."<br><br>The word "exercise" meant something different to Libby at that moment than what it turned out to be. When everyone had eaten and Libby had cracked the books for an hour, Mrs. Woodcock called her into the living room. Libby came in and stood next to the Mr. Woodcock's wingback chair with her hand on the back and one ankle crossed over the other.<br><br>"Yes Mrs. Woodcock?"<br><br>"Libby dear, have you forgotten already about standing for attention?"<br><br>"Oh." She said realizing and immediately got into position.<br><br>"No, come over here and stand for attention in front of the both of us.<br><br>"That's it. Now is that so bad?"<br><br>"No, Mrs. Woodcock, it is very easy. I'm getting used to being like this around the two of you."<br><br>"Very good. Now see how this desensitization works?"<br><br>"Yes Ma'am."<br><br>"Now let's take it up a notch, shall we?" Libby searched with her eyes while she waited for the instructions. "Now I want you to show us your new look between your legs." Mr. Woodcock looked at his wife surprised and pleased then looked directly at Libby's crotch.<br><br>Libby bent her knees out and tucked her hips down and in to tilt her pussy more into view.<br><br>"That is very good. See how easy that was? Now pull apart the folds with your fingers."<br><br>"Like this?" Libby said red-faced as she plied her vulva open.<br><br>"Yes Dear, just like that. You are doing very well."<br><br>Libby was pleased to hear that she was on the right track finally.<br><br>"Now caress your breasts."<br><br>"My breasts? Like this?"<br><br>"That's perfect. How does it feel?"<br><br>"They're sensitive and it feels good."<br><br>"No, I was thinking about how it feels to do something intimate like that in front of us."<br><br>"I'm okay with it I guess."<br><br>"That's good. Now stroke yourself down there like we did earlier."<br><br>"Excuse me? I mean right here? Right now?"<br><br>"Remember, there is nothing more natural than your naked body and all of its normal responses. Being okay with allowing others to witness it moves you to a space where you can focus on other things when you are naked."<br><br>Libby tentatively cupped her snatch.<br><br>"You could do it and pretend we are not here; or you could do it and soak up the attention as an energy source to help you reach your goals, or you could just do it to turn us on. However you decide to do it, it will help you be in more control of your life and in reaching your goals."<br><br>Libby thought it would be easiest to stroke herself in front of them if she thought they weren't there, so she closed her eyes and tried it. It started to feel good until her curiosity got the better of her and opened her eyes to see what they might be thinking.<br><br>Mrs. Woodcock was now cozied up next to her husband and was slowly rubbing her hand along the top of his thigh. Mr. Woodcock had put his arm around his wife and was trying to reach her breast with his fingertips from under her arm. Libby thought this was sweet and appreciated that they were so into watching her that they were unconsciously showing their appreciation this way. It seemed as if they were joining her and she felt more comfortable in reacting to the sensations her self-stimulation was beginning to produce. She remained conscious enough of the Woodcocks to notice that, as she became more relaxed with her sexual response that they became less inhibited about theirs in front of her. As Libby grew reflexively more vocal in her response, Mrs. Woodcock was using both of her hands to touch her husband everywhere but the actual launch pad. Mr. Woodcock was trying to keep one eye on Libby and stimulating his wife with smooches on her neck to convince her to send in the launch codes. Libby's climatic response grew closer, and faster as she saw the effect she was having on the couple and exploded into a blissful release that had her teetering herself over to Mr. Woodcock's chair so she could collapse into it safely.<br><br>"That's it. Good night." Mrs. Woodcock said abruptly dragging her husband to his feet. "Good job Libby."<br><br>Libby basked in the afterglow of her physical response as well as the positive stroke for having accomplished a goal in her sponsor's eyes.<br><br>"Ah, good night." Mr. Woodcock said as he quickly followed his wife so he could couple his bulging crotch into the cupped palm his wife was holding out for him to dock into as she walked.<br><br>`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: `"Good morning champions."<br><br>"Good morning Coach Monika." The team said nearly in unison.<br><br>"I don't have your alternate costumes, girls, with the support you may want or need just yet, however, I just heard of a major rule change that may make a difference."<br><br>Everybody was clinging to the head instructor’s every word.<br><br>"It has just been announced that cradling your breasts at any time that you should need to is acceptable. For instance, in a landing you can do it hugging your breasts with your arms or cradling them in your palms, just so long as you finish with an arched extension."<br><br>"What's that?" Terry remarked.<br><br>"For any maneuver that you need to give yourself support, you can now do so but only for the moment you need that support. The judges will take into consideration the increased difficulty of keeping your balance without the normal use of your arms, and as such it will be encouraged."<br><br>The group started to murmur.<br><br>"Now, this will probably create a whole new set of possibilities for you to develop patented moves and you can bet the other world competitors are working hard on using this to their advantage right now too. I hope you are all ready for the challenge. If not, I'd cooperate with your parents and sponsors to get over any hang-ups about displaying your bodies as soon as possible so we can work on the bigger challenges at hand."<br><br>Once stretches and exercises were over, there was a new found enthusiasm for working on routines. The coaching team members were eager to spot the girls and catch them as they tried to perfect their balance while holding their breasts at individual times during their routines. Some worked with the competitors in trying to come up with new moves that naturally incorporated breast holding and cradling. They seemed to delight in demonstrating on the girls' ways they might be able to do it.<br><br>By the end of the day, with the focus on the bounce and flounce of breasts and with all of the necessary and unnecessary touching, everyone was in need of a cold shower.<br><br>Libby took a day off from school to practice some new aspects of her routine at home. She had always put her competing ahead of school and it was only a GED program at a community college. In Libby's mind, she would complete high school and maybe even college some day, but it didn't have to be now. Her sponsor Mrs. Woodcock had housed several gymnasts over the<br><br>years so they could be by the National Training Center, and she shared the competitors' priorities for their window of opportunity to compete over just about anything else.<br><br>Mrs. Woodcock was busy making finger food appetizers for the impromptu and last minute "coming out party" scheduled for this night to help a couple of the members of the team have an opportunity to grow more comfortable with their nakedness in the presence of strangers.<br><br>The doorbell rang. "Libby, can you get that please?" Mrs. Woodcock called out.<br><br>"Yes Ma'am." Libby replied, her heart racing at having to greet an unknown at the front door in the all together. She stepped into the high heels she was instructed to wear and slowly opened the door a crack to peer around.<br><br>"Mom? Dad? What are you doing here?"<br><br>"Hi Sweetie. Aren't you going to let us in?" Libby's mother asked.<br><br>"Ah, ah, well sure..."<br><br>"Hi Jones', I'm so glad you could come on such short notice. Libby, maybe you could take their coats and things upstairs while we become better acquainted."<br><br>"In the guest room I guess?"<br><br>"Yes Dear. That will be fine." Mrs. Woodcock acknowledged.<br><br>"Will you two be staying here with us?" Mrs. Woodcock offered Libby's parents.<br><br>"Well, we'll have to see. We do have reservations just down the road." Mrs. Jones said politely, but couldn't hide her wonderment at her daughter's nakedness.<br><br>Libby's parents couldn't help but stare in shock at their daughter and the way she was following Ms. Woodcock's direction totally in the nude except for her high heels struggling with a suitcase up the stairs. Libby's sponsor had to bring them out of their staring trance.<br><br>"So how was your trip from Iowa?" Libby heard Mrs. Woodcock asking as she took a moment's rest on a landing.<br><br>When Libby was done, she waited for everyone in the front hall standing for attention the way Ms. Woodcock had instructed, legs about shoulder width apart, toes pointed out, shoulders back and hands flat on her backside.<br><br>"My, how you've grown." Her mother remarked coming back into the front entry.<br><br>"You've filled out nicely... I mean you are becoming a very attractive young woman, Libby." Her father added.<br><br>"So this is what it takes to be a champion these days." The mom said with a hint of sarcasm and regret.<br><br>"She is going to mesmerize her audiences when she performs her events." Mrs. Woodcock said proudly.<br><br>"But why this?" The mother asked pointing at Libby's denuded pubis while trying to turn somewhat away.<br><br>"The costumes really call for it. Would you like to be the first to see what she will be competing in?"<br><br>Both parents nodded their heads.<br><br>"Libby, run upstairs and put on your competition uniform and come back down."<br><br>"Yes Ma'am."<br><br>"We did raise her right, about the manners I mean, didn't we Harold." Libby's mom said reflecting on how polite and respectful she was behaving.<br><br>"Yes Millie, we did. I'm awfully proud of that." He replied.<br><br>"You'll be awfully proud of Libby too when she brings home a medal for the US." Mrs. Woodcock added.<br><br>"Yes, yes of course we will." The mother confirmed.<br><br>Libby came back down and walked the way she had seen models walk in fashion shows along the catwalks. She had to focus on performing something; otherwise she wouldn't have been able to handle her parents looking at her posing nude in front of them for the first time since she had developed into young womanhood.<br><br>"Oh my, hum. I see about the hair part, down there I mean. Yes I see, um." Libby's mother remarked.<br><br>"No, it wouldn't do to have hair there would it?" Mrs. Woodcock added.<br><br>"I guess you know what you're doing." Her father remarked.<br><br>"Yes Dad. We are all wearing this costume this year. It is our country's team uniform." Libby replied.<br><br>"Well then, I think it will be great, and we are proud of you. Aren't we Millie?" He replied.<br><br>"Yes Dear, very proud." She confirmed.<br><br>"Well Libby, why don't you put the costume away to keep it looking nice for tonight. Millie, maybe you would like help me in the kitchen."<br><br>"I'd be happy to," Mrs. Jones said.<br><br>"Harold, maybe you would want to make yourself comfortable in the living room with the TV or something for awhile."<br><br>"Thank you Rebecca, I could use a rest after all that last minute traveling."<br><br>When Libby returned to the living room to continue experimenting with her routine, she found her Dad sitting in Mr. Woodcock's chair clicking the channels. "Would I be bothering you if I practiced in here while you watch? The Woodcocks have me do it all the time."<br><br>"No Dear, no problem. Pretend I'm not here so I'm not in your way. Nice big living room for it isn't it?"<br><br>Libby decided that she would just pretend her father wasn't sitting there so she could concentrate on her craft. It was tough enough to have him see her naked for the first time since she swam topless at a lake back when she was seven.<br><br>As she did her routines her dad tried with all of his will not to look at his naked daughter. The discomfort went both ways in the situation, but something was making his head swim with confusion, the smell of the chair, the movement of Libby grabbing her breasts out of the corner of his eye, Libby's utterances during physically challenging moves, he hadto get up. "Excuse me Dear, I've got to go see if your mother needs any help."<br><br>"Okay Dad," Libby said with a smile.<br><br>A little while later Jill's sponsor, Mrs. Robbins came by with Jill and another teammate Hannah, to help out with the party preparation. Jill and Hannah immediately disrobed down to their underwear smirking that Libby was totally nude. Mrs. Robinson came back out of the kitchen, after going in and announcing her presence, to hang up her coat in the hall closet. When she saw the two girls giving Libby a hard time, she said, "Okay girls, in this house the competitors wear nothing, right Libby?"<br><br>"Yes Mrs. Robbins." Libby said with an 'I got you back' smile.<br><br>Then Mrs. Robbins noticed that Libby had already shaved herself clean between her legs. "Well Libby you are so on the ball. Monika only mentioned it to you all this morning and you have already followed her instruction. Good job. Maybe you would be kind enough to help Jill and Hannah with it."<br><br>"Be glad to Ms. R.  Com'on you furballs lets get you cleaned up." Libby said feeling in charge.<br><br>Hannah was okay with letting another girl be in charge of the area between her legs, but Jill sort of fancied herself as top jokester and decided that she would take care of it herself. She watched as Libby snipped off Hannah's curly hairs as carefully as she could. When she was through, she said to Jill, "Okay, I cut off most of it, you can shave the rest."<br><br>"I'm not touching her there. I think she likes it too much." Jill said in response to Libby's order. "No offense Babe." She said to Hannah.<br><br>"None taken. Why don't you both do it?" Hannah said with a smile.<br><br>"Okay, I'll pull her skin tight while you shave her and then I'll feel for the areas you might still need to go over again." Libby directed.<br><br>"No, I'll pull the skin and tell You where you need to shave her." Jill countered.<br><br>Hannah didn't want to wait for any more arguments, so she quickly put some lotion on and waited for the service.<br><br>Jill knelt down next to Hannah and put her fingers on the inside of her thighs as far away from Hannah's vulva as possible while Libby crouched down between Hannah's outstretched legs and began to gingerly scrape away the stubble with the razor. Hannah closed her eyes and started to bask in the sensations being created down between her legs.<br><br>"Hey look. What did I tell you? She's into this. Look at her nipples." Jill declared.<br><br>Hannah opened her eyes and looked at her nipples, reached up and squeezed them with a smile and pointed out that she could say the same thing about the other two by the size and firmness of their nipples were showing.<br><br>Jill was finding it increasingly difficult to hold the skin taut for Libby because the lotion had worked its way out to where her fingertips were trying to hold the skin back. She found that she had to paw at Hannah's skin closer and closer to the centerline and more and more often to give Libby a tight surface to scrape. As Libby's swaths with the razor came in closer to the center, Jill had to paw all across Hannah's lips to give Libby a proper surface to scrape.<br><br>Hannah was obviously starting to lose control. "Hurry up with it. Will ya?" Jill said concerned.<br><br>"I'm doing it as fast as I can. Your fingers get in the way sometimes."<br><br>"Are you almost done? I can't really see it very well." Jill asked.<br><br>"It's looking pretty good. Feel around for rough spots."<br><br>Jill felt around as quickly as she could, which only heightened Hannah's excitement and when she was about to draw her hand away Hannah grabbed it and kept it pinned to her cunt as she went through the throes of her orgasm.<br><br>"Ooo, gross!" Jill said.<br><br>"I think that is why you and I are in this remedial program to get ourselves more comfortable with our bodies." Libby observed. "It's why we >can’t wear our underwear over here. It's why we are entertaining strangers tonight in the nude. And it's why we may not make the team if we don't demonstrate that we can be comfortable with the natural aspects of a girl's body."<br><br>"Well, thanks for the god damn lecture Ms. Jones." Jill said put out that Libby was getting a handle on it sooner than she was. Then she broke out into tears.<br><br>Libby and Hannah both put their arms around her to comfort her. In her sobbing Jill confessed, "I don't think I'm going to be able to do it and make this team."<br><br>"Sure you will." Libby encouraged.<br><br>"I've worked so hard at this all of my life. The terrible schedules for practice time, the competitions, no boyfriends, the pressure, ..."<br><br>"We know."<br><br>"It is all going to be for nothing and all because I can't get comfortable with my body fast enough for Monika Solheim's schedule. It's just not fair!" Jill said continuing to weep.<br><br>"We'll help you. That's why we were brought together for this tonight, to support each other." Hannah said.<br><br>"Well, maybe. It could be that tonight they will pick who among us they will invest any more time in." Libby said casting a pall over the moment.<br><br>"But we're teammates, right? We work together and help each other and we can't all win all the time, so let's just help each other in doing our best as always."<br><br>"That's what we like about you, always positive, always cheerful." Hannah said as Jill leaned over to give Libby a heartfelt hug.<br><br>"Okay, Jill your turn." Libby said. Jill got herself in position.<br><br>"You do the shaving. You're good at it." Hannah stated.<br><br>"Okay." Libby said in a sigh.<br><br>"You need more lotion, girl." Hannah declared, while Jill opened her eyes suspiciously to look at her.<br><br>Hannah started off doing the job straight, but as time wore on she would get her hand in the way of Libby and feel Jill up. Jill would open her eyes to see if they were pulling something on her and would close them again when Hannah's act reassured her. When Jill was pretty much done, she was sweating from trying to fight the natural response Hannah was creating in her. Hannah wasn't through with her though.<br><br>"Is that a spot you missed?" Hannah would say inviting Libby to follow her touch in a particular spot.<br><br>"Like here?" Libby would say.<br><br>"No, more over here." Hannah would say.<br><br>"Oh I see. You mean here." And Libby would glide the razor again for a moment until Hannah would start it up all over again.<br><br>Hannah skated over the Jill's most sensitive spot going from side to side checking the job Libby had done. She watched and delighted in the convulsing muscle movements she was causing Jill to make along her abdomen.<br><br>Finally Jill opened her eyes wide and sat up forward and rocked back a couple of times in horror as she was flooded by the first orgasm of that magnitude she ever experienced.<br><br>Hannah looked at Libby with a cocked eye and devilish smile. Libby smiled back until Jill looked at them both and their smiles instantly vanished.<br><br>"Welcome to the club Jilly-pooh." Hannah congratulated. "Now it's Libby's turn, don't you think?"<br><br>"No, no... no. The same thing happened to me yesterday. I was in this club a whole day before you guys." Libby protested.<br><br>"Okay, we'll have to take your word for it. So have any of you come up with any new moves for the new rule change?" Hannah asked.<br><br>"I was trying something, but it is hard to come up with stuff."<br><br>"What did you try?" Jill asked.<br><br>"Well, when you turn on one foot on the floor, you know with one arm up and the other bent horizontally in front of you, instead of having it out, you can hug your sternum during the turn like this. Then bring it back out in the stationary moment at the end for the regular posture."<br><br>"That works. You start and end in the normal postures and hug up under your breasts just in the turn." Hannah said considering it for herself.<br><br>Hannah was more intent than anyone on learning these moves because she was the tallest and had the heaviest tits in the group. She used the strongest sports bras in practices and competitions of anyone. Her breasts were starting to be pulled by gravity so her nipples rested just below horizontal when everyone else's were at it or above. Jill had full breasts too, but slightly smaller and their fullness came more to a point at her nipples compared to Hannah's that were more rounded at the end. Libby's breasts were half grapefruit sized and still firm, so her interest in the breast holding moves was more for gaining higher scores for difficulty than for the necessity of supporting them in her routines.<br><br>The girls exchanged the ideas they had been working on and didn't realize that the time had flown by. The next they knew that the party was starting was when Jill's sponsor came up to check on them and to inform them that the guests were starting to arrive.<br><br>Mrs. Robbins was relieved that nobody had any cuts from shaving and had been briefed on Libby's standing for attention by Mrs. Woodcock so she instructed Jill and Hannah to do the same.  She gave them the shoes she brought for them to wear and passed out frilly aprons for the three girls to put on. The bib of the apron barely covered both areolas when standing still and the small token skirt came just below their crotches and was almost as wide in front as their hips.<br><br>"Why are we wearing these, Mrs. Robbins?" Libby asked surprised that she wasn't going to greet the guests naked as planned.<br><br>"Mrs. Woodcock wants to create anticipation and interest in your bodies by the guests. If the guests see you naked at the start, within fifteen minutes they will be blasé about it and you won't feel any challenge from their attention. She is wise about these things. She reminded me that the concern about the nudity thing is all in your heads not everyone else's. People only want what they can't have freely. If everyone walked around naked all of the time, no one would care."<br><br>"Oh, what a relief. I thought I would have to walk into a room full of clothed people being one of the few people totally naked. This way we have something covering us." Jill said. Libby wanted to stop her because she knew they were having their attitudes monitored.<br><br>"Oh, you will find this even more difficult we suspect."<br><br>"Why's that Mrs. R.?" Hannah asked.<br><br>"People are going to try and look at your bodies more with these on the whole time you are wearing them than they would after a short while with you wearing nothing at all. When you are performing, there will be an adjustment to the edge your new uniforms are pushing, but by the end of the competitions, everybody will be looking mostly at your performances, I assure you."<br><br>"Okay, thanks. I get it I think." Jill conceded.<br><br>"Well then, get your hair fixed, any makeup on you want, and I'll come back and get you in half an hour."<br><br>"Yes, Mrs. R," Libby replied tying her apron on in back.<br><br>While the girls were upstairs all of guests had arrived as scheduled. They were briefed on the tactics for the evening to challenge the girls for their competitions. They were coached to draw as much attention to the girls' bodies as possible so they would learn to deal with it. They were asked to find reasons to innocently touch the girls to surprise them by boundary crossing. And they were asked to think of ways to position the girls in potentially embarrassing postures to challenge their poise. Coach Monica and her assistants were present to whisper advice to the guests as opportunities presented themselves.<br><br>The girls were brought down and entered the room full of mostly strangers carrying in appetizers. Guests seemed to empty the side of the tray closest to the girls first with the idea of a possible glancing touch of their breasts. When the trays were eventually placed around the room guest would clumsily drop napkins and ask the nimble athletes to retrieve them for them. When standing and answering people's questions, the girls stood for attention giving everyone an unobstructed view between their legs from behind and their breasts from the sides.<br><br>Some of the women were bold enough to ask, "You're skin looks amazingly soft, may I touch it?" and touch they did on the exposed sides of their breasts. The girls initially backed away, but would look at their coach or an assistant and then decide to stand and take it.<br><br>After a little while of the girls getting a big dose of inappropriate attention, Monika Solheim made an announcement about the team uniforms and asked the girls to run upstairs and put them on. While they were gone, she unveiled her game plan for the rest of the evening.<br><br>"Can you believe those people?" Libby said when they were safely in Libby's room.<br><br>"I don't think they are really like that. I think Coach has put them up to it. It didn't seem very natural. Especially when my folks looked like they were going to try some of it and seemed to back down at the last minute." Libby explained.<br><br>"I say, that if you're gonna touch me, do it and mean it." Hannah declared.<br><br>"You're weird," Jill said.<br><br>With the costumes on they went down stairs and entered like models to the applause of the guests. Some music was turned on, and not just any music, Libby's floor routine music. It got her spontaneously dancing to the beat.<br><br>The other girls had heard it many times and started to move to the beat too as Libby stepped forward and went into some close quarter versions of her floor program. Then the music died down and started up again only this time it was Hannah's music. Hannah stepped forward and did some of her routine modified for the time and space so as not to be outdone by Libby. Applause followed as the guests saw the pattern and from the excitement Hannah's large flopping breasts were creating, especially for the men present. Jill expected and was rewarded with her music playing next. She even threw in Libby's move from the turn to try to get one up with her coaches.<br><br>The audience was thrilled with the sampling of the programs from among the nation's best women gymnasts. The applause, hooting and hollering lasted for several minutes while the girls didn't know what to do other than to stand for attention embarrassed and occasionally bowing to try and get the applause to stop. The other girls felt like Libby, that "I'm just going to have to be 'okay' with my nipples hard and showing stuck out like this, because that is the way it is going to be."<br><br>Finally, when the applause stopped Coach Monika announced to the girls that they were passing their test well and they would have to go one more level before she could be confident that they would be able to handle themselves before the world like this. They were going to have to improvise a dance that would show everyone that they are completely comfortable with their bodies and the way their bodies work, and the only props they could use were the feathers she provided them, a silk scarf, and the small pilates ball she rolled into the room.<br><br>When Waltz of the Toreadors from Carmen was started on the stereo, Libby knew where she needed to take this. Mrs. Woodcock had been preparing her well. She took off her costume, picked up a feather and the scarf and started a wide sweeping dance using her flexibility and wide range of motion. Jill grabbed her arm and pulled her in to talk to her while Hannah caught on and took off her costume too.<br><br>"What are you doing?" Jill whispered.<br><br>"I'm showing Coach that I can be completely comfortable with my body and how it works. You should too." Libby answered frustrated that she was being held back from dancing.<br><br>"Wait. I don't think I can do it."<br><br>"Sure you can. You can either do it pretending that no one is here in the room with you, or you can soak in the strength their appreciation has for you to do a better job of it, or you can just decide to try and turn them on. They all work." Libby said echoing the advice she received the night before.<br><br>"Oh god," Jill groaned. She took a few moments to collect her courage while Libby and Hannah were out in front dancing with their eyes mostly closed, and joined them with her props.<br><br>When all three were out dancing and starting to be free with it, nearly everyone pulled out disposable cameras that were handed out by Monika and Rebecca, Libby's sponsor. Jill nearly stopped; Hannah kept dancing nearly oblivious to the cameras, and Libby started to soak in the attention to generate the strength to try new moves.<br><br>They were all a little taken aback when flashes started going off. Libby decided to face that challenge head on and started stroking the long feather up and down her body. Hannah was amused by Libby's verve and started to stroke Libby's body with her feathers too. Libby was feeling close to stimulus overload from the cameras, her parents, her nudity, and fought to bring the situation back to a performance. A performance she could handle, something with a beginning, middle, and an end. Based on what she had discussed with her sponsor, she knew what her end needed to be, so she started sawing her feather between her legs. She was so into taking control again that she didn't even notice her parents leaving quietly.<br><br>Hannah got swept up in the moment and started dancing her feathers over Libby's breasts and nipples. Jill didn't know what to do, so she just danced on autopilot watching the other two. Hannah brought Jill into it by tickling her with a feather just to get her goat. Jill playfully tickled her back and then joined her on Libby. Meanwhile Libby had to force herself to take what they were dishing out because she had nowhere else to go with it. Mercifully, she finally lost it and collapsed to her knees in an orgasm that wouldn't quit because Hannah and Jill were now oblivious to the audience and trying to make her come again on top of the first one. When Libby started to lean back away from the feathers licking her nipples, Jill rushed the pilates ball under her back and Libby ended up spread-eagle atop the ball. Hannah was into it now, the audience was into her doing these things to Libby and she derived strength form that to finish Libby off and get herself on the ball.<br><br>All pretense of an impromptu dance seemed to be off. Hannah was now sawing her feather between her legs and Jill was dancing her feathers over Hannah's face, neck and breasts while Libby was collecting herself to rejoin the girls. By the time Libby was back on task, Hannah was diddling herself with her fingers so Libby tried sawing her feather back an forth along Hannah's nipples trying to keep the feather on both as she played her like a bass fiddle. Hannah sat up suddenly, breaking from the feathers and rapidly frigged herself to a climax sitting on the ball. Flashes went off in rapid succession telling the girls that the audience was getting pretty turned on.<br><br>Libby walked up to Jill, her breasts meshing with hers as she whispered in her ear. This is our big chance. We've got to really turn these people on." She said as worked the feather around to a sawing motion up and down Jill's crack in back.<br><br>"Okay," Jill said tentatively, but also realizing that since she had a poor start at this that she may have to play catch up from a deficit.<br><br>Jill ended up using the feather motion tickling her crack and turned around with her backside to the audience, legs apart and her hands on her knees inviting Libby to keep. Working it there. Her freshly denuded nether region was super sensitive to the touch and she took her butt up and down against it to increase the motion. Libby changed the attitude of the feathers and Jill started humping it on her cunt. Hannah wanted a piece of this action so she started tracing the surface regions of Jill's globes. Jill tried to make the feathers away on top while still controlling the humping against the feathers Libby was holding below all without removing her hands from her knees. Her squat became more pronounced as she was getting closer and looking back at the cameras flashing away, she tried to look provocative and confident.<br><br>Suddenly her hands slipped from her knees to the floor and she was in a four-pointed slouch. Hannah shifted to spreading Jill's cheeks and lips apart while Libby had her way between them. Jill could take no more and fell to her widespread knees and one shoulder hugging the floor while Hannah and Libby saw to it that she had as little time between orgasms as possible until she just collapsed into a fetal position.<br><br>The flashes had all been used up and the guests were just plain shocked. Coach Monika announced that the evening was a success and that she no longer had any reservations about any of the three girls competing for the US in Worlds and the Olympics.<br><br>The girls were eventually sitting together hugging in relief that the evening was now past them and they were off their coach's informal probation list. Coach Monika came over to them, with her assistants in tow and crouched down to speak to the girls. "I was very impressed with you girls tonight, a little surprised, but very impressed."<br><br>"Thank you Coach." Hannah said for the three of them.<br><br>"You handled everything I could think to throw at you." The girls smiled at each other proudly. "I look forward to working with you at practice tomorrow. Better get some sleep soon."<br><br>"We will Coach." Libby said. "By the way, what is happening to all of those cameras?"<br><br>"We asked for them back. They were just a prop." Coach Monika explained. An assistant whispered something in her ear. "Well, we got all back except one I guess."`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

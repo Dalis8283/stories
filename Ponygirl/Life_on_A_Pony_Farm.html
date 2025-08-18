@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>LIFE ON A PONY FARM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "LIFE ON A PONY FARM",
+            author: "Neuralmancer",
+            chapters: [
+                {
+                    title: "Chapter 1",
+                    subtitle: "The Auction",
+                    content: `Jill stood nervously as she waited her turn to mount the auction platform. It was an extremely hot day. Sweat dripped down Jill's quite naked body as she stood in the afternoon sun. Being in the company of many other equally naked women didn't help matters any. All that Jill could think of was the many men in the audience waiting for a chance to bid on her lovely body.<br><br>What bothered Jill the most was the tingling sensation that she kept on getting between her legs. The more Jill thought about the men observing her, the greater the degree of discomfort she felt.  How could she have come to this, Jill thought. Just a short while ago, Jill had been another college coed attending a southern university. Now Jill was about to be auctioned off to the highest bidder, just like a prized cow at a farm sale. Jill looked about worried as her fellow female captives found new owners. One by one they were brought up onto the auction platform, totally displayed to the almost exclusively male audience, bid on, and then finally led away, sometimes crying as they went. Jill's turn would come soon. With hands tightly bound behind her back, the auctioneer led Jill to the platform.<br><br>"What am I bid for this lovely creature?" Holding her body steady by grabbing her bound wrists with his left hand, the auctioneer proceeded to lift and display Jill's long and straight black tresses with his right hand. "Look at the raven colored hair! Where have you ever seen such a beauty?"<br><br>A few bids were yelled back to the auctioneer. The initial bids were much lower than what some of the previous women had brought. Was she worth so little, thought Jill.<br><br>The auctioneer was skilled at his craft. Releasing Jill's hair, he reached over and cupped one of Jill's breasts and held it firmly. "Please, carefully examine her ample, yet quite firm breasts. Think of the pleasure that she could bring you!" Jill's face turned red as her nipples hardened in response to the auctioneer's touch. The bids increased markedly.<br><br>The auctioneer's right hand then moved to Jill's waist. "Look, not an ounce of fat!" Kneeling, the auctioneer then moved his right hand lower pass her buttocks and finally paused at her thighs. "Notice the exaggerated leg muscles. All you pony farmers out there, just think of what a fine mare she would make. Just a little training and you could have a winner here."<br><br>Jill turned her head to stare at the auctioneer. He had called her a mare! Just what was a pony farmer, Jill thought. While attending school, Jill had spent much of her free time running track. Jill loved to run. What kind of purpose did the men in the audience have in mind for her?<br><br>The bids had increased dramatically. The auctioneer had read the crowd well. Damn I'm good, he thought.<br><br>The bidding process narrowed down to just a pair of bidders. One of those vying for Jill's ownership stood out from the crowd. In a broad-rimmed hat, the sort that cowboys like to wear, by virtue of his height coupled with extremely broad shoulders, he couldn't help but be noticed. "One thousand dollars!" he cried out. This was an extremely high price to pay for an obviously untrained slave girl, even for one as lovely as Jill. The crowd stared at him with wonder.<br><br>The man's adversary was equally determined to possess the lovely slave. A woman of means, she considered herself the equal of any man. She had frequently sparred with this same man in bidding contests. This time she was determined to win. "One thousand two hundred dollars for the slave!" All eyes turned to her. Ignoring them, the woman turned about and gave the man that she was bidding against a gleeful look.<br><br>"Esmeralda, I see that once again that were in contest. So be it. You still haven't learned how to properly play your hand. One thousand five hundred dollars!"<br><br>Ignoring the man's insult, Esmeralda increased her bid. Things were starting to get a little out of hand. After this next bid the man would have to back down. "One thousand seven hundred dollars! Give up Mark, your not going to get this one."<br><br>Mark just smiled. Looking towards the auctioneer, Mark gave his answer, "Two thousand dollars."<br><br>Esmeralda realized that she could go no higher. However much that Esmeralda wanted to beat Mark in the bidding, she was also mindful of business. If Mark wished to be a fool, let him. No untrained slave was worth two thousand dollars. Esmeralda failed to offer a replying bid.<br><br>The auctioneer was delighted with the turn of events. "Going once, going twice, sold to the tall man in the cowboy hat! You just bought yourself one fine mare."<br><br>During all the excitement, Jill had momentarily forgotten that she was the source of all of this. She had been sold. A look of confusion spread over Jill's face. Just what would happen to her now, she thought.<br><br>Mark went up to the auction platform to claim his property. Paying his money to the auctioneer, cash on the barrel, as was the usual practice, Mark ordered, "Unbind her hands and rebind them in front of her!" An assistant to the auctioneer quickly complied with Mark's wishes. The auctioneer himself was already getting ready for the next sale.<br><br>"What are you going to do with me", questioned Jill. "I'm not like those other women. I'm not meant to be a slave."<br><br>Mark replied, "All women are meant to be slaves. Enjoy the sound of your lovely voice, this is one of the last times that you will be permitted, indeed able at all, to speak. Yes, you are not like all those other women. You have the makings of an exceptional ponygirl. I believe that the auctioneer misspoke. You are not a fine mare, no, you are a great mare! With legs like yours, you have a shot at a championship. A championship that I intend to have!"<br><br>With not another word, Mark led Jill down the platform and through the crowd. Jill was embarrassed walking naked amongst all the men of the crowd. But few of them gave her any attention. She was now just another piece of property. The crowd was once again focused upon the next sale.<br><br>Reaching the edge of the crowd, Jill encountered the sight of her life. Harnessed to a two person cart was a naked woman. Well not quite naked. The woman's only garment, if you could call what she wore clothing, was a harness consisting of various leather straps. One thick strap went around her waist. By means of a pair of large rings sewn into the waist strap, the wooden poles of the cart were secured to the woman's waist. Running vertically from the waist strap were another pair of leather straps, each of which split into a vee below the woman's breasts. Each vee, constructed with a half-bra like cup below each breast, had the effect of providing support for the woman's ample tits. The vertical straps then merged back together above the breasts, effectively encircling each tit in leather, looped over the woman's shoulders, ran down her back and rejoined the waist strap. Another pair of leather straps ran down from the waist strap to encircle the top of each thigh.<br><br>The woman's hair was cut into a long Mohawk-like style, the end of which extended well past her shoulders. The sides of her head were shaved smooth. The net effect was something very like a horse's mane. Within the woman's mouth was fitted a bit. As is to be expected, attached to both sides of the bit were reins. This was not a woman, this was a ponygirl.<br><br>The ponygirl had many piercings. Jill could see rings piercing the woman's nose, both nipples, her labia, and her clitoris. The rings were all the more visible due to the ponygirl's lack of body hair. With the exception of the long mane, the ponygirl was completely hairless. The well oiled flesh of the ponygirl glistened in the bright sunshine. Apparently the rings did not serve merely an ornamental purpose. Attached to each nipple ring was a half inch diameter bell. Thin strips of leather descended from the bit to each of the nipple bells. Connected this way, any pull of the reins would cause the bells to ring. As a final touch, thin strips of leather tied to the woman's labia rings connected to the wider straps encircling the ponygirl's thighs to keep the woman's cunt pulled wide open. No article of clothing hindered the movement of the ponygirl's legs. The ponygirl made quite a display.<br><br>As Jill approached the cart, the ponygirl made a few high pitched guttural noises. To Jill the sound was just like that of a horse. Apparently the ponygirl was in a hurry to get going. As Jill stared at this bizzare sight, the ponygirl kept stomping the ground with her right foot. Again, just like a horse would do. It was this point that Jill noticed the odd shoes encasing the ponygirl's feet. Unlike any other shoe that Jill had seen previously, the shoes had extremely high heels, shaped in the form of a U, so that only horseshoe-like footprints were left imprinted in the sand. With the exception of many cutouts that left parts of the feet exposed, including the toes, the body of the shoe itself resembled those worn by ladies in Victorian times. The high tops were secured in place by thin leather laces.<br><br>"So that's what your going to turn me into, a ponygirl?", questioned Jill.<br><br>Mark responded by giving Jill a quick slap across her face. Jill reeled backwards from the unexpected blow. "You will not say another word! Yes, you are to become a ponygirl, just like this one."<br><br>With quiet proficiency, Mark took a piece of rope and bound Jill's wrists to one end of it. The other end of the rope he then attached to the rear of the cart. Jill was quite startled by this move. She had been expecting to ride alongside Mark in the cart.<br><br>Turning to Jill now standing directly behind the cart, Mark informed Jill of how things were to be. "Your training will commence immediately. We have a few miles to go on the trip back to the farm. You will run all the way there. I'm sure that you will have no difficulty."<br><br>Jill looked aghast as Mark mounted the cart. What would happen if she fell? She had run such distances before, but never completely naked and over unknown terrain.<br><br>"Ho!" yelled Mark to the ponygirl, slapping the reins against the ponygirl's shoulders. The ponygirl started out at a slow trot. Slack was quickly taken out from the rope binding Jill to the rear of the cart, Jill found herself pulled along at a moderate jogging pace. The nipple bells rang out the rhythm of the ponygirl's trot.`
+                },
+                {
+                    title: "Chapter 2", 
+                    subtitle: "From Woman to Pony.",
+                    content: `By the time they reached the farm Jill was covered in sweat. Fortunately she was in fairly good shape. Jill had yet to feel winded. There had been no mishaps along the way.<br><br>Approaching the farm, Jill could see to the right of the road an oval track. On it several ponygirls were being put through their paces. A race was in progress. Harnessed to somewhat smaller single person versions of the two person cart that Jill was now following, three ponygirls were having a good run around the track. To Jill, it seemed that a black ponygirl had the upper hand. She was clearly outpacing the two others.<br><br>"To the right you'll see some of your competition. The black mare is especially competitive. But before you can race, you most become a proper pony." said Mark.<br><br>Jill cringed at the thought of what becoming a proper pony meant.<br><br>They entered a courtyard surrounded by various buildings. Stopping the cart, Mark yelled for an attendant to come take charge of the ponygirl and the cart. The ponygirl was obviously used to this, as she made no sound and as Jill saw no sign of discomfort on the ponygirl's face. Later Jill would unpleasantly discover the reason for the ponygirl's limited range of vocalizations. Apparently their run of several miles had not been anything of significance.<br><br>Jill's first stop was the hospital. As she was taken into the hospital, Jill cried out, "What are you going to do me?" Jill struggled as she was bound to an operating cart. As a pair of attendants held Jill down, first her wrists and then her ankles were tightly tied to metal rings located at the corners of the movable hospital bed. Jill tried futilely to kick her legs up to prevent their being tied to the cart. As she was held down, another attendant grabbed her legs one at a time and lashed her ankles to the rings.<br><br>Once they had Jill firmly attached to the cart, she was wheeled into an operating area. A tray of surgical instruments were brought near to her throat.<br><br>Mark stood by observing the procedure. "Now you will begin your transformation from a woman to a ponygirl. Of course ponies don't talk. It is necessary then to somewhat alter your vocal cords. In the future, the only sounds that you will be permitted, or for that matter able to make at all, are the horse-like sounds that one would expect to hear from a fine filly such as yourself."<br><br>Jill looked up to Mark with horrified eyes. Jill could offer little resistance as the anesthetic was already taking affect. Quickly she lost consciousness and with it Jill lost the remainder of any control that she had left over her destiny.<br><br>The operation went well. Immediately after the operation, Jill couldn't make a single sound. Jill had been rendered incapable of producing speech. After a few days of recovery, Jill found that she could now make some sounds, but only the high pitched guttural sounds similar to that produced by a horse.<br><br>While Jill recovered from the surgery, attendants proceeded to cut her head hair into the a style identical to that worn by the ponygirl who had pulled the cart. All hair located elsewhere on her body was permanently removed. Once again Jill attempted to hinder the attendant's progress. But Jill's kicking came to no avail. The attendants set with the task of removing Jill's body hair had anticipated Jill's every move. After all, they had done this many times before. Jill was taken to a vertical frame where she was securely harnessed. The bonds were so tight that hardly any movement was possible. Just to make sure, Jill was given an injection of a sedative. Jill looked down passively at the men as they busily employed electrolysis to permanently remove the hair on her public mound. They quickly had her mound completely bald. Soon every inch of Jill's body from her neck down was completely hairless.<br><br>Jill was taught the proper sounds and actions to make. Only certain kinds of vocalizations were expected of her. A high pitched whinny was to be produced as a command acknowledgment. A neigh could be used as a kind of greeting to other ponygirls. Other actions, such as the stomping of her feet, were used to indicate an emotional state. For example the stomping of feet may be used to indicate an eagerness to proceed. Jill was carefully taught a varied vocabulary of both utterances and body movements. Denied the capacity to speak, the vocabulary of horses would replace her human vocabulary.<br><br>Sufficiently recovered from the surgery, Jill went next to the blacksmith shop. There she was once again securely bound to a vertical frame. With her wrists bound from above, and her ankles bound from below, Jill could offer little movement. Both her arms and her legs were spread wide apart.<br><br>"The usual complement of rings?" asked the blacksmith.<br><br>Mark studied Jill's bound form. Reaching across to her breasts, he pinched each nipple. Jill grimaced at the pain. "I think that the nipple rings could be a bit larger on this one. Her nipples are extremely long."<br><br>"Two inches in diameter perhaps." replied the blacksmith.<br><br>"Yes, two inch diameter rings should do nicely on the nipples." Reaching up to Jill's nose, Mark pinched his fingers about the flesh separating each nostril. "A half inch nose ring I think." Releasing Jill's nose and turning his attention to Jill's now fully visible cunt, Mark continued. "One inch rings piercing each labia lip and a two inch ring piercing her clitoris. Notice that this mare's clitoris is unusually long. Her clitoris should be able to accommodate a two inch diameter ring."<br><br>The blacksmith quickly noted down all of Mark's choices. The nipple rings came first. Once again Jill had each of her nipples pinched and pulled. She looked to the blacksmith with eyes that clearly conveyed the horror that she felt. Employing special needles heated red hot to prevent infection, the blacksmith first pierced Jill's right nipple, followed by her left nipple. Jill screamed. Though distinctly high pitched and noticeably different from the normal human scream produced by an unmodified woman, it gave Jill some measure of relief. The blacksmith didn't care. Momentarily, he left Jill with a pair of red hot needles piercing each of her nipples. The pain was agonizing. Quickly pulling the needle from Jill's right nipple, the needle was slowly replaced with a two inch stainless steel ring. The blacksmith took his time. He carefully pushed the ring closed and brazed the ends together. Jill couldn't take her eyes off the flame produced by the miniature torch the blacksmith used. The flame came precariously close to her as of yet unblemished skin. The procedure was then repeated to Jill's left nipple. These rings would never be removed.<br><br>The labia piercings felt like pin pricks in comparison. However Jill's suffering was far from over. Pulling back on the hood covering Jill's clitoris, the blacksmith employed a specially designed clamp to keep the fleshly covering out of the way. Jill's clitoris stood revealed. Again utilizing one of the red hot needles, the blacksmith quickly pierced Jill's clitoris. Intense pain instantly seared up through Jill's body. As loud as she could, Jill cried out. Even after the sounds ceased, Jill's mouth remained agape in a perfect pantomime of a scream.<br><br>Following a procedure identical to that previously used, the blacksmith left the hot needle in Jill's flesh while he procured her clitoris ring. Jill found the wait agonizing. Withdrawing the needle, he carefully substituted the ring. Also like before, the ends of the clitoris ring were brazed together preventing its future removal.<br><br>Last of all, the blacksmith inserted Jill's nose ring. To Jill this piercing was by far the most humiliating. It forever marked her as an animal.<br><br>Tears of relief flowed down Jill's cheeks as she was finally released from the vertical frame. Barely able to walk, she had to be held up at her shoulders by a pair of attendants.<br><br>The blacksmith's tasks completed, Jill was then walked half dragging to her new home, the stables. Taken to a stall, the floor of which was lined with straw, Jill's wrists were cuffed to an overhead beam. Left standing in the sunshine provided by an open stall door, the new ponygirl made quite a sight.<br><br>"Well, at least now you look like a ponygirl." Mark stood in front of Jill as he took in her entire form. As he watched, an attendant busily scrubbed Jill's hanging body. Never again would Jill be allowed to bathe herself.<br><br>"Let me see, you need a name. That dark mane of yours tends to stand out. Just like the color of a raven. That's it!. Raven, that will be your new name." Mark turned his attention to the stable attendant. "Have her name, Raven, put on her stall door."<br><br>Jill's former life passed from her like a dream. Now she was not only an animal, she was no longer Jill. As tears dripped from her eyes, the former college coed realized that she was now Raven the ponygirl.<br><br>`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "Training", 
+                    content: `"Walk! Trot! Canter! Run! Come on you stupid mare, get it right this time! Lift your knees when you trot!" Raven, formerly Jill the college coed, was being given a lesson on the basics of being a ponygirl. Harnessed to one of the single person carts that she had seen on her arrival, with her trainer at the controls, she proceeded down the oval track doing her very best to obey her trainer's instructions. After every mistake Raven felt the pain of the trainer's whip.<br><br>Already Raven had the scars of several lashes. He showed a particular expertise on the whip's use. Raven soon came to realize a correlation between the severity of her error and the placement of the end of the whip. A lesser offence would result in a whip stroke to one of her shoulders. Something more severe may cause Raven to feel the whip on her tender buttocks. After a particularly bad infraction Raven came to expect to feel the whip's sting on the lips of her most sensitive vulva.<br><br>Raven was being put through the basic sequence of ponygirl movements. Each of these Raven had to master before she could be raced.<br><br>Raven had to relearn how to walk. Walking now became something of an art form. She was taught to bring her knees up high as she stepped. One foot down while the opposite foot was brought up as high as the ponygirl could manage.<br><br>Next came the trot. Not only was the trot a faster version of the walk, but the ponygirl's weight was brought down onto the balls of her feet. The ponygirl's heels never touched the ground. By balancing herself on the balls of her feet the ponygirl made use of the natural energy storing ability of her leg muscles. Energy stored by the natural springs of the leg tendons on the downward stroke would be released to help propel the ponygirl on the upward stroke.<br><br>The canter was essentially a faster version of the trot. The exaggerated up and down movements of the legs became less evident.<br><br>Finally there was running. Here the show was over. All emphasis was placed on speed. For the human ponies running wasn't all that different from normal human running. No effort was made to high-step the legs.<br><br>During both racing and training the arms of the ponygirl were kept bound behind her back. A standard piece of equipment used to bind the ponygirl's arms was a short T-shaped bar having cuffs at each of the three ends. The cuffs on the ends of the horizontal portion of the bar were used to bind the ponygirl's upper arms together while the vertical cuffs bound the wrists. Only the most thoroughly trained ponygirls, and this usually meant only those ponygirls born into ponygirl servitude and hence knowing no other kind of life, were allowed to pull carts while having their arms free.<br><br>Just prior to the start of her training, Raven had been introduced to the bit. Just like what happens with a more normal mare's introduction to the bit, Raven at first resisted the bit's placement into her mouth. A U-shaped bar fitted with rings for the reins at its ends, the bit was held between Raven's teeth. A harness comprised of leather straps fitting around Raven's head served as the bridle. With the bridle buckled tightly at the back of her head, Raven had no hope of shaking the bit loose.<br><br>As one of the stable attendants held Raven, bound by her wrists behind her back, Mark had come forth with the bit in hand. He loved to break in the new ponygirls. Raven attempted to keep her mouth closed, but the attendants knew how to easily cope with this. One attendant held an extremely smelly substance to Raven's nose. Raven had to open her mouth. She tried to resist, but the urge to breathe was too strong. Seeing his chance, Mark thrust the bit inbetween Raven's teeth. The bridle was then tightly secured behind Raven's head.<br><br>Over Raven's shoulders was then placed the pony cart harness. As it was buckled in the back, the half bra cups came up to give support to Raven's ample breasts. The nipples with their protruding rings were left uncovered. Just had been done to the ponygirl that Raven had seen as she came off the auction block, to her nipple rings tiny bells were attached. Raven's labia rings were likewise tied to the body harness's thigh straps by means of thin leather strips. The labia bondage had the effect of holding Raven's cunt wide open. No matter how Raven moved, the pink of her inner labia lips was clearly visible. Raven was deprived of any shred of modesty.<br><br>As Raven was being bound to a pony cart for the first time, Mark addressed her. "You will get used to the feel of the bit in your mouth. Soon you will learn how to behave." Mark came up to Raven and rubbed his right hand against her bare flanks. Raven jumped a bit at his touch. "You make quite a fine pony. After a time you will begin to crave my touch. Or for that matter, any man's touch. You will live for the track. If you are successful, and I have no doubt that you will be successful, we will breed you. I'll rent a human stud from my sometimes adversary, Esmeralda, and have him mated to you. I'm sure that you are capable of producing many fine fillies. Also as is the custom in these parts, we'll bring you to milk. Synthetic hormones will be administered to you to both stimulate and enhance your lactating ability. Those ample tits of yours should swell up even more as they fill up with milk."<br><br>Raven looked at Mark with disbelief. How could he do this to her? Raven wanted to scream, but all that she could muster was a shrill whinny. Mark smiled upon hearing Raven's whinny. The new ponygirl was becoming more horse-like with each passing day.<br><br>Mark had been observing Raven's trainer put Raven through her paces on the track. As they paused for lunch, Mark queried the trainer on Raven's progress. "How's she doing?" he inquired.<br><br>"I think you have a winner with this one. When she finally got going I almost had the reins pulled from my grip. A hell of a pair of legs on that one. Just a little rough around the edges. Give me some time and I'll have her attitude properly adjusted." answered the trainer.<br><br>Mark was very pleased with the trainer's assessment. Raven's performance on the track had left him very impressed. She may even be able to beat the black mare, he thought.<br><br>As her trainer ate his brown bag lunch, Raven stood on the track dripping with sweat. It was hot in the noontime sun. At the beginning of the day one of the stable attendants had applied a liberal amount of sun screen lotion over her entire body. Try as she might, Raven could not help having her nipples harden and her cunt moisten at the attendant's touch. The stable attendant obviously had enjoyed his task. Now as Raven stood still after her first half day of training, most of the sun screen had become washed off due to her dripping perspiration. She hoped that someone would reapply more lotion before her fair skin burned red from the sun.<br><br>An attendant temporarily released Raven from the pony cart and guided her over to a watering trough. She looked upon the attendant with amazement. She still had her arms bound behind her back. How was she supposed to drink?<br><br>"Down on your knees! See how those other mares drink? You will do the same." yelled the stable attendant to Raven. A few yards away in a separate pen a couple of human mares had gotten down onto their knees to drink. Not in training at the moment, by virtue of their arms not being bound behind their backs, each ponygirl was like Raven, quite naked. Nudity was apparently a ponygirl's natural condition. Although their hands were free, they made absolutely no attempt to use them. Instead they both meekly kept their arms to the sides of their bodies as they lapped up the cool water.<br><br>Raven was entranced by the sight. How could they accept their condition, she thought. As she watched, one of the ponygirls stood up and looked at Raven. It was at this point that Raven realized that this ponygirl was quite pregnant. Her bare belly swelled noticeably. Eyeing Raven, the pregnant ponygirl made a loud neighing sound in Raven's direction. It was if the other ponygirl was attempting to say hello.<br><br>Raven was quickly returned to reality by a sharp slap on her bare flanks. "Either get down on your knees now and drink or go without. I haven't all day. They'll breed you soon enough" said the attendant. Reluctantly, Raven acknowledged her thirst and got down onto her knees to drink. While she found lapping up the water somewhat difficult to do at first, Raven quickly got the hang of it.<br><br>After Raven had her drink, another attendant brought over Raven's lunch. Within a horse's feed bag had been placed a mixture of grains and crushed raw vegetables. Also mixed in with her food was a powerful oral contraceptive. Raven's owner had no desire to see her impregnated quite yet. With the feed bag strapped over Raven's head, Raven could feed on its contents without the use of her hands. Never again would Raven be permitted the luxury of feeding herself using her hands. In the future Raven would have her arms bound behind her back at all meal times. Lifting up her head after eating, Raven had food particles stuck all over her face. An attendant came over to Raven to clean up the mess. As the men watched her, this was just one more humiliation that Raven had no choice, but to accept.<br><br>Raven's trainer kept her on the track all that afternoon. Over and over again he put Raven through the motions of the walk, the trot, the canter, and the run. By evening Raven was near exhaustion.<br><br>Finally unleashed from the pony cart, Raven was led back to the stables. Raven could see other ponygirls being brought back as well. Of all sorts of races, Caucasian like herself, African, and Hispanic, they made quite a collection in Mark's stable. Raven also noticed a few that were very young. Child ponies born on Mark's farm who knew no other life than that of a ponygirl. Raven passed by the pregnant ponygirl that had made the horse like sound to her at lunch time. Glancing at the pregnant ponygirl, Raven wondered what it must be like to bear young in a place like this. The proposition of experiencing a fate like that of the pregnant ponygirl left a foul taste in Raven's mouth.<br><br>Once back in Raven's stall, a stable attendant bound Raven's wrists to an overhead beam. With a hose connected to a tap of cold water he then summarily rinsed Raven of all the dirt and sweat that she had acquired during training. Aided by a bucket of soapy water, he then scrubbed Raven's flesh clean. He paid particular attention to Raven's breasts. After washing her full tits, he paused for a moment to lift them with both hands. As if appraising Raven's tit flesh, the attendant carefully squeezed each of her breasts as he held them. Looking down, Raven could see a bulge developing at the crotch area of the attendant's pants.<br><br>Next the attendant turned his attention to Raven's vagina. The lips of Raven's vagina were still sore after spending the day being bound to the pony cart harness. Obviously not caring about Raven's discomfort, the attendant vigorously washed her vaginal area. Spreading the lips apart by pulling at Raven's labia rings with the fingers of his left hand, the attendant then poked a pair of fingers from his right hand deeply into Raven's exposed cunt. Raven jumped back at the unexpected intrusion. In and out of Raven's cunt the attendant pumped his fingers. Raven's cunt began to lubricate uncontrollably. Raven let out a low whinny as the attendant continued to work on her ever wetter cunt.<br><br>Stopping the forced foreplay, the attendant stood up and dropped his pants. His stiff cock stood erect and ready. Raven looked aghast at the stable attendant. She was about to be raped!<br><br>Grasping Raven's hips by each of his hands, the stable attendant drove his stiff cock into Raven's vagina. He entered her without any difficulty. Kneeling slightly in front of Raven, the attendant thrust his stiff member in and out of her wet sex. In spite of Raven's feelings of revulsion, she emitted a series of low whinnies as the attendant continued his rape. His thrusts began to feel good to Raven. Forgetting for a moment about her bound condition, Raven started to meet the attendant's thrusts by her own movements of her hips. Each thrust forward by the attendant was reciprocated by Raven with a return thrust towards the attendant as he receded from her.<br><br>Their coupling went on for some time. Finally the stable attendant cried out, "Oh shit, I'm coming." With that announcement the attendant pumped his semen into Raven's waiting cunt. Almost simultaneously Raven's body shook as she was overwhelmed by her own orgasm. As the attendant withdrew his cock, semen dripped out of Raven's ravaged sex.<br><br>"I think we're going to get along fine. God I love this job. To think that they pay me to do this." announced the stable attendant.<br><br>Proceeding as if nothing had happened, the stable attendant released Raven from the overhead beam. "Now it's time to eat." he told her. Binding her hands behind her back, the attendant then brought Raven her dinner. Once again a feed sack was placed about Raven's neck. As she had during lunch, Raven fed without the use of her hands. The meal wasn't all that bad. Consisting of a mixture of chopped fish, rice, and other vegetables, Raven ate eagerly. She had been through a lot on her first day of training.<br><br>After Raven had finished her dinner the attendant led Raven out of the stable to an open latrine. As the attendant watched, Raven relieved herself. Raven blushed as she knelt down to pee. No privacy would be permitted. Not now, not ever.<br><br>Upon their return to the stable, the attendant bound Raven to the walls of her stall. As she lay on a bed of fresh straw, the attendant first bound her wrists and then her ankles to rings bolted into a wall of the stall. Stretched out lengthwise on the straw, with her wrists bound in front of her and her ankles bound behind her, was Raven forced to spend the night. Despite Raven's discomfort, due to her exhausted state, sleep came quickly.<br><br>Raven's training continued for the next few months. Raven changed. No longer was she Jill the defiant college coed. More so with each passing day she became Raven the ponygirl. The combination of reward and punishment dealt to Raven by the farm's staff irrevocably altered her mental condition. It was good to be lashed to a pony cart. It was good to be put on display. To deny her master's wishes was bad.<br><br>She came to look forward to her daily runs. And the nightly pleasures. The same group of attendants put Raven through her paces each day and night. She came to look forward to their attentions. As Raven trotted down the track she would proudly lift up her ample bosom to the delight of passers-by.<br><br>Not much time was left. Derby day was approaching. "Do you think that she is ready?" asked Mark of Raven's trainer.<br><br>"As ready as she'll ever be. I believe that she has a chance to beat the black mare." responded Raven's trainer.<br><br>Mark looked at Raven and smiled. To beat Esmeralda's black mare, that was a noble goal. Finally he could put Esmeralda in her place. During the previous two seasons Esmeralda's black human mare had won the Derby race. None of Mark's human mares had come even close.<br><br>As the two men discussed the coming events, Raven stood bound to a pony cart. With her legs spread apart, just wide enough so that onlookers could get a good view of her bound cunt, she proudly lifted her ample breasts. She wished that the two men would finish their chatting so that she could get back to the track. Raven made a loud whinny to indicate her impatience. Raven loved to run.<br><br>`
+                },
+                {
+                    title: "Chapter 4",
+                    subtitle: "Derby Day", 
+                    content: `The day before Derby day Raven and three other ponygirls were herded into a horse trailer. Identical to the trailers used to transport the normal variety of horse, the trailer had two long stalls separated by a partition. Two ponygirls shared each stall. Since the ponygirls were considered valuable merchandise, each of them was wrapped in a blanket for the journey. Other than the blanket each ponygirl was naked, as usual. Their hands and arms were loosely bound behind their backs. With a chain binding each ponygirl from a neck collar to large rings welded to the interior of the trailer, the four ponygirls traveled to the derby. They were hauled away like animals.<br><br>From narrow slits cut in the sides of the trailer, Raven had a view of their route of travel. Nothing that Raven saw was familiar. Occasionally Raven would notice a free woman going about her business. The first sight of a free woman caused tears to form in Raven's eyes as she remembered her former life. Raven's stall companion upon noticing Raven's condition let out a soft whinny and moved over to nuzzle at the side of Raven's head. This obvious attempt at comfort by this fellow ponygirl merely reassured Raven of the impossibility of her ever returning to her prior state.<br><br>After several hours of travel they entered the derby grounds. It wasn't long after leaving the farm that Raven had stopped looking out the slits of the trailer. Raven tried as best as she could to blot from her mind all thoughts of her former freedom. She now had to accept her future as a ponygirl.<br><br>As they were led out of the trailer, Raven saw that the derby grounds were alive with activity. Everywhere could be seen ponygirls, their drivers, stable attendants, and owners. Attendants were kept busy getting the ponygirls settled into their temporary stables. From her stall in the derby stables Raven could see the track, a dirt floored oval not unlike the one back at Mark's farm. One difference was the existence of the starting gates. On the farm Raven had simply commenced her run from a line drawn in the dirt. Here she would not be allowed to start running until the opening of the gate.<br><br>Located adjacent to the long straight-away was the reviewing stand. It was capable of holding a great quantity of people. Raven wondered what it would be like to race naked in front of a large crowd. On the farm there had been only a few spectators. Not that she had any choice in the matter.<br><br>Stretched out on a bed of straw while being chained to one of the stall's walls, Raven waited for the morning. Mark came to her. Kneeling down he ran his right hand over Raven's tender flesh. She was by now used to the attendant's touch. Her sexual use by the attendants was part of Raven's conditioning. Starting from Raven's thighs, Mark gently caressed the length of Raven's nude body. Her cunt involuntarily moistened when he rubbed first her buttocks and lastly her breasts. "Well, tomorrow is the big day. You'll finally get to show off all that you have learned. There will be two competitions, the first one the more artistic to show off your trotting ability, while the second one is an all-out race. During the trot the first ponygirl to cross the finish line is not always the winner. You'll be judged equally on appearance. The second event, the race, is an all-out affair to see which ponygirl crosses the finish line first. No holds are barred. Watch out for the black mare. Her driver may try to use his whip to block your advancement. This is of course perfectly legal."<br><br>After Mark had left, Raven went to sleep thinking about the coming race and about her rival, the black mare.<br><br>In the early morning Raven stood in the preparation area, naked except for her pony boots. An attendant was busy oiling every square inch of Raven's skin. The oil caused her skin to shine in the morning sun. Another attendant occupied himself combing Raven's mane. During her months of captivity, Raven's mane had grown long down her back. It almost reached her ass. Raven's long black mane contrasted sharply to her hairless yet still fair skin. The all-over tan that Raven had acquired during training had enhanced her beauty. Raven closed her eyes as the attendants busied themselves with her. Her nipples hardened and her cunt moistened with the attendant's touch. It felt so good to be pampered. Other ponygirls were likewise being prepared.<br><br>A female voice caused Raven to open her eyes. Startled, Raven turned her head to discover the source of the sound. "So this is the slave that I failed to purchase. I see Mark created a fine looking ponygirl out of her. But, the question is, can she run?" Esmeralda leisurely walked up to Raven. "May I?", Esmeralda asked of Mark who was standing nearby. Mark nodded his approval. With that, Esmeralda ran her hands down the sides of Raven's body. Pausing at Raven's breasts, Esmeralda lifted the ample tits, one tit in each hand. Esmeralda carefully examined Raven's nipple rings with their attached bells. "Nice job on the nips. You must let me borrow your blacksmith." Without releasing Raven's breasts, Esmeralda looked up to Raven's neck. The scar from Raven's vocal cord operation was extremely hard to see. "Oh I see that you've had her vocal cords fixed. Again a nice job. Let me hear you whinny, Raven my pretty pony."<br><br>Used now to obeying commands without question, Raven uttered a low whinny sound. Esmeralda smiled.<br><br>Esmeralda gave Raven's nipples a final squeeze before moving her hands to another part of Raven's body. Raven's nipples had become quite hard from all the attention.<br><br>Esmeralda's hands next paused at Raven's buttocks. The flesh felt firm to Esmeralda's touch. Kneeling down, Esmeralda studied Raven's labia and clitoris rings. Again Esmeralda was impressed with their installation. Raven kept her legs spread sufficiently apart so that Esmeralda had a good view.<br><br>Lastly Esmeralda felt the muscles of Raven's legs. "She's powerfully built. My black mare may finally get some worthwhile competition." Though a shrewd competitor, Esmeralda was always honest with her judgments.<br><br>"Don't look so worried Esmeralda", Mark said in jest. "After Raven beats your black mare we will come to you to breed Raven. As everyone knows, you have the best selection of human studs in these parts. You'll still make out."<br><br>Esmeralda just smiled.I'll get Raven's breeding fees all right, plus I'll win the derby, thought Esmeralda.<br><br>After Esmeralda left to attend to her own derby entry, the black mare, Raven was bound to the pony cart. A lighter weight version of a sulky used in conventional harness racing, the pony cart was constructed around a tubular aluminum frame. Its dimensions had been adjusted for the human ponies. The driver, most often a small man of no more than one hundred and twenty pounds, and the ponygirl worked as a team. Together they could achieve impressive speeds.<br><br>Just like a well trained horse, Raven no longer resisted the bit. As an attendant brought the bit to Raven's mouth, she meekly opened her mouth and let the U-shaped bar slide in. A ponygirl, particularly a racing ponygirl, had to be alert for her driver's commands. Raven was expected to respond instantaneously to the subtle messages sent to her via the bit.<br><br>Just prior to proceeding to the starting gate for the first competition, the trotting race, Raven stood on display bound to the pony cart. Raven's driver, the same man who had trained her all the many months, sat anxiously in the pony cart. Raven was just as anxious as was her driver to get going. She tossed her head up and down and stomped her feet in anticipation. Decked out in her pony cart harness and bridle, Raven made quite a sight. Other ponygirls about to be raced likewise stood on display.<br><br>Many men and a few women moved about the ponygirl display area prior to the race. This was the time to study the contestants for the purpose of making wagers. Raven would instinctively straighten her back and thrust forward her ample breasts in response to any onlooker's gaze. All this time Raven kept her legs spread just slightly apart. Just wide enough so that an onlooker could get a good view of her bound labia lips. The thought of the many strange men examining her naked body excited Raven. Raven's nipples stayed hard and her cunt stayed moist during the entire exhibition period. Raven had never before realized how sexually excited she could become being exhibited as a ponygirl.<br><br>A lot of money would change hands before the day was finished. The trotting race came first. Actually more of an exhibition than a race, for this event style counted for far more than did speed. Appearance mattered the most. A prime factor in the scoring was how much like a horse the ponygirl behaved. To at least place in the top scores required that the ponygirl adhere to a strict regimen of high stepping. Beyond that, little gestures from the ponygirl made all the difference. Some subtle addition to the movements of the ponygirl's bound body to catch the eyes of the judges could turn a lackluster performance into a winning performance.<br><br>The performance of each ponygirl was individually observed and timed. Only during the final event, the speed race, would the harnessed ponygirls race together.<br><br>A blond-haired ponygirl was the first to go. To the packed reviewing stand a public address system announced each ponygirl in turn. "Ladies and gentlemen, on the track is Nordic Maiden." A loud bell sounded and the gate containing Nordic Maiden opened. Almost immediately a ponygirl with a long blonde mane exited the gate. Responding to her driver's commands, the blonde ponygirl stepped her knees high as she trotted down the track. The ponygirl's form was near perfect, an effortless appearing high stepping bouncing on the balls of her feet. An occasional twisting motion of her head added to the performance. Nordic Maiden had obviously been very well trained.<br><br>Seeing the blonde-haired ponygirl's performance, Raven wondered whether she was up to par.<br><br>Next came the infamous black mare. Usually the ponygirls were given fanciful names by their owners. Here was an exception. Due to the outstanding track record that this human pony had acquired, this dark skinned ponygirl came to be simply known as the Black Mare. Everyone knew who she was.<br><br>The Black Mare's skin glistened brightly in the sun. Her mane had been slicked so that each strand of hair stood almost vertically. This conditioning of the Black Mare's hair made her mane extremely prominent.<br><br>"Ladies and gentlemen, on the track is the black mare." came over the public address system. With the sounding of the bell, the black mare came trotting out of the starting gate. Once again Raven observed a near perfect performance.<br><br>Finally it became Raven's turn to trot down the track. Raven felt nervous standing within the starting gate housing. "Hold still Raven. Remember, step with your back straight and your breasts thrust forward. Just like you did in training." whispered her driver.<br><br>Everyone could hear the announcement. "Ladies and gentlemen, on the track for the first time is Raven." For a brief instant Raven wished that the announcer hadn't mentioned that this was her first time at the Derby. With the sounding of the bell the starting gate opened and Raven felt the slap of the reins on her shoulders. Just as Raven had been trained to do, off she went trotting down the track. With her back held straight and her bare breasts thrust forward, Raven stepped quickly on the balls of her feet. Raven's nipple bells rang according to the rhythm of her steps. Raven coupled the feminine sway of her hips to a slight, but definitely noticeable rotation of her head. By such a motion of Raven's body, Raven's mane was caused to move considerably from side to side. Her trotting appeared all the more horse-like. Soon Raven forgot all about the observing crowd as she concentrated on her performance.<br><br>As Raven trotted down the track she could hear the yells from the crowd on the reviewing stand. Consisting of a mixture of encouragements and obscene catcalls, the yelling of the crowd excited rather than scared Raven. Raven discovered that the crowd's attention added significantly to her stimulation. And as Raven's stimulation heightened, so did Raven's enthusiasm. Urged on by the crowd, Raven high stepped down the track.<br><br>After all of the ponygirls had completed their initial trotting performance, came the announcement of the results. "Ladies and gentlemen, for the results of the Derby's trotting competition we have a tie. Tied for first place are the Black Mare and Raven."<br><br>The all-out race would decide the Derby, thought Raven.<br><br>The six top scoring ponygirls from the trotting competition waited patiently within the starting gates. Raven and the black mare just happened to get placed next to each other. As Raven looked out ahead to the track, the black mare turned her head around to get a better look at Raven. The black mare made a loud snorting sound as she looked in Raven's direction. The black mare wasn't used to so outright a challenge. Seeing the black mare's behavior, her driver gave a quick jerk on her reins. The black mare promptly responded by returning her gaze to the track ahead of her. In her thoughts Raven smiled to herself. Already the black mare had taken notice of Raven, the new racing ponygirl.<br><br>Once again the announcer's voice was clearly heard. "Now, ladies and gentlemen, the event that you all have been waiting for. Our six finalists will race to give us the winner of this year's Derby." No sooner did the announcer finish than a man studying a large pocket watch saw that the appointed time had arrived and he pushed the starting button. Suddenly the starting bell rang and the gates opened.<br><br>Six simultaneous shouts were heard from the drivers. With a loud stomping of feet, the six contestants commenced the race.<br><br>Raven uttered a loud whinny as she darted from the starting gate. Raven could see that the black mare had started out with an early lead. Biding her time, Raven waited for the opportune moment to pass the black mare. No ponygirl had the stamina to keep such a lead when running full out. Eventually the black mare would exhaust herself. Seizing the moment, Raven would then pass the black mare. At least that was the plan.<br><br>Under more normal, less strenuous conditions, the pony cart harness would keep the ponygirl's breasts rather comfortably supported. Conditions were anything but normal during the all out race. With nothing to restrict the upward movement of the ponygirl's breasts, at the speeds that they were achieving the breasts of the racing ponygirls continued to bounce up and down. Even at the reviewing stand the continual clanging of twelve miniature bells could be heard. Upon the race's conclusion there would be twelve sore teats.<br><br>As the six ponygirls ran down the first straightaway, Raven managed to pass Nordic Maiden. Raven's jet black mane bounced in unison with her bouncing breasts. Raven appeared all the more horse like as she ran. Utilizing carefully planted strokes of his whip, Raven's driver urged her on. Soon Raven's shoulders would show the markings of many lashes of her driver's whip.<br><br>As the six ponygirls exited the first curve and advanced onto the far straightaway, Raven found herself just behind the black mare. Raven saw her chance. With an added bit of strength found from Raven's desire to win, Raven slowly advanced on the black mare. As Raven and the black mare came neck to neck, the black mare's driver realized his predicament. Instead of lashing out to the black mare with his whip, the black mare's driver instead turned to Raven and lashed out at Raven's face. Raven felt a sharp pain below her chin as the whip of the driver of the black mare found its mark. Raven's driver responded by lashing out at the black mare with his own whip. As Raven's driver had said back during training, in this race no holds were barred. This was truly an all out race to the finish.<br><br>While the drivers of the two lead pony carts lashed out at each other's ponygirls, the ponygirls themselves continued their advance down the track. Each was determined to beat the other. Bearing the markings of their opposite driver's abuse, Raven and the black mare ran together neck to neck.<br><br>As they came around the second curve and neared the finish line, an announcement could be heard. "Looks like its going to be a photo finish, ladies and gentlemen. Here comes Raven and the black mare neck to neck."<br><br>Seeing the finish line Raven found within herself an extra portion of energy. With an extra burst of speed, Raven edged ahead of the black mare. Crossing the finish line the strobe light of an automatic camera went off to effectively signal the end of the race.<br><br>As Raven slowed to a stop, Raven felt a momentary dizziness. Just as Raven was about to collapse onto the dirt of the track, one of the stable attendants rushed out to steady her. She had given all that she had to win.<br><br>Soon came the announcement of the results. "Ladies and gentlemen, I have just been given the results of the photo finish. And the winner is, Raven from Mark's farm!"<br><br>As the crowd heard of Raven's victory, Raven was ushered to the winner's circle. Like any successful race horse, a flower-bearing wreath was placed about Raven's neck. Raven, still harnessed to the pony cart, stood proud with her back straight and her breasts thrust forward. Being naked among clothed people had become routine. A small crowd gathered about Raven to stroke her sweating flesh. Raven loved the attention.<br><br>According to the tradition of the Derby, a wooden statue of a trotting ponygirl harnessed to a pony cart would now be repainted in Raven's likeness. The statue, located high upon the roof of Derby's stables, would stay that way until next year's race. The image of the black mare would finally be removed.<br><br>Esmeralda was graceful in losing. As she approached Mark at the winner's circle, she thought of Raven's breeding. Esmeralda loved to watch the young mares couple with her virile studs. The idea of their mating caused Esmeralda's cunt to moisten. "Well congratulations Mark. You've finally won the Derby." Quickly Esmeralda changed the subject. "Now about Raven's breeding fees...."`
+                },
+                {
+                    title: "Chapter 5",
+                    subtitle: "Breeding", 
+                    content: `Raven was confused upon learning that she was to accompany Esmeralda to her farm, not Mark's. What had Raven done? Had not Raven won the Derby?<br><br>Once again Raven found herself running naked bound behind a pony cart. Apparently Esmeralda's farm wasn't located far from the Derby grounds. Raven had been relieved of her pony cart harness, bridle, and pony boots. Her wrists and arms remained tightly bound behind her back. Pulling the pony cart, a two person cart this time, was the black mare. Having Raven forced to follow the pony cart gave the black mare at least some satisfaction, thought Raven.<br><br>As they entered the confines of Esmeralda's farm, Raven saw what she considered to be most extraordinary. Within one of several separate pens was a group of naked men. Their hair was styled in a mane-like fashion much like Raven's own. In addition each man had a ring piecing his nose. Again just like Raven. And as they approached closer, Raven could see that the naked men also had a ring piercing the loose flesh of their testicles. Upon seeing Raven, the confined men rushed to the fence nearest to Raven to get a better view. On many of them their penis had become noticeably erect. The sight of so many nude men with their stiff phalli caused deep sexual desires to emerge in Raven. Raven's cunt involuntarily started to lubricate. Raven had an odd thought, could these men, done up as horses as she was, be ponyboys? Raven had not seen any ponyboys at either Mark's farm or at the Derby. Why were they kept? Raven would soon find out.<br><br>Esmeralda sat in the driver's seat of the pony cart that Raven was attached to. Turning her head towards Raven, Esmeralda spoke. "I see that already you've had some effect on my collection of studs. They look like they're raring to have their way with you."<br><br>A collection of studs, thought Raven. Raven had been told that she would be one day mated. Raven looked out to the waiting studs with a mixture of apprehension and anticipation. Raven felt apprehensive over the effect of the stud's lust on her now slender body. Raven feared being pregnant. On the other hand Raven anticipatively looked upon the studs' stiff phalli. The thought of a stud's nice stiff phallus penetrating her wet cunt excited Raven. Raven fantasized on a mental picture of the studs taking her in succession. Raven's fantasy would soon become reality.<br><br>As the pony cart bearing Esmeralda with Raven behind it stopped in front of a large stable, a female stable attendant rushed out to greet them. Stepping to the ground, Esmeralda directed the attendant to Raven. "Michelle, have Raven bathed and then prepare her for mating. I want the studs to have at Raven as soon as possible." Esmeralda once again addressed Raven. "As you might have guessed, one of the functions of my farm is the breeding of young ponygirls such as yourself. Mark gave me a contract to have you impregnated. My farm is one of the few to perform this necessary service. The keeping of studs for the purpose of impregnating young ponygirls isn't very popular. But someone has to do it. You will remain at my farm until it is verified that you are indeed heavy with a foal. You will at that time be taken back to Mark's farm where you will give birth in his stables. My responsibility ends once your pregnancy is confirmed. Oh by the way, at my farm all of the stable attendants are women. They know very well how to direct my studs."<br><br>Now having Raven's fate confirmed, Michelle directed Raven into the stable. Taken to an empty stall, Michelle bound Raven's wrists to an overhead beam. "We'll get you all dolled up for your date." Michelle told Raven somewhat in jest. Taking a hose in hand, Michelle then sprayed a stream of cold water all over Raven's body. Then utilizing a bucket of soapy water, Michelle scrubbed the road dirt from Raven's flesh. Michelle gave extra attention to Raven's hairless vaginal area. Raven had by now gotten used to being washed like this. Raven found Michelle's attentions invigorating.<br><br>Freshly bathed and her mane combed, Raven was led to an enclosed pen within the stable building. Here Raven was directed to bend forward at her waist, whereupon she had her upper arms bound to a T-shaped metal bar. The breeding bar, constructed of metal pipe, stood about three feet above the floor of the stable. Its single support was rigidly cemented to the floor. Raven's ankles were then spread apart and bound to large rings that were also cemented into the stable's floor. Bound like this, Raven's cunt was quite indefensible. Raven could do nothing to prevent what was going to happen next.<br><br>A blindfold was tightly wrapped around Raven's head. Raven would be denied knowledge of her foal's father. If Raven ever had the chance to identify the father, the only knowledge of him that she would have would be his scent, and the feeling of his cock within her cunt. But of course Raven would never have such an opportunity.<br><br>Having Raven both blindfolded and securely bound to the breeding bar, Michelle prepared Raven's injection. As was usually requested, Mark had specified that Raven's foal be female. A request of this kind was not difficult to comply with. All that was required was a simple injection of hormones into the mare's womb. The sudden unexpected piercing of a needle into Raven's lower belly caused Raven to emit a loud whinny.<br><br>One final preparation was made prior to Raven's mating. Bending behind Raven's exposed buttocks Michelle applied a generous amount of lubricant to Raven's vagina. In the next few hours, and further more over the next few days, Raven's cunt would get well used.<br><br>"Michelle bring in the black stud." ordered Esmeralda. Raven nervously waited for the stud's arrival.<br><br>Michelle left the enclosed pen and promptly returned with the black stud in tow. Michelle held a chain that attached to the stud's nose ring. The stud had his arms securely bound behind his back. He would have no use of his arms that evening. Behind the stud another female attendant held a thinner chain that connected to the stud's testicle ring.<br><br>"This stud has fathered many foals here at my farm. He has very well developed leg muscles coupled with a very large lung capacity. Just the characteristics that are desired in racing ponygirls. Oh, don't think that the drugs given to you with your food during training will prevent a pregnancy. Those substances were deleted from your food several weeks prior to the Derby. You should now be quite fertile." lectured Esmeralda.<br><br>As the stud was placed just behind Raven's buttocks another pair of attendants grasped Raven's waist to steady her. Still holding on to the stud's nose chain, Michelle knelt down and guided the stud's penis to Raven's gapping cunt. The stud knew what to do. Without having to be ordered, the black stud rammed forth his stiff penis.<br><br>Raven cried out with a high pitched whinny. In just a single thrust the black stud filled Raven's cunt with the entire length of his erect cock. A quick withdraw of his cock and in he thrust again. Instinctively Raven moved her buttocks back and forth to meet the stud's thrusting cock. Deep down in her consciousness Raven wanted to somehow prevent what was going on. It wasn't right that she be mated like this. Forcibly mated like an animal. But the stud's thrusting felt too good, and Raven's training to be submissive had been too thorough. Any thoughts of resistance quickly faded. The pleasure of the moment overwhelmed Raven. With a regular rhythm the stud would thrust forward his cock into Raven's well lubricated cunt. Raven would respond with a short high pitched whinny, and upon the stud's withdrawal, coupled with a toss of her jet black mane, Raven would attempt to keep his penis within her by reciprocating her hips back towards the stud's receding loins. And so the sequence of motions of Raven and the stud would repeat.<br><br>Esmeralda enjoyed watching the coupling of the ponygirls with her studs. Raven and her black stud were putting on a particularly good show. Esmeralda had collected the finest examples of the human male animal. She felt a special pride in dominating both the female and the male.<br><br>After a while, the stud let loose a loud roar. A thick stream of semen was then pumped into Raven's waiting cunt. Raven's body subsequently shook violently as Raven also climaxed. After the stud had let loose the last of his semen, the female attendant standing behind the stud gave a hard jerk on the chain connected to the stud's testicle ring. The stud yelled out with pain. With the stud's penis forcibly dislodged from Raven's now semen filled cunt, the stud was directed by the chain attached to the stud's nose ring away from Raven and out of the enclosed pen.<br><br>Raven was left bound to the breeding bar for the rest of the day. Two additional copulations were performed before Raven was released from the bar. Her initial coupling had occurred in the early morning. Raven reckoned that her second coupling happened around noon time. The stud's second time around was no less stimulating for Raven than had been the first. Just after the second mating one of the attendants had given Raven her lunch from a horse's feed bag. Raven ate and drank with her head enclosed within the feed bag as she remained bound to the breeding bar. The third and final coupling of the day occurred right before dinner. Raven figured that the time must have been near nightfall, as that was usually when she had her dinner. In a repeat of her previous two encounters with the stud, Raven's cunt was once again filled with sperm.<br><br>In spite of being blindfolded Raven could tell that the same man took her each time. She began to grow accustomed to the feelings of his large cock deep within her. His cock alone was all that she felt. Raven realized that the stud's hands must have been bound behind his back. Raven felt nothing other than the sensations conveyed to her body by his thrusting cock.<br><br>It was dark when Raven was finally released from the breeding bar. Raven ached all over. Her cunt was particularly sore. As she stood up Raven found walking to be somewhat difficult. Oh, what had become of her, thought Raven.<br><br>"Take it easy girl. It's always hard the first time. You'll soon get use to the routine." said Michelle in a soothing voice.<br><br>Over a period of weeks Raven was repeatedly bound to the breeding bar and forcibly mated with Esmeralda's black stud. Raven came to welcome the pleasure of the stud's thrusting cock.<br><br>One day Raven had a visit from the veterinarian. From a sample of Raven's urine some tests were made. "No doubt about it. The mare's with foal."<br><br>Upon hearing the veterinarian's verdict, Raven cringed with fear as to what was going to happen next. She would now be returning to Mark's farm where she would give birth in his stables. Just like a lowly animal.<br><br>Esmeralda smiled. "Well Raven now that my contractual obligations are satisfied you will soon be returning to your owner. But before that, as is the custom at my farm, we're going to have a little party. You Raven are the guest of honor."<br><br>That evening Raven was once again blindfolded and bound to the breeding bar. This time not just one male, but many males took Raven's luscious body. All except the one stud who had fathered her foal.<br><br>This time the studs taking Raven were free to use their hands. Not a single square inch of Raven's body was left untouched. While one fucked Raven's cunt, another would use her mouth. And so it went throughout the night. It would be near morning when the sound of the miniature bells attached to Raven's nipple rings finally became silent. Raven was thoroughly gang-banged.<br><br>Raven had slept little when Mark and one of his stable attendants came for her the following morning. After a quick bath, Raven was chained lying down within a horse trailer. Not until their arrival back at Mark's farm did Raven awake.`
+                },
+                {
+                    title: "Chapter 6",
+                    subtitle: "Raven is brought to milk", 
+                    content: `During the term of Raven's pregnancy no pony cart duties were demanded of her. She had the free run of Mark's pens. In a constant state of nudity, as were all the ponygirls on Mark's farm, Raven spent the bulk of each day running the perimeter of Mark's largest pen. Roused from her sleep and bathed by a stable attendant, Raven would each day be led via a chain attached to her nose ring to the outdoor pen. There Raven would run and frolic with the other ponygirls of Mark's farm. Not until near nightfall would the stable attendants lead Raven and the other ponygirls back to the stables.<br><br>Each day Raven's belly increased in size. Eventually Raven's once graceful trotting and running form were reduced to an ungainly waddle. Raven began to wonder whether her once lovely shape would ever return.<br><br>It was during the period of Raven's pregnancy that Mark satisfied his promise to bring Raven to milk. Not that Raven wouldn't have begun to lactate on her own accord. This was to be a permanent change in Raven's composition. Mark wanted to insure the Raven continued to produce milk long after her foal was weaned. In this part of the deep south the milk of the human mares was deemed a prized commodity. At the richest gatherings where ponygirls were exhibited, the milk produced by the ponygirl's own bodies would be drunk just as if it was fine champagne.<br><br>So commenced a change in Raven's daily routine. After each morning bath the synthetic hormones that had earlier been promised were injected to each of Raven's breasts. Raven squirmed with pain as each injection was administered. The effect of the injections would be permanent. Raven's breasts, already large by any measure, increased both their girth and length by several inches as Raven built up her milk supply. Near the end of Raven's sixth month of pregnancy she began to lactate profusely.<br><br>A ponygirl may be milked either manually by say the manipulations of the nipples by an attendant's fingers, or automatically by a milking machine. Bound to milking machines was how most of Mark's ponygirls got milked. Raven was no exception. Bent over on her knees with the tips of her now huge breasts firmly sealed within the cups of a milking machine, Raven was milked daily. With her belly swollen to great size with her unborn foal, Raven presented quite a picture.<br><br>Raven's days of being an uncaring college coed now seemed far in the past. In reality less than a year had passed since her sale.<br><br>Raven came to enjoy being milked. It felt great to have the pressure relieved. Milking was also sexually pleasurable. As the suction cup clamped down on her extended nipples Raven couldn't help feeling an odd sort of pleasure deep within the recesses of her cunt. Drops of vaginal fluid could be seen dripping from Raven's cunt as she was being milked.<br><br>Raven's time came late one night. Mark stood by to observe the birth of Raven's foal, just as he did with every ponygirl about to give birth. If he saw that this birth went well then he would be inclined to have Raven impregnated for a second time. Farm bred ponygirls, due to their inherently subservient nature, were highly prized. All the more so in Raven's case since she had won the last Derby race.<br><br>No drugs were given to Raven to ease her discomfort. Raven was expected to endure the intense pain of her contractions. Although stable attendants assisted, it was Raven of course who did the bulk of the work.<br><br>Unable to scream like a normal woman due to her vocal cord modification, instead Raven vented her pain with loud high pitched whinnies. With the contractions and Raven's consequential whinnies coming close together, one could be excused in thinking that not a woman, but an actual horse was giving birth in Mark's stable.<br><br>Fortunately Raven was young and healthy. A brand new female foal entered the world shortly before three in the morning. After being given its first bath by one of the assisting attendants, the foal was placed beside Raven. Raven's maternal instincts immediately took over. She would now join all the other ponygirls of Mark's farm in the rearing of their young.<br><br>No attempt was made to separate the young ponygirls from their mothers. Rather, by letting the farm-born ponygirls associate with their mothers they consequentially learned to emulate them. Each succeeding generation became evermore submissive and domesticated than the last.<br><br>Domestication of the ponygirls was however a two-edged sword. While the farm bred ponygirls had a reputation for being easy to train, extreme subservience often failed to excite the crowd at the Derby. Mark, being the good ponygirl farmer that he was, realized this. Hence the occasional need to bring in fresh blood. He had immediately seen what he had needed in the young ex-coed on the auction block.<br><br>"Well what do you think?" one of Mark's attendants asked of Mark.<br><br>"I believe that we have the beginnings of another excellent line of ponygirls here." replied Mark.<br><br>Raven was oblivious of Mark's and the attendant's conversation. Lying on her side on the straw of her stall, all that she could think of was the little foal that lay beside her. In a few short years the foal would join her mother on the track.`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

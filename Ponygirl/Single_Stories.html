@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>Oneshot Collection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            chapters: [
+                {
+                    name: "Cinderella",
+                    author: " Jennifer Harrison",
+                    title: "#1",
+                    subtitle: "Author's Note: I hope you enjoy the retelling of this classic fairytale!",
+                    content: `Cinderella strained every sinew as she climbed the slight incline, struggling to pull the great weight behind her. Her feet slipped on the path, and she felt the mud ooze between her toes, but she redoubled her efforts as she felt the lick of the whip across her back.<br><br>The beautiful young woman was naked, other than the leather straps of the body harness that held her painfully tight across her shoulders, chest, stomach and hips. The web contained two steel rings, through which her breasts had been forced, leaving them swollen and disfigured, discoloured by trapped blood. Her nipples were pinched by metal clamps, from which hung small silver bells, constantly tinkling as she struggled along.<br><br>Leather cuffs locked around her wrists were chained close to straps around her upper arms, keeping her arms bent and useless. Her head was also held in a harness, with leather panels on either side of her face preventing her seeing anything other than the dirt track in front of her, and her mouth was stretched around a cruel metal bit, tugged and twisted by reins to drive her in different directions.<br><br>The reins were held by one of the two grossly overweight women riding on the buggy that Cinderella was dragging behind her. The sulky had been used by Cinderella as a child, pulled by her favourite pony. Now, in a perverse irony, she had been forced to take the place of the beast of burden, while her stepsisters had crammed themselves onto the bench seat.<br><br>While one of them, Beatrice, steered the small carriage using the reins, her sister, Eugenie, gleefully used the riding whip to encourage the girl between the traces to greater efforts. Both women laughed at the sight of their pony's back, her skin glistening with sweat and criss-crossed by a lattice of red welts on her shoulders and on her firm buttocks. They were also highly amused by the horsehair tail which swished from side to side on her rump, knowing it was attached to a thick wooden dowel, forced into the poor girl's anus, and held in place by a leather strap which passed between her legs and was buckled painfully tight against the belt at her waist. The crotch strap was so tight that it pressed between the girl's labia, presenting an obscene view to anyone looking at the tortured form locked into the shafts of the cart.<br><br>As the driving rain ran down her naked body, plastering her hair to her head and running off her tortured breasts, Cinderella wondered, once again, how it had ever come to this. Only a few months ago, she had been ecstatically happy, growing up in a loving household. Then her mother had died suddenly, her father had remarried with unseemly haste, and the nightmare had begun.<br><br>The woman he married was very haughty, and treated Cinderella with disdain bordering on disgust, although she was always icily polite to her in front of her father. She had two daughters of her own, and Cinderella thought of them as 'the ugly sisters' - they were physically unattractive and fat, but more than that, they were mean and cruel to her whenever they could get her alone.<br><br>As one of her first acts, her new stepmother had dismissed the servants and said that Cinderella must give up school and take over the household chores. She had protested to her father, but he meekly agreed with his new wife that Cinderella had to find herself a husband, and schooling was no way to do that! She needed to learn how to look after a home.<br><br>And so began a life of drudgery for the sad beauty, one filled with cooking and cleaning, washing and ironing, while the ugly sisters frittered away their time, and her father's money, on balls and dresses.<br><br>One day, Cinderella's stepmother was inspecting the standard of cleanliness and, as usual, was not happy.<br><br>"This is the final straw!" she fumed. "You are such a lazy girl! I have important guests coming today and this place must be spotless!"<br><br>She went to the wardrobe and, to Cinderella's horror, returned clutching a riding crop.<br><br>"Take off your clothes!" the older woman commanded. Cinderella, close to tears, complied, removing her dress, chemise, shoes, stockings and pantaloons, finally standing naked, cowering before her stepmother. Without a moment's hesitation, the older woman lashed out, striking the girl hard across her milky thigh and eliciting a heart-rending scream from her. The ugly sisters appeared to investigate the noise, and watched with undisguised pleasure as their mother hit their stepsister repeatedly, until she was in floods of tears and her buttocks were striped with ugly red wheals from the crop.<br><br>"Now do it all again, and if it is not perfect, I will beat you again!"<br><br>Cinderella picked up her duster and began working frantically, as her stepmother gathered up the discarded clothes.<br><br>"You two, watch over her and make sure she works hard! Punish her if she stops!" She handed the riding crop to her daughters and left. The two young women giggled at Cinderella's plight and their new power over her. It wasn't long before they perceived a slackening of her work rate and took turns to 'encourage' her to greater efforts with the riding crop.<br><br>When, at last, the job was done to her stepmother's satisfaction, she was ordered to start preparing dinner for the party to take place that evening, but was not given back her clothes, so had to continue in the nude. When everything was finally complete, Cinderella assumed she would be given back her clothes and either included in the party or, more likely, be made to serve as waitress. But both assumptions were wrong. Very wrong.<br><br>"Well," her stepmother said once she had inspected the arrangements, "you must be tired, you're excused for the evening. Girls, show your stepsister to her new quarters."<br><br>The two women squealed with delight, and grabbed their younger stepsister, dragging her out of the house and out into the dark winter's evening. Cinderella fought to free herself but they were older, bigger and stronger than her, and they twisted her arms up behind her back as they marched her into the stable block. They forced her into an empty stall, making her lie down on the dirty straw.<br><br>"Let me go!" the naked girl shouted as she struggled to escape their grasp. "You can't keep me here! I'll tell my father of this and he'll put you in your place!"<br><br>Both women laughed, and continued to hold their victim down on the dirt floor.<br><br>"You are wrong on every count, you stupid girl!" the older sister, Eugenie, said, as Beatrice brought over a length of chain and began wrapping it around Cinderella's body, pinning her arms to her side.<br><br>"We can and will keep you here as long as we want! Get used to your new home, Cinderella - you'll only be in the house to cook, clean, and wash, and do anything else we want you to do. And as for telling your father, please go ahead - he is so much under the control of Mama that he will believe anything she tells him - and nothing you say!"<br><br>She heard the click of padlocks, and knew they had effectively rendered her helpless. But they were not finished with her. They dragged her to the side of the stall and locked another chain around her neck, then padlocked the other end to a heavy iron ring bolted to the woodwork.<br><br>"You know she'll probably whine and howl all night, like a whelping bitch, don't you?" Beatrice said to her sister.<br><br>"We can't have that, now can we?" Eugenie replied.<br><br>"W-what are you going to do to me?" Cinderella asked fearfully. Eugenie leaned down, until her face was only inches from that of the frightened girl.<br><br>"Whatever we want to," she breathed, chilling Cinderella to the bone. Beatrice had found an old rag on the floor, and now stuffed it into the chained girl's mouth until she couldn't force any more in. Eugenie wrapped a length of rope twice around her head and tied it tight to hold the gag in place. For good measure, they pulled a hessian sack over her head, leaving her blind, as well as helpless.<br><br>"Goodnight, Cinders," she heard one of them say, "Sleep well, tomorrow is going to be a busy day!" She heard them laughing heartlessly as they left her alone. It was a long, cold night, and the young woman was awake throughout, sobbing and shivering, dreading what was to come.<br><br>The next morning, the two sisters released her from her bondage, but used the chains to manacle her wrists and ankles. They also chained a large rock to her waist to prevent their younger step-sibling from escaping - she would still have been able to outrun the two fat women, even while hobbled.<br><br>They set her to work cleaning out the stables, which was dirty and back-breaking work in the bitter cold. She was grateful later, when they took her into the warmth of the house to prepare their lunch, followed by sweeping and dusting. The sisters took great delight in tormenting poor Cinderella as she slaved away, having found bamboo canes in the garden and now employing them to strike the naked girl on her buttocks and thighs at any opportunity. She was constantly crying out as they beat her, weeping and begging them to stop.<br><br>As she prepared dinner for the rest of the family, Cinderella's stomach growled - she had not been allowed to eat all day - and she pleaded with her tormentors for food, but they merely laughed, saying she could have the scraps off their plates before she washed them later.<br><br>She wondered how they had explained her absence from the table to her father, surely he would come to find out what had happened to her, see her desperate plight and rescue her from this terrible mistreatment?<br><br>Beatrice seemed to sense her surprise and disappointment when the empty plates and dishes were returned to the kitchen without any sign of her father.<br><br>"Papa asked after you at dinner," she said, the smug triumphalism in her voice very evident, "but he seemed perfectly happy when we explained that you had decided you would, from now on, eat your meals in private."<br><br>"Why would I want to do that?" the shocked girl asked in dismay.<br><br>"Mama just told him it was a 'woman' thing, and he accepted that without question." Cinderella burst into tears as she saw her stepsister's broad, and evil, grin. She had been completely abandoned by the only man she thought loved her! She sank to her knees in total disbelief, as the other woman stood over her, openly laughing at her despair.<br><br>Cinderella slept hungry that night, having only found a few scraps to eat, and many nights afterwards. The stable stall became her permanent residence, and her life of slavery continued, with the abuse she suffered becoming more and more degrading. She never saw her father and very rarely her stepmother - but she was always within the clutches of her heartless, sadistic stepsisters.<br><br>They eagerly adapted the bridle and harness in the stables once they found the child's sulky, and decided it would be a wonderful idea to turn their beautiful slavegirl into their beautiful ponygirl. They drove her hard around the neighbouring forest, forcing her to pull them at least a mile a day, whatever the weather - baking sun, driving rain, freezing snow.<br><br>What dismayed the young girl more than anything was the attitude of the local people. Farmers, fieldworkers, even local landowners saw her being whipped by her cruel stepsisters as they trotted down the lanes and along the roads, but none seemed to think it unusual that a naked woman was being abused in this way, like a dumb animal. They occasionally stopped and spoke to the sisters, passing the time of day on trivial gossip, ignoring the poor girl sweating between the shafts of the buggy in front of them. It was as though the whole population around there was complicit in a conspiracy of silence, designed to cover up the systematic abuse in their midst.<br><br>One day, as Cinderella was on her hands and knees scrubbing the kitchen floor, her stepmother burst in, excitement written across her normally stern features.<br><br>"Beatrice! Eugenie! Great news!" she cried out. "Prince Tremaine is holding a ball! Every woman between 18 and 30 in the kingdom is to attend, and he is going to choose his wife!"<br><br>The ugly sisters were ecstatic at the thought, and danced around the room, clearly convinced that the prince must choose one of them - a triumph of blind optimism, overweening ambition and a total lack of self-awareness over any sense of realism!<br><br>"When is the ball, Mama?" Eugenie asked.<br><br>"Tonight," her mother replied, "so we don't have a moment to lose."<br><br>"Excuse me," Cinderella said quietly. The three other women turned with identical expressions of disgust and disbelief as they looked down at the naked girl on her knees, chains hanging from her wrists and pooled on the floor between her ankles.<br><br>( link opens in new window )<br><br>"Surely, that means I should attend the ball as well?"<br><br>Her stepmother hooted with laughter, and her two daughters joined in.<br><br>"Oh, you poor, deluded child!" she managed to say, still laughing. "The prince doesn't want servant girls at his ball, and he certainly wouldn't want a disgusting, filthy slave like you contaminating his palace! Girls, it seems your stepsister still hasn't learnt her true place yet. Please teach her a lesson that she won't forget, would you?"<br><br>With evil grins on their faces, they dragged the frightened girl out to the stables.<br><br>"Please," she begged, now terrified as she felt her wrists being bound cruelly tight behind her back, followed by her elbows, "don't hurt me!"<br><br>The two women laughed as they continued, unmoved by the desperate plea, applying nipple clamps, larger and stronger than they had used before. Beatrice tied strings to the clamps and attached the strings to a nail in the beam above Cinderella, pulling it tight, until the girl was having to stretch up to try and ease the pressure on her aching buds. Meanwhile, Eugenie tied a rope around her waist and passed it between her legs, making it into a crotch rope. She then added a large lead weight to the free end of the rope.<br><br>"Hopefully this will make you think before you speak out of turn again," she said as she dropped the weight. The bound girl screamed as the rope suddenly pulled tight, ripping it's coarse fibres across the tender flesh of her defenceless pussy, and burying it deep between her plump labia. The desperate scream was cut short as they stuffed her mouth with a dirty cloth and tied another across her face to hold it in place. Tears sprung to her eyes as they laughed at her evident discomfort.<br><br>"You have a choice, Cinders," Eugenie said triumphantly, "if you squat down and rest the weight on the floor, you can relieve the pressure on your nether regions but, of course that will increase the tension on your poor little nips - such a dilemma! Do enjoy your evening, won't you, as you imagine what a wonderful time we're having!" With a final laugh at their helpless stepsister, they went back to the house to get ready.<br><br>Poor Cinderella wept and whined in tormented agony as she tried to cope with the pain inflicted alternately on her most sensitive parts. As the afternoon turned to evening, she knew she could expect no mercy, and would be left here to suffer while they went off to the ball to enjoy themselves.<br><br>She thought she must have become delirious when she saw a shimmering light in the stable and suddenly, in front of her, appeared a beautiful woman in a sparkling dress, holding a wand. She waved the wand at Cinderella and, in a shower of glittering stars, she found that all her bondage had disappeared and she was free!<br><br>"Who are you?" she asked in awe, before howling as the blood rushed back into her pinched flesh, causing her fresh pain.<br><br>"I am your fairy godmother," the apparition replied, once the tortured girl had recovered, "and you SHALL go to the ball!"<br><br>"But I don't have a thing to wear," Cinders said, acutely aware of her nudity for the first time in a long time.<br><br>"No matter," the fairy said airily, "just put on any old rags and I will turn them into a beautiful evening gown by magic!"<br><br>"No, you don't understand, I literally have nothing to wear - apart from that horrible harness," she said, pointing to the web of leather and steel hanging on the wall.<br><br>"No problem," explained her fairy godmother, "put that on and I will transform it."<br><br>Reluctantly, the naked girl stepped into the hated restraint and tightened it up. At the other's insistence, she also donned the head harness and placed the bit between her teeth. Despite her garbled protests, she was also ordered to insert the butt plug, with its ridiculous tail. This was difficult, painful, and undignified, but eventually she had it done.<br><br>The magical being waved her wand at the strapped and gagged girl, surrounding her in dancing stars. When she looked down, she saw that the ugly harness had been transformed into a beautiful, full-length, black, shiny leather gown which held her slender frame perfectly, squeezing her in at all the right places, and presenting her impressive décolletage perfectly, with a daringly deep cleavage. The bridle had been turned into sparkling tiara and necklace of pearls, while the bit had become a diamond-encrusted retainer, instantly straightening and whitening her rather ugly teeth. The butt plug was still in place but, instead of feeling horribly invasive and uncomfortable, it seemed to suffuse Cinderella with an inner glow, making her feel wonderfully excited, and a little aroused.<br><br>"Now, we must sort out your transport," the Fairy Godmother said, leading the way out into the courtyard. She saw the little sulky standing there and, in a trice, it had magically become a crystal carriage, fit for a princess!<br><br>"But what about the horses?" the young woman asked. At that moment, the door to the house opened, and her father, stepmother, and two stepsisters emerged.<br><br>"What is the meaning of this?" her stepmother began, but a moment later the wand had waved, and Cinderella was amazed to see the women, naked, harnessed and bridled, in the traces of the carriage, while her father, in coach driver's livery, was sitting on the bench, looking bemused.<br><br>"Now, off you go," the fairy said, ushering her into the carriage, "but remember, on the final stroke of midnight, the magic will wear off, and everything will be as it was!"<br><br>As she sat down, Cinderella heard a crack of the whip, a stifled scream, and the carriage shot forward at a startling pace. She leaned out of the window and watched as her father, clearly bewitched, drove the women on, lashing their exposed rumps without mercy. She smiled at this delicious reversal of fortunes.<br><br>At the ball, all eyes were on the beautiful, mysterious girl in the stunning leather dress. The prince was smitten from the moment he set eyes on her, and danced every dance with her. As the evening wore on, the two young people gazed deep into each other's eyes, and the rest of the world ceased to exist, only the music mattered as they twirled and waltzed the night away.<br><br>It was only as the clock was striking the midnight hour that Cinderella came out of her trance, realising her perilous situation.<br><br>"Oh, your Highness, I must leave immediately," she said, dropping a low curtsy and backing towards the huge doors.<br><br>"Nonsense, my dear," the prince smiled, "the night is yet young, and I would learn more of your past... and your future!"<br><br>"Alas! I cannot stay a moment longer!" she cried, turning and running for the doors as she heard the clock continuing to strike. At the merest signal from the prince, the guards on the door moved forward to block her escape and grabbed her arms. She struggled frantically, but could not break their hold and, as the last chime faded away, she saw the stars surrounding her once more. The guards, unnerved by the magical display, thrust her away, and she fell to the floor. By the time she had got to her knees and looked up at the prince standing over her, her fine dress was once again no more than a tight leather harness over her naked body, and her head was trapped in the bridle and bit.<br><br>As the whole court stared down at the naked girl and she stared up at her prince, the doors burst open, and there was her stepmother, closely followed by the ugly sisters and her father, all dressed in their fine clothes.<br><br>"Your Highness!" her stepmother cried out, pointing down at Cinderella, "this... this witch has cast a spell on us and the court! As you see, she is nothing but a common slavegirl!"<br><br>The prince seemed to assess the situation carefully before he spoke.<br><br>"And yet, madam, I have made slavery illegal in this kingdom, have I not?" he said, his voice firm and commanding. It was true that, as an enlightened despot, he had recently introduced such a law, though it had yet to have much effect on the barbaric practices in the remoter parts of his kingdom. "Furthermore, it seems as though you have treated this beautiful young woman worse than a dumb animal. Guards! Take them away!"<br><br>And so it came to pass that the father was imprisoned, while the evil stepmother and her two daughters were made to work in the fields, pulling a plough like oxen.<br><br>Meanwhile, Cinderella became 'Princess' Anastasia - her real name - and was loved and revered by the prince as the finest of his string of ponygirls. Her harness and bridle were made of the finest calf-skin leather, while her bit, nipple clamps and butt plug were fashioned by the greatest silversmith in the land. On her head, she wore plumes of ostrich feathers, and on her feet, boots which formed a perfect hoof, complete with genuine horseshoes. They looked and sounded magnificent as she trotted through the cobbled streets of the city, pulling the prince's sulky, watched and cheered by his adoring subjects.<br><br>While it may not have been her first career choice, Cinderella was grateful to escape the abuse of her relatives and to be given a fresh bed of straw to sleep on every night.<br><br>And so, they all lived happily ever after. Well, the prince certainly did...<br><br>The End`
+                },
+                {
+                    name: "The Stable Girl",
+                    author: "fiona-florence",
+                    title: "# 2", 
+                    subtitle: "[Female dom and female sub, ponyplay, bondage, discipline]",
+                    content: `Eleanor winced and then swore as her car juddered to a halt, hearing the grind of buckling metal and the crunch of breaking plastic and glass.  She sighed, knowing she'd made yet another stupid mistake.  Her three months as a stable girl for the prestigious Wickham's Stables had gone so badly, with accidents almost every day. From accidentally spilling manure over the boots of a visiting horse owner, turning too quickly and shattering a window with a rake she was carrying, to leaving a door unbolted so that horses got out, and now reversing her car into the owner's 4x4 - things just seemed to be going from bad to worse this summer!<br><br>Later that morning, in the stable offices, Eleanor stood awkwardly in front of the stable owner Mrs Wickham, wishing she could hide or curl up or do something to avoid Mrs Wickham's terrifyingly stern gaze.  It was like being called up in front of the class at school, only somehow more embarrassing given that Eleanor was a grown woman in her early twenties being talked to this way.  None of the stable staff ever dared use Mrs Wickham's first name, she expected to be addressed as Mrs Wickham by everyone, and Eleanor had barely heard it used, other than by newcomers who were swiftly set right.<br><br>Mrs Wickham was an imposing woman in her mid fifties, relatively short and with a stocky but toned build from years running the stables, with silver hair that brushed her shoulders, piercing blue eyes and a tanned complexion that spoke to a life largely spent outside.  She was always immaculately dressed, even when she was going to be spending the day in the stables, and her smart clothing had a severe demeanour that only enhanced the schoolteacher aura she sometimes had.  She was wearing a knee length tweed skirt and a matching jacket over a crisp white stand collared blouse, with a vintage cameo brooch fastened at the neck.  As always, she was in gleaming high black leather riding boots that disappeared beneath the hem of her skirt - only ever exchanging them for more sturdy boots in the worst of weather.<br><br>Eleanor, by contrast, was tall and towered over Mrs Wickham by almost a full head, with an athletic figure after years of riding and cross country running.  As with most of the stable staff, she was always dressed suitably for both work and riding at the stables, wearing a pair of tight jodhpurs, riding boots, a technical top zipped to the neck and a quilted bodywarmer.  Her hair was long and blonde, tied back in a thick ponytail that hung past the nape of her neck.<br><br>"I had assumed you weren't doing this deliberately," Mrs Wickham snapped, glaring at Eleanor, "But after so many incidents, one can't help but suspect either you are doing so, or perhaps you're simply an idiot.  Do you have any excuses to make?  Any pathetic justifications?"<br><br>"No, Mrs Wickham," Eleanor whimpered. "I'm sorry, really I am.  I don't mean to do any of it, I'm just clumsy-"<br>"And forgetful."<br>"And forgetful, Mrs Wickham."<br>"And rude.  And late.  And honestly girl, I am reaching the end of my patience with you!"  Mrs Wickham sighed deeply, looking Eleanor up and down then sighing again. "I really am!"<br>"I'll pay for the damage to your car," Eleanor said, not daring to look up and instead fixing her gaze on the toes of Mrs Wickham's boots. "I can afford it, it's no problem."<br>"Look at me when I speak to you."  Mrs Wickham's voice was like ice, and Eleanor jerked her head up immediately, looking into the cold blue of her eyes. "I know you can afford it.  I am well aware that money is not an issue for you, and that you want this job rather than need it."<br><br>Eleanor flushed a little at the direct reference to her wealth.  Her parents were rich, and she enjoyed the benefits from a good school to nice clothes, to an ongoing trust fund that let her work part-time at the stables for very little pay.  Mrs Wickham, on the other hand, was certainly not struggling and had an old-fashioned Englishness to her that clearly denoted her as upper middle class, but she was not rich, simply relatively comfortable financially.  Her rarely seen husband had retired early from a job in the financial markets, letting Mrs Wickham spend her days running the stable and barely tolerating the arrogance of the wealthy women who kept their horses there.<br>"Mrs Wickham," Eleanor tried again, "I'm terribly sorry.  What can I do to make it up to you?  I'll do anything, please! Anything!"<br>"I have better things to do than take you in hand this morning," Mrs Wickham said with a raised eyebrow at Eleanor's plea, "But after lunch, I think I can find a way for you to make things right, and that'll help improve our working relationship.  Meet me at the south field at 2pm, and do not even think about being late."<br><br>Just before 2pm, Eleanor arrived at the gate leading to the south field, thankful that she had managed to get there on time.  The south field was some distance from the main stables and was rarely used, a legacy of a time when the stables had been busier she supposed.   Mrs Wickham was already waiting and gave Eleanor a curt nod, beckoning her to follow as they walked up the path leading to the stable building itself at the far end of the field.<br><br>"What are we going to be doing here, Mrs Wickham?"  Eleanor glanced around, not seeing any sign of horses in the field, or of anyone else.  "I've not been into this part of the stables before."<br>"No, you wouldn't have been.  I don't use this building much any more," Mrs Wickham replied, "But this morning led me to think you might be quite suited to it.  A little training never did anyone any harm."<br><br>Baffled, Eleanor followed Mrs Wickham to the door, watching as it was unlocked, then following her inside. Eleanor blinked as the lights were turned on, looking around to see a clean and well-appointed stable with stalls for horses, walls with tack hanging up.  Something felt somehow off though, but Eleanor couldn't quite put her finger on it.<br>"So what should I do here?" Eleanor glanced around, not quite sure what was expected. "I mean, it's all so clean and there are no horses."<br>Smiling slightly, Mrs Wickham walked over to where a selection of riding crops hung, taking down a bright red crop, bending it between her hands to flex the implement.  "Eleanor, you've tried my patience since you started working here.  But I think we've a real opportunity to improve your performance."  As she spoke, she started to pace across the stable floor, the sound of her booted feet quiet on the thick rubber matting.  "It will be challenging, but rewarding.  You may find it tough, but I hope you'll come to enjoy it."  She swished the crop through the air, standing with her back to the door they'd entered through, which Eleanor couldn't help but notice was the only door into the building.<br><br>"I'm not sure I understand," Eleanor said nervously, trying to work out what was bothering her about the stable. "I want to be less trouble, I really do!"<br><br>"Mr Wickham has always been very supportive," Mrs Wickham said, in a tone that suggested this would explain things. "He worked long hours before he retired, and I didn't have any interest in being a housewife with no job or interests of her own.  I started running the stables and after a time, much to my surprise, I had some offers to shall we say, enhance, the services we provided.  I was shocked, at first, but money was offered, and it interested me conceptually, so it was hard to say no. Wealthy women, and a few men, found the stables much to their liking after that, and apparently I was rather good at it. I stopped providing those services a few years ago once Mr Wickham retired, but never got rid of the equipment.  And as you can see, here we are.  Here you are, to be precise."<br><br>Eleanor was utterly confused by what Mrs Wickham was saying, but slowly she was realising what was wrong.  The tack was all wrong, it wasn't the right shape, it wasn't the right size, and some of it was very clearly not for horses.  It was made for people!<br>"Mrs Wickham," Eleanor said slowly, "I'm not sure this is what I-"<br>The silver-haired older woman shook her head, "Eleanor, you've made more than enough mistakes. This is where I draw the line.  You will obey me, and you will submit.  If you want to remain at this stable, you'll spend the rest of this afternoon in a more fitting role, that of a pony needing a firm hand."<br>"A pony???"  Eleanor was shocked, barely able to believe what she was hearing.<br>"Well, a ponygirl at least." Mrs Wickham smirked. "I take it from your expression that you're unfamiliar."  Eleanor nodded, her jaw hanging open in amazement and horror. "It's not uncommon, and I'm told the experience can be enjoyable.  Now, do you wish to remain employed here, or would you prefer to leave now?"<br><br>"One afternoon?"  Eleanor didn't know what being a 'ponygirl' would entail, but suspected it would not be anything good.  She looked over Mrs Wickham's shoulder to the door, then back to the stern stable owner. "A few hours? That's it?"<br><br>Mrs Wickham stepped forwards, looking up at Eleanor with a smile.  She raised the crop, letting the leather tip trail down Eleanor's sleeve. "A few hours. Surely a girl like you can easily put up with that? I will require complete obedience of course, and will instil it through firm training as needed."<br><br>Eleanor nodded hesitantly at first, then raised her chin. "A few hours, fine. I want to keep my job, I like it here."   The prospect of whatever might await her was making her shiver with nervous anticipation, but she steeled herself to endure whatever it might be.  After all, she'd been through worse, she was sure.<br><br>"As I said, I require complete obedience."  Mrs Wickham tapped the crop against her boot, looking Eleanor up and down very slowly with an appraising expression. "And as you're well aware, a pony needs a harness to keep them under control. So, please strip."<br><br>"What?!" Eleanor was aghast at the idea, "I can't take off my clothes here!  What on earth are you-"<br>"I said strip," Mrs Wickham said in a flat commanding tone that Eleanor had never heard her use before, "I will not give the instruction a third time.  Until I say otherwise, you are a ponygirl.  You are my ponygirl, and as such you will do exactly as I say."<br><br>Realising that she had no choice, Eleanor gave Mrs Wickham an angry stare, then shrugged. "Fine." She started to turn away, then yelped as Mrs Wickham flicked the crop, catching her thigh.<br>"Facing me, please."<br><br>Flushing bright red, Eleanor nodded, worried that she had got herself into a far stranger situation that she had expected.  She took her bodywarmer off, carefully folding it and looking around for something to hang it on, but eventually put it on the floor matting beside where she stood.  Bending over, she pulled off one boot, then the other, glancing up at Mrs Wickham to see her watching closely.  Eleanor was surprised if this was some kind of weird sex thing as it seemed to be, given Mrs Wickham was married, but perhaps their marriage was some kind of arrangement and her husband knew she had tastes for whatever this was going to turn out to be.<br><br>Trying to avoid meeting Mrs Wickham's eyes, Eleanor unzipped her top, pulling it off and placing it on top of the jacket.  She followed it with her jodhpurs, unbuttoning then sliding them down her legs, standing in the brightly lit stable in her sports bra, briefs and socks. Straightening her back, she looked at Mrs Wickham, trying not to feel self-conscious.<br><br>"I don't recall telling you to stop."  Mrs Wickham spoke quietly, but the meaning was clear and Eleanor blushed even more deeply. "Continue."<br><br>Sighing heavily, Eleanor took off her socks, then unhooked her bra and removed it to expose her small breasts and the spattering of freckles between them.  Finally, and with a shiver of shame, she pulled down her briefs, so she stood nude in front of the older woman.<br><br>"Very good." With a pleased nod, Mrs Wickham started to walk around Eleanor, looking her over with the same appraising eye that she did a new horse. "You're fit, good muscle tone. You'll make a good pony."  With the same calm detachment, she reached out, pinching Eleanor's thigh, then cupping one breast with her cool hand for a moment to Eleanor's horror, and finally grasping Eleanor's chin and turning her head from side to side.  "Oh very nice.  I always thought you'd be perfect for this, but didn't expect to have the opportunity."<br><br>Eleanor shifted awkwardly on her bare feet, not daring to say anything, but watching as Mrs Wickham went over to the wall of tack and laid down her crop, pulling down items and searching through some of the storage drawers beneath.  "Now, I had a good selection so we'll have things that fit you," she called over her shoulder as she sorted through what looked like leather harnesses with gleaming buckles, "So you don't need to worry about that. There was a high initial outlay of course but you can't beat being truly well-equipped.  As I'm sure you know, substandard tack really doesn't help anyone."  Turning back, Mrs Wickham held up a wide black leather item that was somewhere between a belt and a corset.  It was covered in straps and buckles, and looked more intimidating than anything Eleanor had worn before.<br><br>"Arms up." As Eleanor raised her arms, Mrs Wickham wrapped the belt around her waist, the leather cold against Eleanor's skin which rapidly came out in goosebumps.  The belt was six inches wide and made of thick white leather, with heavy buckles at the back and steel rings fixed at points all around, ready for any attachments.  Once it was in place, Mrs Wickham tugged on the buckles mercilessly, until it was cinched tight, making Eleanor feel a little short of breath. The scratchy tweed of Mrs Wickham's jacket brushed against Eleanor's bare breasts as the older woman adjusted the belt slightly, and Eleanor bit her lower lip, not wanting to make a sound, feeling like she would die of humiliation and shame.<br><br>A collar was next, and all in black leather with gleaming buckles and rings to match the belt. It was easily three inches high, and as it was buckled around Eleanor's neck, she choked slightly and was forced to hold her head upright by the height of it.  "Please Mrs Wickham, I can't breathe in this!"  Eleanor gasped, but the collar wasn't loosened and she head the buckles being fastened behind her.<br>"Shallow breaths until you get used to it," Mrs Wickham ordered, "I know how to fit a harness rather better than you."<br><br>Taking short shivering breaths, Eleanor whimpered softly and tried to ignore the strange choking sensation of the stiff leather pressing against her neck. She didn't dare speak, but instead watched quietly as Mrs Wickham brought over yet more restrictive black leather, this time a strange item which Eleanor didn't recognise, some kind of long wide sleeve, covered in straps and buckles that jingled together softly as it was carried over.<br>Mrs Wickham paused, looking Eleanor up and down for a second.  "This is an armbinder.  Once it's on, you will lose the use of your hands and arms.  I don't want you to panic, or to fight me.  Just make your hands into fists, and stay still."<br><br>Eleanor bit her lower lip, then sighed and nodded, clenching her hands obediently.   Mrs Wickham smiled, "Good girl" then stepped behind Eleanor.  With a firm grip, she pulled on Eleanor's wrists, moving her arms as if Eleanor was a doll to be manipulated until she stood with her shoulders back and wrists together.   The arm binder was pulled up over Eleanor's fists, then manoeuvred up her arms and tugged into place so that the top of the leather was high on her upper arms, just below her shoulders.  Without a word, Mrs Wickham began to tighten buckles, working from the bottom up, so that first Eleanor's hands were pressed close together, then her forearms and then even her elbows.<br><br>Eleanor whimpered as the straps continued to be tightened, forced to push her chest out in response, and while the restriction wasn't painful as such it was certainly uncomfortable.  This wasn't, however, the full extent of the armbinder's restriction, and Eleanor stood helplessly as supple leather straps were pulled up over her shoulders, crossing between her breasts and then curving under her arms, so that that once they too were buckled into place, the armbinder was held in place with no chance to slip down even an inch.<br><br>"What do ponies need?" Mrs Wickham asked, stepping in front of Eleanor and looking into her eyes. "What are you missing?"<br>Eleanor sighed, suspecting she knew where this strange situation was going next.  "A bridle, Mrs Wickham."<br>"Correct.  I always wonder if my girls here truly understand just how intimate it is to have a bit between their teeth, the total control that gives when the reins are tugged."  As she spoke, Mrs Wickham was taking a bridle down from where it hung on the wall and running her fingers over the array of straps before walking back over to where Eleanor stood.<br><br>"Once this is on, I will not consider you to be an employee." Mrs Wickham's blue eyes were fixed on Eleanor's, and the younger woman found herself unable to look away or even blink.  She had never been talked to this way, or had before felt the sheer force of will that Mrs Wickham exuded.  "I will consider you as my ponygirl, and treat you accordingly.  You will not speak, and if I feel that you consider yourself to still be an arrogant young woman who doesn't need to follow instructions, I will punish you accordingly.  Just like a real pony, you'll be given a mixture of encouragement and discipline such that you follow orders.  Do I make myself clear?"<br>"Yes, Mrs Wickham," Eleanor whispered, her head spinning at the prospect of what was about to happen.  She couldn't believe that she was here, already bound and in front of this stern older woman, with who knows what strange perversions lying ahead.  She was terrified, horrified even, but she found she wasn't able to say no to any of this.  Something about the situation, something in the relentless grip of the leather straps and collar, was like a hook lodged in a dark recess of her mind and was slowly but surely dragging it into the light.<br>"Now open your mouth."<br><br>Eleanor obeyed the humiliating command, opening her mouth wide and giving a little moan deep in her throat.  The bridle looked just as heavy and functional as the real horse tack that Eleanor was used to, with a thick rubber bit that was nearly an inch across, blinkers, wide rings to connect the various straps and long dangling reins.  Mrs Wickham brought the bit up to Eleanor's mouth and gently pushed it between her lips, firmly pressing it back until she had to grip it with her teeth.  Already, she felt herself gagging a little, flexing her tongue under it and making soft choking noises around it as she tried to get used to the utterly new sensation.  With practised skill, Mrs Wickham started to buckle the rest of the bridle into place with a thick strap passing from the rings at either side of the bit going round behind Eleanor's head, under her high ponytail.  Once this was buckled, the bit was held tightly into place, and Eleanor started to understand what Mrs Wickham had meant as she was unable to fully close her mouth around the thick rubber and felt strangely vulnerable.<br><br>Ignoring the noises that Eleanor was making, Mrs Wickham pulled a forehead strap tightly into place, followed by a narrow strap across the bridge of her nose and an unpleasantly tight strap under her chin which forcing her to grip the bit more tightly between her teeth.  The rubber of the bit was slightly yielding but with a firm core, and she could already feel saliva welling up in her mouth that she struggled to swallow down.  Brushing against Eleanor's nude body, Mrs Wickham adjusted the blinkers so that they did their intended job of taking away her peripheral vision just as they must do for real ponies.<br><br> Stepping back, with the long reins loosely held in one hand, Mrs Wickham smiled.<br>"What a good girl you've been! I need to make sure you're nice and secure though before I continue."  Mrs Wickham tossed the reins up, so they looped over a high beam in the ceiling, then knotted them swiftly so that they hung taut - and with the simple action Eleanor's mobility was removed.  Eleanor could feel an unpleasant tension on the bit between her teeth when she moved more than a few inches, and realised she now had to stay standing on the spot.<br><br>Mrs Wickham picked up the red riding crop again, tapping the end against her palm. "Have you ever been whipped?"  When Eleanor shook her head a little, the older woman nodded. "I didn't expect so, although I'm sure it would have done you a world of good.  I'm going to whip you now, so you can understand what will happen if I need to provide you with firm encouragement.  Please don't bother trying to beg me to stop, don't cry or embarrass yourself.  Ponies get whipped, and I think you're well aware of that."<br><br>Eleanor had never really considered just how it felt for a horse to be whipped, but as Mrs Wickham walked behind her she shivered uncontrollably and then gave a loud yelp of pain around the bit as the riding crop was brought down firmly across her bare bottom. She couldn't help but try and move away from the sharp pain, but the taut reins quickly made her head jerk up, making her choke against the collar and moan around the bit even as two further strokes followed, one across each buttock. Flailing her bound arms behind her, breathing hard and feeling a string of drool trickling down her chin, she gave Mrs Wickham a hot glare when the stern woman walked back round in front of her.<br><br>"I will use the crop to encourage you, and will not hesitate to punish any disobedience firmly."  Mrs Wickham raised her arm, tapping the tip of the bit very lightly against Eleanor's right breast, and then her neatly trimmed pubic hair. "Continued disobedience will result in punishment to more, should we say, sensitive areas."  Recoiling in horror, Eleanor gave a moan of assent, standing with her legs pressed together to try and expose herself as little as possible, with the limited movement available to her.<br><br>Briskly, Mrs Wickham fetched more items, with a loud jingling audible as she brought them over, although Eleanor couldn't initially understand what she was looking at.  When she realised, her eyes widened as she had no idea such things existed, or that people would wear them.<br>"These are hoof boots, made just for ponies like you.  You'll find that it's a lot like wearing very high heels, so I hope you have a good sense of balance otherwise I might need to use the crop again."  The boots that Mrs Wickham had retrieved were black leather ankle boots, but the arched sole had a thick black four inch hoof and no heel, so that the wearer would be left teetering on their toes.  The top of the boots had a buckled leather cuff built into it, and a small metal bell hanging from the cuff, so they would jingle with each movement.  "Right foot, please."<br><br>Without any choice, Eleanor lifted her right foot, then slid it into the offered boot, her foot forced into an instantly aching arch.  She did occasionally wear six inch heels, and these boots felt similar, although with the surprisingly weighty hoof and no heel to rest on.  Swaying, and conscious of the reins that held her on the spot, she waited helplessly as Mrs Wickham buckled the boot tightly into place and then moved on to the left foot.  Once both boots were on, the height of the hooves gave her a little slack in the reins, and she tried cautiously stepping from side to side, swaying but managing to stay upright.  It was a strange sensation, having nothing under her heels, but she found as long as she focussed on the front of her foot, she could stay upright easily enough, although not without pain.<br><br>"The last couple of items are ones that you may find very unpleasant," Mrs Wickham said with a slightly amused tone, "but before those, I think it's time to really underline your situation and status here."  Looking Eleanor over, she seemed to be counting under her breath, which made sense once she had rummaged through a drawer and returned with a bag of what turned out to be gleaming brass padlocks.  Kneeling to start with the boots, Mrs Wickham slipped a padlock through the buckle of each boot, fastening them with a snap to lock them into place.  Standing, further padlocks followed through the buckles of the tight belt, the collar, the buckles of the bridle and then one final cruel padlock was used to lock a ring on the armbinder to a matching ring at the rear of the belt, so that Eleanor had even less mobility of her arms.<br><br>With each click of a padlock fastening, Eleanor felt both a sense of resignation at her fate, but also a strange sensation that was almost thrilling.  The loss of control and the humiliation was terrifying, but somehow it felt almost freeing knowing that she had no choice in what happened to her, and that was truly trapped until Mrs Wickham decided to release her.  Even if she were to somehow run in the boots, the harness and accoutrements were locked on, and without the use of her hands, she was more helpless than she had ever been.  Eleanor didn't know why this feeling was verging on perversely enjoyable, but there was certainly something, even if she desperately wished that she didn't have to be nude, since the cool air of the stable on the parts of her body not covered in leather straps and buckles was a constant reminder of her position.<br><br>Swallowing, trying to get used to the constant salivation that the bit caused and the tightness of the high collar, Eleanor watched as Mrs Wickham retrieved yet more items, then shook her head as she realised what they had to be.  Unable to help herself, she tried to form words around the bit but instead of pleaded objections, all that came out was a wordless grunt and drool spilling down to splash across her bare breasts.<br>"You know what these are, I take it?"  Mrs Wickham allowed herself a small smile, holding up a pair of nipple clamps in front of Eleanor.  To make them far worse, a pair of metal bells hung from each clamp so that as soon as they were in place, any movement would bring a loud ringing sound.<br><br>Hooking her fingers into a ring that hung from Eleanor's collar, Mrs Wickham held the young woman in place firmly while she opened one of the clamps, then let the jaws bite shut around Eleanor's left nipple.  Ignoring the anguished squeals, Mrs Wickham swiftly set the second clamp in place, eliciting a muffled yell from behind the bit.  Eleanor stamped her hooved feet, wanting to clutch at her abused nipples but the armbinder meant she couldn't even so much as move her fingers.  To her utter shame, every slight shiver that ran through her as she groaned and tried to endure the squeezing of her tender flesh made the bells rattle together and ring loudly in the otherwise silent stable.<br><br>Waiting until Eleanor had caught her breath, Mrs Wickham looked up at her.  "Are you done?"  Eleanor whimpered, and even though in the hoof boots she was at least a foot taller than Mrs Wickham given their height difference in normal footwear, she found herself lapsing into silent outrage.  "One more piece of tack, then you're ready."<br>When Mrs Wickham revealed the final item, Eleanor shook her head again with a sinking feeling of horror.  The item was a butt plug, gleaming bulbous black rubber that was at least four inches long, and with a long tail of blonde hair that was a remarkably similar colour to Eleanor's own.  "You can't be a pony without a tail, and this is the one that's closest to your natural colour."   Eleanor watched as Mrs Wickham coated the plug with glistening lubricant, whimpering and trying to think of anything she could do or any way she could avoid what was coming, but she knew there was nothing.  She had never been interested in anal sex, and the idea of this intruder being lodged inside her and by someone like this was alien to her.  "Stand with your legs apart please.  Don't make me ask twice."<br><br>Reluctantly, Eleanor parted her legs, hearing the jingling of the bells at her ankles and attached to her clamped nipples as she shifted position.  Gripping the rings of Eleanor's belt to keep her in place, Mrs Wickham pressed the plug up between Eleanor's buttocks so that she felt the cold lubricated tip against her tight asshole.  With firm pressure, Mrs Wickham slowly eased the tip into Eleanor, the lubricant letting it slip inside and stretch Eleanor's hole wider and wider.  Eleanor's moans and then cries were ignored as the plug stretched her more and more, the thickest part sliding inside and then her sphincter tightened around the narrowest part leaving the flared base between the cheeks of her bottom and the tail dangling down to just above her knees.<br><br>Eleanor wanted to cry with humiliation at being treated like this.  Being objectified or treated like an animal was one thing, but the clamps crushing her sensitive nipples and the horrific toy inside her ass were far beyond that.  With the padlocked harness though, what could she even do?  The bit prevented her speaking, and she was left to just stamp her feet angrily almost like an actual horse would do - but even this caused yet more jingling and equally strange sensations from the intruder inside her.  The plug felt massive now that it was lodged in her stretched ass, far bigger than it had looked.  The narrow part just above the base meant her body could clutch it tightly, but the size of the rest ensured she couldn't force it out, and with her arms completely bound she was utterly reliant on Mrs Wickham for its removal.<br><br>Mrs Wickham paced around Eleanor in a circle, her boot heels tapping against the rubber floor matting, then nodded to herself.  "I think you're fully kitted out now."  The older woman took off her tweed jacket, revealing bare arms as her crisply formal blouse was elegantly sleeveless.  Hanging her jacket on a hook, Mrs Wickham returned and reached up to the knotted reins.  "I'm going to take these down now.  Don't try anything silly."  Eleanor stood stock still, hating that each movement made the bells ring out, silently watching as Mrs Wickham untied the reins, then wrapped the slack around her hands.  "Come!"<br><br>Ordering her as if she was truly a pony, Mrs Wickham gave the reins a sharp tug and the bit transmitted the gesture to Eleanor's mouth.  She understood immediately what Mrs Wickham had meant, as feeling the tug between her teeth didn't give her any option to disregard it, so she obediently took several paces forward.  Each step made the bells at her nipples bounce and jingle, the slight weight of them a further presence that she couldn't ignore alongside the crushing teeth of the clamps.  The humiliating plug was an intensely shameful sensation inside her, a fullness like nothing else, and it shifted slightly with each step in a way that she found impossible to ignore.  The tail didn't help matters, as it swayed just as a real tail would, the soft hair brushing against the inside and back of her bare legs with a teasing ticklish sensation.<br><br>"Follow!" Mrs Wickham started to briskly walk across the stable floor, pulling on the reins and leaving Eleanor with no choice but to follow.  The hoof boots thudded into the floor matting with each step, the bells on her nipples and boots jingled, her tail swished from side to side and the combination of the restrictive collar and tight-cinched belt together with the intrusion of the plug inside her ass meant that even after just a few steps she was breathing hard around the bit, and snorting through her nose.  The effort of walking in this bondage, swaying slightly from the strange feeling of having no ability to use her arms, was already exhausting.<br><br>The older woman led her in a wide circle around the room, flicking the reins periodically and forcing Eleanor to walk faster so that the bit didn't tug at her jaw.  She couldn't easily look down due to the stiffness of the high collar, and in order to keep her balance was raising her knee high with each step.  To her horror, she realised this was more of a trot than a walk, the boots forcing her into it.  Eleanor could feel drool trickling down her chin but couldn't do anything about it, the bit was keeping her this way and she could hear herself gasping around it, sounding more animal than human.<br><br>"Stop!"  Mrs Wickham stopped abruptly, but Eleanor was so lost in humiliation that she didn't catch herself in time and accidentally bumped into the older woman, who had half turned towards her.  She gave a yelp of pain as her clamped nipples were pressed against Mrs Wickham's side, and a string of saliva dripped down from her bitted mouth - leaving a translucent wet patch on Mrs Wickham's blouse.  Eleanor shuddered as she caught her breath, looking down at the dominant shorter woman, nervously hoping that her mistake would be forgiven.<br>"I believe I ordered you to stop," Mrs Wickham said calmly, tapping the riding crop against her boot. "Orders should be obeyed immediately. I don't know why you think I'd make an exception for you."<br><br>Eleanor barely had time to whimper an incoherent apology around the bit before the crop lashed out, coming down across her right thigh, then her left, a succession of blows following, all landing on her toned thighs.  "Those were for not following my order."  Mrs Wickham moved round behind Eleanor, laying into her soft bottom next, alternating between her buttocks until the cracking blows finally ceased and Eleanor was left with a burning hot sensation across the whole of her bottom.  "And those are for trying to speak.  Remember you're a pony, and ponies don't speak."<br><br>She knew she had been told not to cry, but Eleanor felt tears streaking her cheeks.  Not tears of pain, because the whipping was bearable, but tears of shame and humiliation at being treated this way.  She was an attractive young woman but she was being treated like a dumb animal by this cruel woman.  She wanted to scream or run away, but those would result either in punishment or further humiliation.  It was hard to disobey Mrs Wickham for another reason though, and that was the sheer force of her personality.  There was simply something about her no-nonsense manner, her firm tone and her complete lack of concern for Eleanor's feelings that was somehow almost hypnotising.  Eleanor had never felt this way before, and even in this extreme situation, there was a feeling that she genuinely wanted to obey the older woman, that she'd somehow enjoy obeying her.<br><br>"And follow again!"  Eleanor was abruptly forced to trot again, following Mrs Wickham in circles around the room and then speeding up to what she supposed would be a canter and eventually was running in circles while Mrs Wickham remained in the centre of the room, loosely holding the reins.  The plug, nipple clamps, armbinder and hooves forced Eleanor to think about her body in a way she never had before and as she gasped for breath around the bit, she could feel all of them acting on her, forcing her into a particular posture, conscious of every movement and aware of herself in a very heightened way.  When eventually she was ordered to stop, her chest was heaving between the crossed straps and she could feel sweat standing out on her body and face as well as drool helplessly spilling from her mouth.<br><br>"Very good," Mrs Wickham said appreciatively, running a hand down Eleanor's arm, then idly tugging on one of the rings set into her belt.  "Do you need a drink?" Not willing to speak and risk punishment, Eleanor nodded and was glad to see Mrs Wickham fetch a water bottle.  She was less glad to realise that her bit wasn't going to be removed, and instead Mrs Wickham held up the bottle, waiting for Eleanor to tilt her head back a little so that the water could be poured into her mouth.  She gulped around the bit, her throat working convulsively in the grip of the tight collar, swallowing as much as she could while the rest splashed down her body and dripped to the floor.<br><br>When Eleanor had drunk her fill, Mrs Wickham looked at her thoughtfully. "Time for something a little more intense, follow me."  She didn't even need to tug on the reins, Eleanor obediently trotted after her until  they had nearly reached the stable door - but as Mrs Wickham reached for the door handle, Eleanor stopped dead, shaking her head frantically.<br>"Is something wrong?"  Mrs Wickham asked the question as if it was completely normal to take a bound nude woman outside, "I didn't order you to stop?"<br>Eleanor backed away slightly, until there was no more slack in the reins, looking at the door then back at Mrs Wickham and shaking her head.<br>Speaking in a very soft, but utterly firm voice, Mrs Wickham raised the riding crop in one hand, and pulled the door open slightly with the other. "I did not order you to stop.  Are you going to follow me?"<br><br>Shaking her head again, Eleanor whimpered helplessly.  She didn't want to disobey, but the idea of going outside like this was insane and a humiliation she felt she couldn't bear.  Instead, she shuffled her booted feet, wishing she was able to move her arms and hands, not even able to stare down at the floor due to the high collar, instead just biting down on the bit in her mouth and moaning.<br><br>"I thought you were doing well," Mrs Wickham said, pacing to where the tack was stored, and searching through until she found a long whip.  "But evidently you still feel that you can do what you want.  Perhaps a few strokes will teach you a lesson."  Pulling her arm back, Mrs Wickham lashed out with the whip, the tip curling around and laying a hot stripe of pain across the backs of Eleanor's thighs.  Even as she screamed around the bit, the whip struck out again with a loud crack, this time across the front of her thighs, and then across her bottom.<br><br>The pain of being whipped was far worse than the riding crop, and Eleanor tottered from foot to foot trying to make herself less vulnerable as more strokes followed, all across her bottom and thighs.  When they eventually stopped, she was on the edge of tears and frantically trying to promise that she would go outside, but the bit meant her pleas were nothing more than noises.<br><br>"Again, I said that ponies do not talk."  The resulting cry from Eleanor rapidly turned into a scream as the whip came down again, cutting another line into her abused bottom, her tail swishing from side to side as she bucked under the punishment, nipple bells jingling loudly.<br>Mrs Wickham lowered the whip finally, looking at her sobbing ponygirl. "Now, ready to follow?"<br><br>Eleanor whimpered, blinking away tears and nodding, desperate to avoid more punishment.  She hated that she had made her own situation worse - now she wouldn't just be taken outside, she would be taken outside with the burning red marks of a whipping standing out across her buttocks and thighs, embarrassing her even further.<br><br>As the door was pulled open, Eleanor tried to steel herself but there was nothing she'd previously experienced that even came close to this.  As Mrs Wickham stepped outside, tugging on the bit, Eleanor obediently followed but felt some part of herself dying inside, an inhibition crumbling away without even being allowed to make a choice about it.  As she stepped over the threshold, her hoof boots coming down on soft grass and feeling the warmth of sunlight on her bare skin, Eleanor gave a low moan. The field was far enough from the rest of the stables that no one was likely to see her, but if anyone did happen to come over in this direction or seek out Mrs Wickham, she would be totally exposed in her bound, humiliated and beaten state.<br><br>"Just so you are aware," Mrs Wickham said conversationally, "If you dare to speak again, I will cane those pretty little breasts until you remember that you are a pony.  You'll find it a lot more painful than the whipping.  Now, follow again."<br><br>Without giving Eleanor time to recover from the terrible threat, Mrs Wickham set off and Eleanor was once again walked at a brisk pace, but this time with the sound of her bells jingling across an open field, and knowing that anyone who saw her would realise a cruel toy was shoved inside her ass and that she was utterly vulnerable while being completely controlled.  The whip marks were a constant painful reminder of her punishment, and she couldn't even imagine the terrible agony of being caned - and especially not across her chest.   As she trotted across the field, she could see the stables where she would normally be working in the distance, and the tiny figures of the people she worked with, none of whom presumably had any idea that she was here and what she was undergoing.  But if any of them turned around and got curious about the figure in the distance, her normal life would surely be over.<br><br>"Enough daydreaming!"  Mrs Wickham brought Eleanor to a halt, then unfastened the reins. "You can start galloping around this field.  I'll tell you when to stop."<br>Eleanor nodded, starting at a jog as best she could in the hoof boots, her padlocked arms bouncing against her back, bells bouncing wildly and the clamps tugging at her nipples.  Running with a plug inside her felt strange, but it was becoming oddly pleasurable in a strange way.  Painful, intrusive and a stretched, filled feeling that was very odd, but as it bumped inside her with each step, she felt a terrible heat that she wanted to clamp down on and ignore, but couldn't.<br><br>"Down to that edge of the field as far as you can, then wait for me there!"<br><br>Obediently, Eleanor started running in what was not quite a sprint as she wouldn't be able to manage that in the boots, but raising her knees high with each bouncing step in a fast job, breathing hard around the bit, not caring about the wetness on her chin from her constant stream of drool, and barely conscious of her total exposure, just eager to please.  Her eagerness came to a crashing halt when she reached the bottom of the field, standing by the fence panting hard.  With each laboured breath, her chest heaved and the nipple clamps moved slightly, making the bells ring.  But from where she stood, she realised that one of the riding paths she never normally took came up quite close to this fence, and if anyone from the main stables was to ride along it, they would see her clearly.   Whimpering, Eleanor waited what seemed like an eternity as Mrs Wickham slowly walked down then gave a little soft sound of surprise when the older woman gently patted her aching bottom, then ran a hand from Eleanor's shoulder downwards, across the side of her left breast, to her flat stomach - as if she was petting a horse.<br><br>"Good girl," Mrs Wickham said.  "Have you realised why you are standing here?" Eleanor didn't speak, but jerked her head towards the path. "Correct.  If I want people to see you, then people will see you," Mrs Wickham continued. "But I will look after you, don't worry.  You're being a good girl now, and maybe you'll get a nice treat later if you continue to please me.  But I need you to understand that shame is a luxury you do not have.  Now, let's trot again - knees high, following me!"   She refastened the reins to the rings at the sides of Eleanor's bit and with a tug, led her off.<br><br>Eleanor followed once again, trotting behind Mrs Wickham, finding herself glad she was able to please her, and thinking back to the affectionate touch she had received.  She'd never been this exposed in front of anyone, so vulnerable to them, and she knew she should hate it - and she did hate it - but some part of it appealed to her too, but she didn't understand why.  If she was just allowed the use of her arms, she would dislike it less, or if the bit was less humiliating, but she supposed Mrs Wickham enjoyed seeing her like this.<br><br>After more trotting around the field, several runs and a brief break for more water, Mrs Wickham eventually led the panting ponygirl over to one side of the stable building, letting her stand still at last.  Eleanor was hot from the exertion, her ponytail damp and hanging down against the collar, sweat standing out all over her body and face.  The black leather that constrained her was slick with her sweat too, and she was breathing hard through her nose, snorting slightly as she did so, but uncaring how unladylike she sounded.<br><br>"I think that's nearly enough for today," Mrs Wickham said cheerfully after giving Eleanor more water, which she gratefully drank rather messily, "You're such a good girl though, I think you deserve a reward.  Stay here and wait for me."<br><br>She left Eleanor standing, disappearing away inside the stable.  Eleanor didn't know how to feel, suddenly alone while in bondage and totally helpless.  Without Mrs Wickham there, her situation felt stranger and more distressing, so she was pleased when the older woman returned after only a few minutes.  To Eleanor's surprise, Mrs Wickham was pulling on a pair of disposable blue latex gloves, letting them snap tightly around her wrists.  Mrs Wickham picked up the reins, then looped them through a ring set into the wall of the stable below waist height, pulling them tight until Eleanor was forced to bend at the waist, lowering her head until she was bent over, the bells clamped to her nipples hanging down beneath her as the reins were knotted tight.  "Back straight," Mrs Wickham ordered, "Good posture is key."   Eleanor grunted a little, glad she had taken ballet as a girl and was relatively flexible, straightening her back so that she was bent almost at a right angle, teetering in the boots.  "And legs apart."  Mrs Wickham pushed her own booted foot between Eleanor's and kicked her feet apart, so that Eleanor was bent with her legs spread.<br><br>Standing beside Eleanor, but facing in the opposite direction, Mrs Wickham put one strong arm around Eleanor, holding her tightly around the waist.  Her free hand, to Eleanor's complete surprise, brushed past the blonde tail and then slid across Eleanor's inner thigh.<br>"You should know that I'm not a lesbian," Mrs Wickham explained as her strong fingers squeezed Eleanor's thigh. "I have no sexual interest in women.  Aesthetic interest, yes - I enjoy seeing attractive women in harness, and I am interested in controlling them, but I have no desire for them. I've always taken sexual satisfaction from men, but I do understand the submission of being a ponygirl can be very exciting.  I find it best to reward girls to reinforce their training, and if I'm not mistaken then you very much need this."<br><br>Eleanor gave a surprised moan as the gloved fingers caressed her labia, then teased their way up and down, gently sliding between the lips of her pussy even as she felt the dull heat of desire and aching need making her slick with wetness.  She had not expected this kind of treatment, and had tried to hide any sign of enjoyment, not least because the mixture of humiliation, pain and strange pleasure was deeply confusing to her.  "There we go," Mrs Wickham remarked as her gloved fingers slid inside Eleanor, first two then a third, pushing deep into her. "My word, you're very wet already, if I didn't know better then I'd have thought all your objection was for show."  Eleanor groaned helplessly as the older woman teased her with skilled fingers. The fact they were doing this outside, with the warm sun on Eleanor's back, was intensely humiliating but added a layer of deep arousal that Eleanor was barely able to contain.<br><br>When Mrs Wickham's fingers reached Eleanor's clitoris, she gave a cry of pleasure around the bit, uncaring that she was drooling constantly or that the nipple bells were jingling.  Her body was trembling with barely contained pleasure and she had rarely felt this turned on.  She had no idea why she was enjoying this, but somehow the feeling of being held tightly against the older woman with her arms bound tightly and a collar around her neck was making the experience more enjoyable and not less.<br><br>Mrs Wickham's tone remained conversational, even as Eleanor's moans and cries of pleasure grew louder, and the gloved fingers in her pussy grew wetter and wetter as they slid into her and across her clitoris.  "If you did enjoy this, I would welcome you back as my ponygirl for a longer period." She pushed three fingers deep into Eleanor then withdrew them slowly, twisting as she did so to tease Eleanor from the inside. "Of course, if you were kept for longer, I'd have to treat you more firmly."  Mrs Wickham firmly stroked Eleanor's clitoris, the latex of the gloves giving each movement of her fingers a wonderful slithering sensation against Eleanor's ultra-sensitive flesh. "You'd be kept in a stable, fed and watered like a pony.  Perhaps you might not be allowed to speak for days at a time."<br><br>Eleanor stamped the hoof boots, feeling her hot wet arousal slick across her inner thighs, letting the latex gloved fingers slide wherever they liked, her stretched ass taut around the intruder and the sensation adding a delicious humiliation every time a shiver of pleasure ran through her.  She had never been treated like this, never humiliated like this, but bent over and drooling, utterly at the mercy of a woman more than twice her age, she was unbearably aroused.  Somehow Mrs Wickham's stated lack of sexual interest and the almost clinical calmness with which she was manipulating Eleanor was exciting too, the detachment made Eleanor feel even more objectified, but she did not dislike the sensation.<br><br>"I can tell you're close," Mrs Wickham remarked as she thrust her fingers into Eleanor more rapidly, letting her thumb caress Eleanor's clitoris as she did. "You've been a good girl, so you I'll let you climax, I believe you deserve it."<br><br>Arching her back against Mrs Wickham's strong arm, her own arms completely useless, Eleanor sobbed with pleasure, pushing her hips back, bells jingling as she let Mrs Wickham finger fuck her and tease her clitoris, the white heat of an orgasm rising inside her while she struggled to breathe through the constriction of leather and the rubber in her mouth.<br><br>"When I next have you in harness," Mrs Wickham said, her fingers briskly rubbing Eleanor's clitoris even as the shivers of her approaching orgasm started to run through the young woman, "I'm going to add an extra clamp with a bell, right-" As Mrs Wickham spoke, and just as Eleanor was pushed over the edge by the firm ministrations into her climax, the older woman pinched Eleanor's tender clitoris between two fingers. "- here!"<br><br>Eleanor screamed around the bit, not caring how much noise she made, writhing in Mrs Wickham's grasp as the orgasm exploded through her. She could feel her ass spasming around the plug that filled it and the thought of a clamp on her most intimate parts was the final straw. She sobbed with pleasure, biting down on the gag and howling with the overwhelming strength of her orgasm, gasping and moaning as she shook, with Mrs Wickham's gloved hand resting between her legs the whole time.  The tightness of the belt around her waist, the choking collar at her neck, the reins that held her in place, the hated boots and the cruel clamps on her nipples should all have been things she hated, and she was in the back of her mind sure that she did hate them but as the hot pleasure coursed through her, Eleanor was somehow sure that she needed them regardless.  She wanted the terrible humiliation of being a ponygirl and it filled a void inside her that she hadn't even known was there.<br><br>When the tremors of her orgasm had finally faded, Eleanor stood bent over panting, sweat dripping from her forehead, drool pouring down from her mouth, her whole body shivering as she slowly recovered from the overwhelming pleasure.  The bells hanging from her nipples were jingling constantly as she trembled, the swollen flesh now a barely noticeable numb ache after the intensity of her climax.  Smiling down at her ponygirl, Mrs Wickham untied the reins, then gently helped Eleanor upright, patting her bottom.<br>"Come on girl, let's go back inside and get you cleaned up," Mrs Wickham said, tugging the reins gently. Eleanor gave a moan of agreement that was almost a horse's whinny, following the older woman inside happily on unsteady hooves.`
+                },
+                {
+                    name: "...",
+                    author: " ...",
+                    title: "",
+                    subtitle: "", 
+                    content: `No content.`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.name}</div>
+                            <div class="chapter-desc">by ${chapter.author}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            document.getElementById('storyTitle').textContent = chapter.name;
+            document.getElementById('storyAuthor').textContent = `by ${chapter.author}`;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

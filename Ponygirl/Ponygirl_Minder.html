@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>Ponygirl Minder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "Ponygirl Minder",
+            author: "Xaltatun of Acheron",
+            chapters: [
+                {
+                    title: "INTRODUCTION",
+                    subtitle: "A few words...", 
+                    content: `This work is copyright 2000-2006 by Xaltatun of Acheron (A Pseudonym). It may be posted on the Internet to any free forum. It may be reformatted to match the forum's look and feel, and the forum editor may make minor spelling and grammer corrections. Otherwise it must be posted in its entirety, including these notices. It may not be sold, or included in any compilation that is sold, or posted on any forum that requires a fee for access, without my written permission. My permission will require payment, terms to be negotiated. For purposes of this notice, sites guarded by Adult Check or similar packages are considered pay sites. Posting on any site must include this copyright notice.<br><br>Adult Content Warning - this story contains adult themes, including non-consensual bondage/slavery and forced sexual acts. If you are under the lawful age for such materials (18 in most jurisdictions) or if you would find such material offensive, please go elsewhere.<br><br>Safety Warning. This story may contain descriptions of practices that are decidedly unsafe, either in general, or if performed by someone without adequate training. There are a number of good books available on safety in the BDSM scene. Most large cities, and some not so large ones, have organized BDSM groups that will usually welcome a newcomer. I'm not going to point out which practices are safe, and which aren't. Any practice is unsafe if performed by someone with inadequate training and experience, or if performed when not paying attention. Please think before you act. Don't make yourself a candidate for a Darwin award.<br><br><center><h2><strong>What has gone before.</strong></h2></center><br><br>The date is sometime around 2400, and Jenny Jackson is ready to graduate from high school. She discovers, contrary to every reasonable expectation, that she is not picked as a wife, nor is she going to college. Instead, she’s been routed to a job as a collared worker in Reliable’s ponygirl manufacturing process. She finds out that manufacturing only looks simple; it’s anything but.<br><br>Meanwhile, a girl named Audry has decided to drop out and become a wild girl; she’s going to hide out at the Taxi Service as a ponygirl.<br><br>By now Jenny has spent several months in Stage 2 of Ponygirl Manufacturing, has gotten to criterion on shift work and is learning more of the business. She’s trained three of her former classmates and has been trained as both a ponygirl and an engine.<br><br>Then she finds out she’s headed to college. She collects the other three girls who will be traveling with her and gets the engines installed on their mounts in the rental car they will be taking. They have an enlightening discussion on the way.<br><br>Then they stop overnight. When the dust (not to mention the sex) settles, Jenny discovers that Beth thinks she’s Jenny’s wife. The settle in, and Jenny discovers her work assignment is with the Taxi Service. The taxi service uses ponygirls, of course. Lots of ponygirls. And she finds time to collar Beth, much to Beth’s pleasure.<br><br>Jenny finds out about the fake ponygirls at the Taxi Service, and starts training them. Audry discover`
+                },
+                {
+                    title: "Chapter 1",
+                    subtitle: "Jenny: Graduation",
+                    content: `“Calm down!” Jenny’s mother instructed. “You’ll muss your makeup.”<br><br>“Why?” she answered with the unanswerable logic of a late teenager.<br><br>“If you expect to get picked as a wife, you need to look attractive, not like you’re going to jump out of your panties at the slightest sound.”<br><br>“She won’t be wearing then much longer anyway,” Debbie, the youngest of Jenny’s sisters, put in.<br><br>“She does not need your remarks,” their mother said.<br><br>“She’s going and she won’t be back,” Debbie shot back.<br><br>“One more remark.”<br><br>Dave, the only boy still in the brood, vanished down the hall.<br><br>“It’s time I got mine back!” Debbie said.<br><br>“That’s enough,” Sara said, holding her hand out for what Dave had fetched. “Open up.”<br><br>Debbie looked at the device and grimaced. Mother really must be mad, she thought, but she opened her mouth obediently. A moment later her mother snapped the latch on the ball gag closed behind her youngest’s head.<br><br>Esther started to say something and then thought better of it.<br><br>“You had something to say?” Sara asked sweetly.<br><br>“Nothing that needs saying now,” she answered.<br><br>“Good.”<br><br> <br><br>Jenny took a deep breath and let her eyes wander to her mother’s marital collar. It was a simple circlet of a light-colored metal, about an inch tall and 3/8ths of an inch thick with a post and a ring in the center. It had her name, Sara, boldly engraved on the left of the post in half inch high letters and her husband’s name, Dennis Jackson, equally boldly engraved to the right. The legend ‘devoted and obedient wife of’ crossed the top in smaller engraving.<br><br>It was almost impossible to see the join where the pin had let it pivot in two half circles until her husband had placed it on her neck and closed it with a rivet gun. According to the Church, it symbolized the two halves of the marriage, permanently linked. By law and custom it would never be removed. It would be the only thing that remained after she was cremated; its surface discolored and the circuitry inside fused by the heat of the final flame that consumed the body she had ceased to inhabit.<br><br>She let herself imagine what it would feel like to have one like it encircling her neck, engraved with ‘Jenny’ and ‘Jack Davis’. She could almost feel his hand on her head and the thud of the rivet gun.<br><br>“There, all better?” Sara asked her current eldest.<br><br>“I suppose,” Jenny answered. Then she giggled to release the tension. “As good as it’ll get.”<br><br>“What’s the problem?” asked Dave. “Your grades have been good, you shouldn’t have to worry.”<br><br>“You know how it works?” Jenny asked.<br><br>“Sorta.”<br><br>“Right,” Sara said. “Esther, tell your brother how the selection system works.”<br><br>“Uh,” she started off. “Well, the bottom 40 percent becomes ponygirls and engines, and the top 30 goes to college to become Professionals. Unless one of the guys picks them as his wife.”<br><br>“And the rest?”<br><br>“Some kind of drudge. Maids, that kind of thing.”<br><br>“Which is why you’re studying like mad,” Dave said.<br><br>“Of course! Being Swifty’s daughter is not a guarantee of college if I don’t get a guy!”<br><br>“Persistence, properly directed, will get you a long way,” their father, Dennis, put in.<br><br>“Well, that’s almost right. Only 50 of the professional candidates are going to go to college, the rest will get snapped up to do something else.”<br><br>“So being in the top 30 percent isn’t a guarantee?”<br><br>“Right. That’s what’s got Jenny bothered.”<br><br>“And they don’t tell you where you rank, either,” Dave added. “She should be in the top 30 percent, but we don’t really know.”<br><br> <br><br>“Dave, make sure Swifty’s harnessed,” his father instructed. “Jenny, you’re looking about as good as I’ve ever seen.”<br><br>She preened a moment.<br><br>“So it’s time. Turn around and put your hands behind your back.”<br><br>She sighed again but obediently turned and clasped her hands.<br><br>Dennis slid one set of cuffs up to just below her elbows, and another on her wrists, and then pressed her elbows together until the latches caught.<br><br>“That’ll have to do,” Sara said as she hung Jenny’s purse on her belt.<br><br> <br><br>“Well, let’s get going,” Dennis said. Jenny sighed again, her bosom heaving because of the way her pinioned arms made her breasts stick out, but obediently followed her mother out the door, being very careful of her footing. Three inch heels without arms to keep balance could lead to a nasty spill if she wasn’t careful!<br><br>Dave stood in the driveway holding Swifty’s reins. Swifty was a typical ponygirl. Her two inch wide mane fell carelessly to the center of her back, and blew a bit in the slight breeze. It complemented the chestnut horsehair of her tail and which covered her powerful legs from the top of her thighs to where they vanished into mid-calf length hoof boots. Her collar looked, at first glance, to be the same as Sara’s collar. It said ‘Swifty’ on the left, and had the names ‘Dennis’ and ‘Sara’ stacked on the right, with ‘Jackson’ in slightly larger letters following. There was no legend.<br><br>The collar, together with chastity shield and her nose and breast rings, was her only adornment. She occasionally wore various pieces of jewelry, ribbons and such, but never wore anything that could be described as clothing.<br><br>Her hip harness firmly attached her to the shafts of the trap. Her hands rested lightly on the shafts, held in place by wrist cuffs and a light chain. A bridle with blinders encased her head; a bit-like device that attached to her permanent jaw block held her reins.<br><br>“You’ll have to ride with us,” Dennis told his daughter. “There’s no way you’re going to be able to walk it with those heels.”<br><br>A minute later they were off down the lane, Swifty trotting fairly slowly so the rest of the brood could keep pace without running.<br><br> <br><br>Part way there, they heard a beep-beep from behind them. Swifty pulled the trap a bit over to the side so whoever had beeped could pass.<br><br>Jenny looked out of the trap at the wagon. It seemed to be a fairly standard four engine light truck. The engine compartment was open to take advantage of the pleasant spring day so she could see the four engines nestled next to each other, two abreast. All four wore engine hoods and had their legs going in long, powerful strokes. Their hands rested on the steering controls.<br><br>She shuddered slightly. It wasn’t at all likely, but the fates were notoriously fickle. And they didn’t give you any idea beforehand.<br><br> <br><br>She sighed as they added themselves to the long line of carriages, traps, carts and other ponygirl conveyances that led into the school. Mercifully, the line actually kept moving. Swifty had her tail high; she was obviously enjoying herself. It wasn’t often she got to show how smoothly she could pull the trap in slow motion.<br><br>They got to the front and her father handed her down. One of the sophomores bounced into the trap and took a card from the dispatcher.<br><br>“Goodbye,” her mother said, giving her a hug that she couldn’t return. She melted into her mother’s arms instead for a moment. “And give me a call when you settle in with your husband.” When she turned to enter the auditorium, she thought she saw a tear in her mother’s eye.<br><br> <br><br>The guard looked at his reader as she reached the head of the line. “Jenny Jackson?”<br><br>She nodded, wondering if he was really interested.<br><br>“Row 5, place 15,” he replied.<br><br>That was what she expected, she thought. Taller girls were farther back, and they were in alphabetical order within height. She was almost exactly average. She walked carefully into the large auditorium and turned toward the stands for the graduating girls on the right.<br><br>There were already a fair number of girls there, she noted. The girls in the first row sat primly on their heels, the ones in the second row knelt on little cushions. The ones in the third row stood. The rest of the rows were on terraced platforms that rose three inches for each row.<br><br>The fifty places in each row were staggered so she could see straight ahead without having to look at the back of the girl’s head in front of her. The girls were spaced far enough apart that there was no difficulty making her way through the array.<br><br>She found her place, planted her heels shoulder width apart, and settled back to wait for the graduation ceremony to start and for her to hear the verdict on what she would be doing for the rest of her life.<br><br> <br><br>She watched the crowd gather, families in the center, the girls around her and the two rows of boys on the other side. Not for the first time she called down a malediction on the long dead head of whoever had created the virus which had changed the sex ratio to one boy for every five girls.<br><br>She smiled slightly as she saw Jack come in and take his place. Like all the boys, he had a collar and neatly coiled leash hanging from his belt. She tried to catch his eye, but failed. It seemed that he wasn’t really looking at the massed array of 500 girls across from him at all. Even if he was, he’d probably have a hard time picking her out of the crowd.<br><br>Her mind wandered a bit with the waiting. She amused herself by watching several of the school’s collared workers. They were easy enough to spot: they wore the school’s staff uniform and they had collars around their necks.<br><br>At that distance it was impossible to tell the difference between their collars, her mother’s collar and Swifty’s collar. Or the ones that the engines in the truck wore. Partly it was because there wasn’t any difference. They were exactly the same. Her mother and the collared workers wore clothes, the ponygirls and engines didn’t. Her mother’s collar had a legend on top; the other three didn’t. At that distance it didn’t help; her eyes weren’t good enough to see the slight difference the legend made. Neither were anyone else’s.<br><br>What did make the difference was the skirt length. Uniform tunics for collared workers were almost always mid-thigh length. Professionals and senior workers had relatively free choice in skirt length and took advantage of it, with one notable exception: wives who had joined the senior worker or professional ranks always wore their uniform tunics below the knee.<br><br>Finally, she thought as she flexed her legs the way she’d been taught to keep them from cramping, the principal arrives! Now let’s get this show moving.<br><br>She let her mind drift again, imagining what it would be like to be Jack Davis’ wife as the principal droned on with the utterly predictable banalities of the graduation ceremony.<br><br>Finally he got to the point, and the second row of boys turned and walked up to the stage, maintaining their line. An attendant walked down the line, holding a short whispered conversation with each of them and checking something on her reader. She was dressed in the school’s staff uniform and wore a collar, but she was not a collared worker. She was a wife who had finished raising her family and become a teacher. At that distance, the only way she could tell for certain was the slight distortion that the legend caused at the top of her collar. Teaching, she thought, was one of the Professions. She wouldn’t mind becoming a teacher.<br><br>Another teacher, this one in the school staff uniform but not wearing a collar around her neck, stood on the platform checking something on her reader and matching stacks of graduation certificates. She handed a pair to the principal.<br><br>“Roger Stout,” he called. “Nancy Devon. Is it your will to become Roger’s wife?”<br><br>She heard a squeal from behind her, and a tallish blonde walked down the terrace. She had her arms pinioned crosswise, Jenny noticed.<br><br>Nancy walked up the stairs to the platform and stopped in front of Roger. She fell to her knees and then bowed further, torso almost horizontal, as Roger placed his hand on her head and said: “Nancy Devon, by my will and your will, I take you as my wife. You will be known as Nancy Stout from this time forward.”<br><br>He took the collar from his belt and slid it closed around her neck. The solid thunk of a rivet gun echoed through the hall. Then he unfastened her cuffs and pulled her into a deep kiss. He snapped the leash on her collar, and they made their way back to the second row. Nancy sat prettily at his feet, leaning back gently against one of his legs as his hand rested on her shoulder.<br><br>The ceremony went on and on and on. Part way through, he called Jess Stewart.<br><br>Why, she thought to herself, is Jess carrying a collar? He’s so gay it isn’t funny. Then the principal called Mary Snell, and she almost gasped. Mary was just as much a lesbian as Jess was gay.<br><br>She thought she heard someone behind her gag slightly. Then a firm soprano said: “I accept.”<br><br>Mary came down and went through the submission ceremony, but Jess didn’t undo her cuffs or kiss her. Jess clipped the leash to her collar and led her back to the boy’s side, where she sat at his feet, just like all the other new wives.<br><br>She wondered briefly: How are they ever going to make that work? Then the principal called another boy and his intended wife.<br><br>He finally got to Jack Davis, and she flexed her legs so she wouldn’t fall when he called her.<br><br>It didn’t happen. The principal called Rita Adams instead.<br><br>What! Jenny thought, stunned. What could he possibly see in that cow?<br><br> <br><br>Finally the first part of the ceremony was over; all hundred of the boys had returned to their places, each of them with his new wife sitting at his feet.<br><br>“Now we come to those of our graduating young women who will be going on to college to prepare for a professional career,” the principal intoned. He reached for a graduation certificate and read the name.<br><br>“Peggy Sanchez.”<br><br>Peggy walked out of the mass of girls and ascended the platform. The principal unsnapped her cuffs and handed her the certificate, and asked her what she intended to study.<br><br>She decided, not at all surprisingly, that she wanted to be a teacher.<br><br>She walked down the other side of the stage and took her place standing in the row behind the boys and their new wives.<br><br> <br><br>It was over. Fifty college bound girls had ascended the podium and received their diplomas, and Jenny still stood among the 350 girls that had not been selected. She looked around numbly.<br><br>The guards had brought out the barrier as the last few girls had been called. The first row of seated girls rose smoothly and walked out the door to the lot. There wasn’t much else they could do, Jenny thought. All that was left was to face up to whatever happened and take it like an adult. Breaking down would practically guarantee a lifetime as an engine.<br><br> <br><br>Time seemed to crawl as the line crept along. The last dozen or so feet of the line had bars crossing at a two and four foot height, placing each girl into her own separate cell. The guards on each side checked to make sure they knew which girl was in each space, and then clipped a card to her dress. Once she got to the door, she found that they had set up a temporary hallway in the lot with corridors heading off to the left, right and straight ahead but then with a turn she couldn’t see around.<br><br>The final barrier dropped, letting her into the corridor. The only way she could go was left; the other two directions were blocked by bars on the doors. She walked to the left, turned a corner and stopped, wide-eyed with shock.<br><br>The sign said: “Reliable Ponygirl and Engine Training.”<br><br>`
+                },
+                {
+                    title: "Chapter 2", 
+                    subtitle: "Jenny: Processed by Reliable",
+                    content: `Three girls stood ahead of her, apparently being processed. Each one stood as an attendant used a power shear to strip her clothing, letting it fall into a pile of brightly-colored discarded scraps. When they had completely denuded the poor girl of everything except her chastity shield, she walked forward, knelt in the submission pose, and was collared. Then they led her away to something else she couldn’t quite see.<br><br>A guard scowled at her. “Over here, we haven’t got all day!”<br><br>She took a deep breath to calm herself and walked, still stunned, to the empty spot. The attendant looked at the card clipped to her dress and then unbuckled her belt, handing it to the waiting guard.<br><br>Two minutes later it was all over. She got to her feet, naked and collared. A guard put a leash on her collar and led her past a row of frames, each of which had a kneeling girl bound facing forward and head tilted back. A group of attendants was doing something to them, but she didn’t have the time to figure out what.<br><br>They turned a corner. “I’m not going to have any trouble with you, right?”<br><br>There didn’t seem to be any answer other than “no.”<br><br>“Good.” He unsnapped the shackles on her arms and handed her a tunic. “Get dressed.”<br><br>She looked at the garment and then slid it on over her shoulders, twisting a bit in pleasure as it fell across her body. It was remarkable, she thought, how much difference a simple mid-thigh length tunic could make. Even without underwear.<br><br>He handed her a belt and her purse. She put them on and twisted to settle them around her waist.<br><br>“Hit the head.” He gestured at a partition.<br><br>She gratefully walked to the other side and saw, as she expected, a flexible pipe. She snapped it into the catheter valve and stretched as she felt her bladder empty. A minute later it was done. She unfastened the pipe and walked back to the waiting guard.<br><br>He snapped a leash on her collar and led her outside.<br><br>“Stay here until someone comes for you,” he said as he wrapped the end of the leash around a convenient post.<br><br>It couldn’t, she thought, have been more than five minutes since she had reached the end of the line inside the auditorium.<br><br>When she looked around she found herself standing near a fence, close to the temporary building she had just left. As soon as she got settled, she saw them lead a naked, collared and cuffed girl out of the shed and clip her leash to a long, neck high chain that ran between two posts. There were several other naked girls already on the chain, and spots for several more. The girls, she noted, didn’t seem to be talking. She frowned. It made sense that they’d have blocked talking right away, but they still seemed to have the use of their mouths. Strange.<br><br>It looked like Hey Girl! had their area on the other side of the fence. She noted the same organization; the processing shed, the chains of girls and the trucks. However, the girls on the chains wore tunics and weren’t cuffed; quite a few of them were talking to each other in low voices.<br><br>On the other side of the Hey Girl! enclosure a number of people wandered around an open area. They seemed to be some of her classmates; a mixture of single girls and boys with their new wives. They were talking with older people in a range of booths bearing signs of companies she had never heard of.<br><br>A thought occurred to her, and she got her compact out of her purse. A bit of angling and she could see her collar. It didn’t, she noted, have her name on it. That area was blank. The other side said, as she expected, ‘Reliable Ponygirl and Engine Training’.” So she’d wound up as a collared worker. Well, it was better than being an engine or ponygirl, although Swifty certainly seemed to be a busy and fairly happy being.<br><br>“Having fun?” an amused alto broke into her thoughts.<br><br>“Uh?” she turned around, startled.<br><br>The speaker was a somewhat older woman, probably in her mid 30s, wearing a Reliable uniform and a collar.<br><br>“I’m Helen,” she said. “You’re coming with me.” She untied Jenny’s leash and led her to one of the waiting trucks. She held the right side door to the driver’s compartment open. “Hop in.”<br><br>A moment later, Helen seated herself on the left and slammed the door shut. “Strap yourself in and hold the questions until we get onto the road.”<br><br>Jenny fastened the safety straps and sat back to watch. This was the first time she’d ever been in a truck.<br><br>The front of the passenger compartment didn’t look all that different from the several passenger cars she had been in; they were also quite familiar from school and 3-V shows.<br><br>The wrap-around window at the front extended all the way to the back of the passenger compartment. The various displays and readouts wrapped around just below, extending from door frame to door frame. Pullout tables and control panels sat below the line of displays.<br><br>There was enough space on the bench for three passengers. The space under the dash had two closed and two open cabinets which separated the passenger’s spaces; at least if they wanted to stretch out their legs.<br><br>Helen manipulated a joystick for a minute, moving the truck back and forth until it got out of the lot and turned onto the road. She finally put the joystick away and sat back. “The computer in this thing sucks,” she announced to no one in particular.<br><br>“Huh?” Jenny said to the unexpected comment.<br><br>“The lead engines are pretty good, but the computer can’t coordinate a back and forward maneuver to save its screwed-up electrons,” she explained.<br><br>“Huh?” Jenny said again.<br><br>Helen laughed. “We’ve got an hour to kill, so ask away. And shut up when I tell you; traffic rules say I have to have the controls out and my complete attention on the road when the traffic computer gives me an alert.”<br><br>“OK. What did you mean about the engines?”<br><br>“You know that the engines actually do the driving, right?”<br><br>“I’d heard that, but?”<br><br>“Well, two of them do, one for forward and one for reverse. They use the front and rear cameras. I tell the computer where we’re going, and the computer feeds them the route minute by minute. They handle all the detail, and quite well, too. What they don’t do is coordinate; that’s supposed to be the computer’s job. Unfortunately, this model is so totally screwed up on back and forth maneuvers to get in and out of tight spaces that it’s easier for me to tell them what to do.”<br><br>“I suppose it’ll make sense,” Jenny said.<br><br>“It had better.”<br><br>“So what’s going to happen?” Jenny asked.<br><br>“You’ve probably guessed you’re going to be a slavegirl?”<br><br>“I thought that was on the other side?”<br><br>“I call it like it is: slavegirl and collared worker are the same. We’re both slavegirls. You want to be prissy and call us collared workers, I won’t complain. Almost all collared workers start out at Hey Girl! Reliable likes to start its manufacturing trainees out right away rather than getting them from Hey Girl! We let Hey Girl! train our office staff, though.”<br><br>“So that’s what I’m going to be doing?”<br><br>“Something in the manufacturing operation. I don’t know what. I’ve got a bunch of stuff I’m supposed to tell you if you ask, and another bunch of stuff that I’m not supposed to tell you. Not that it’s secret, it’s just that they don’t want to take the time and effort to make sure I’ve got it right.”<br><br>“So what’s going to happen when we get there?”<br><br>“You’re going right over to medical so they can install the mods.”<br><br>“What!”<br><br>“You’re going to get part of the ponygirl and engine mods.”<br><br>“I don’t understand?”<br><br>“I don’t either. They didn’t give me the memo.” Helen laughed. “They’re not going to install them all. You can still talk, right?”<br><br>“Uh. Yes.”<br><br>“Well, the girls in back can’t. They’ve already had the throat unit installed; that’s what keeps them from talking.”<br><br>“Oh. So that’s what they were doing.”<br><br>“Yep. It gets them started out right, and they can’t scare each other with rumors.”<br><br> <br><br>Reliable seemed to be huge. Helen watched alertly as the truck turned off the expressway onto a side road, and then turned into an entrance road with big Reliable signs and the usual warnings about “Private! Keep Out!”<br><br>The truck drove down a couple more roads and then stopped in front of a large building with a sign that proclaimed it was “Stage 1 Manufacturing, Building 4.”<br><br>Helen, Jenny noticed, had pulled out the joystick again. She moved it back and forth as the truck pulled forward and then back into an unloading slot.<br><br>A guard opened the door. “Jenny Jackson? Get out here.”<br><br>She looked at him, unfastened the harness, slid out of the cab and stretched.<br><br>He held out a leash. “Work rules say you’re to be leashed at all times in this facility unless specifically told otherwise. You don’t have to be cuffed.”<br><br>“Uh, I’d rather not,” she answered as she bent her head back a bit to let him snap the leash on her collar.<br><br>“Funny,” he chuckled. “They all say that.<br><br>“The next thing,” he said conversationally as he led her along, “is that you’re supposed to watch the unloading process for our new ponygirls and engines.”<br><br>“Uh, why?”<br><br>“They didn’t tell me,” he answered cheerfully. “I think it’s half ‘there, but for the grace of the Goddess,’ and half so you get a good feel for what they start out with. Of course, they may have other things in mind.”<br><br>He led her to an area by the side. Workers opened the truck and pulled the girls out by the end of the chain. By now they looked more worried and scared than stunned, but they followed along without much prompting. He led her along after the procession until they turned into a long room.<br><br>The two chains of girls separated, each one going down a corridor that seemed to be lined with booths.<br><br>“New worker?” a pleasant soprano said from behind her.<br><br>“Yep,” the guard said.<br><br>“So I get to give her the standard lecture. This is Manufacturing Stage 1. What they’re doing is putting the girls into training cages. They stay in these cages until surgery is ready for them, and then they stay another four days to make sure everything heals up properly. When they’re healed from the surgery, they’re transferred to Stage 2.”<br><br>“No exercise?”<br><br>“We give them a bit, but we don’t really have the facilities for anything major. By the time they get to Stage 2 they’re ready for anything resembling exercise. Now watch.”<br><br>She stood aside so that Jenny could see what was happening. It was, she thought, startling. A platform slid out of the booth. The guard unclipped the next girl off the chain and told her to sit on it. She looked around, shrugged and sat. Then she squirmed a bit to get comfortable on the contoured surface. Suddenly there was a snap and then the platform pulled the girl into the booth. A metal mesh slid down the front.<br><br>“Once they get done loading the row we’ll show them how they get their nutrients,” she finished.<br><br>“That’s all here,” the guard told her, giving her leash a gentle tug.<br><br>“How can they do that day after day?”<br><br>He shrugged. “The women in this section aren’t too bright. They like routine.”<br><br> <br><br>“So here’s our new worker,” a chipper voice said as the guard led her into what looked like a hospital nurse’s station.<br><br>“Yep. Jenny Jackson. She’s all yours.” He handed the girl the leash and waved his badge at a reader plate.<br><br>“I’m Natalie,” the young woman said. “Orderly extraordinary. Meaning I take orders extraordinarily well.” She giggled. “Right now we’ve got to take you to your room. You’re kind of late in the day, so you’re not scheduled for surgery until tomorrow morning.”<br><br>“Um?” Jenny said as she looked at the room.<br><br>“It’s a hospital room. What did you expect? This is a hospital.”<br><br>“Uh, right.”<br><br>“Hop into the bed. Orders are that you’re to be chained in bed.”<br><br>Jenny got into the bed and arranged herself.<br><br>“Now we need to connect you up,” Natalie said as she peeled back the covers and extended a tube. She reached between the girl’s thighs and deftly snapped it into place. “All good. Just don’t get it tangled.” She padlocked the light chain from the wall onto Jenny’s collar.<br><br>“Uh, right,” Jenny said as she pulled the covers back up.<br><br>“Good. Here’s a reader. While you’re here waiting for surgery and then while you’re recovering, you’re supposed to be studying. The subject is basic manufacturing. Terminology, procedures, background. All that boring stuff. It beats staring at the ceiling, but not by much.”<br><br>Jenny giggled at the image.<br><br>“Get yourself organized and I’ll be in with dinner in a bit.” She turned and walked out.<br><br>Jenny pulled the reader up and started stroking the back. There was, after all, not that much to do other than memorize the cracks on the ceiling plaster.`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "Audry: Drop Out", 
+                    content: `Audry looked at the girl on the stage with wide eyes. The dancer had just finished a number, and coyly intimated that she was available – for a fee.<br><br>“They let her do that?” she breathed.<br><br>“She’s probably wild,” Darlene said. “Wild girls have got to make money somehow.”<br><br>“Wild girls?”<br><br>“She decided to drop out of the system. How?” Darlene shrugged.<br><br>“How is easy,” Francine proclaimed. “There’s all kinds of things you can get off the record. What I don’t understand is why.”<br><br>“I would if I could,” Audry almost whispered as she watched the dancer descend the stage.<br><br>“You’re nuts,” Darlene proclaimed.<br><br> <br><br>That night, Audry checked her reader for messages. One popped up: “You want to drop out?” with a one time contact number.`
+                },
+                {
+                    title: "Chapter 4",
+                    subtitle: "Jenny: This is your life. Adapt ... or else", 
+                    content: `“Am I going to have any trouble with you?” the guard asked.<br><br>“Uh, no sir,” Jenny said from where she lay propped up on the hospital bed.<br><br>“Good. They tell me you’re healed from the operation, so I’m to take you to your work assignment.” He reached over and unlocked the light chain that attached her collar to the wall.<br><br>“Get dressed. There.” He pointed at a cabinet.<br><br>She blushed as she got dressed under his watchful eye. Then she looked at herself in the mirror and nodded thoughtfully. The mid-thigh length skirt and neckline that stopped just before it showed cleavage seemed to be the current fashion for collared workers’ uniforms when they would not be doing anything that required protective clothing.<br><br>“Do I need this?” He held out a leash.<br><br>“No, sir.”<br><br>“Good. Follow me. No need to remember where we’re going. You won’t be coming back this way for a long time, if ever.” He walked out of the ward, Jenny hurrying to keep up.<br><br>After several twists and turns and one short elevator ride they emerged into the sunlight. She stopped, startled at the sight of wide lawns and flower beds, with ponygirls and what had to be engines taking care of the flowers.<br><br>“Surprised?” he asked.<br><br>“Uh, yes.”<br><br>“It’s a common enough reaction. Ponygirls and engines are all supposed to be able to do yard work, do their own housekeeping and keep their equipment working.”<br><br>“Swifty sure did,” Jenny said reflectively.<br><br>“Your family’s ponygirl? The best way of making sure they can do it is to have them do it. This place wouldn’t be half the size if we didn’t need all the space to give them a yard to work. It sure makes it pretty, though.”<br><br>“It sure does,” she agreed as he led the way to a waiting ponygirl and a two seat chariot.<br><br>“I suppose this is more of the same?”<br><br>“Right. Municipal taxi services, parks, industrial farms and suchlike are our second biggest market segment, right behind individuals, so we give them lots of practice before sale. Or at least as much as we can squeeze in.”<br><br>“I suppose you do the same for engines?”<br><br>“Not as much as we’d like. The truck you came in on had trainee engines, but we don’t have enough of that kind of work.”<br><br> <br><br>They arrived at another building in short order. The neatly kept sign on the front lawn proclaimed: “Ponygirl Manufacturing Stage 2, Building 4.” The only way to describe the building, Jenny thought, was huge. Four stories and sprawling.<br><br>They went down several corridors and eventually stopped in front of a door marked: Ponygirl Manufacturing. Stage 2. Unit 128.<br><br>“In you go, girl.” He stood aside as she looked at the door. She shrugged and went through. There weren’t, she thought, all that many other options. Like, none.<br><br>Inside was a small cubicle with another door. She tried the handle and found it wouldn’t budge until the outer door closed behind her. Then it opened and she walked through.<br><br>She looked around and saw an older woman standing watching, arms crossed under her breasts. Well, she was a few years older than Jenny herself.<br><br>“So you’re my new crew member,” she said. “Female. Check. Breathing. Check. I take it your name is Jenny? I’m Daphne.”<br><br>“Uh. Yes, I’m Jenny. Hello, um, Daphne?”<br><br>“You got it. I suppose you’ve got all the usual questions, because I know they didn’t tell you anything while you were in the hospital recovering from the operation.”<br><br>“I got a lot to study, but it all seemed kind of general.”<br><br>“They do that so you’re not totally bewildered when you arrive. Manufacturing is manufacturing; the basics are the same everywhere. The only place you’re going to learn the specifics is on the job.<br><br>“Let’s start at the top. We live here and we stay here, possibly until we’re ready to be cremated. The usual way out of this unit is a job transfer to another assignment in the organization. If you don’t work out you’ll find yourself in one of the cages being trained for real.”<br><br>“That’s?”<br><br>“Not what you expected? Don’t worry about it. We have very few failures, and the comps assign trainees to units where they’ll fit in. Reliable is interested in getting its ponygirls trained properly, not in providing fodder for the 3-V comedies.<br><br>“We sleep 8 hours, work an 8 hour shift and have the other 8 hours to study and amuse ourselves. There are two of us on each shift in each cell, for six on shift in the unit. We supposedly get one day a week off, so there are actually seven of us on each of the day shifts. The day off rotates; the seventh worker rotates among the cells. Otherwise we’re assigned to a specific cell and stay there until we’re reassigned.<br><br>“There are only four people on the night shift. We don’t need more because all the girls are supposed to be asleep in their cages. They do maintenance and some monitoring and planning.<br><br>“Trainees, that’s you, are extra. We work extra shifts while we’ve got a trainee, and then she fills in to make up the time. Once she’s up to speed and can take a full shift without a mentor, one of us will get moved to another assignment.<br><br>“You’re not actually going to get a lot of time off for a few months because of training assignments I’m going to talk about later. Once you’re done with those you get most of your off shifts and half of your days off; the other half you’ll spend doing something else I’ll talk about later.”<br><br>“Uh. Right.”<br><br> <br><br>“Physically,” she gestured to a chart on the wall, “the unit is a rectangle, and it’s a lot longer than it is wide. The dormitory extends all the way along the wall. Next there’s a row of study cubicles. We each have one. Then we have the long corridor, rows of units stacked lengthwise, and another long corridor by the far wall. The other side of that wall is the rein training area.”<br><br>“It looks simple enough,” Jenny said as she looked at the diagram. “I’m, um, here and here?”<br><br>“Right. Your area in the dormitory is a bed and a small stand. The walls between are both light and sound absorbent, as is the far wall, so you don’t have to try to sleep with a lot of noise or a lot of light. I’ll give you a quick tour when there’s nobody sleeping.<br><br>“We use a standard manufacturing cell organization. This is unit 128, and it has three cells. Each cell has 3 columns of 10 cages, for 30 in the cell. We normally have 60 girls in the unit for 20 in each cell. We get an average of one new girl a day and send an average of one trained girl a day on to stage 3. Most of the fluctuation is smoothed out in stage 1; we’ve sometimes been up to 25 in each cell, and sometimes down to 15, but it usually stays right around 20.<br><br>“Each cell has six rows: three rows of cages, one row of Tentacle Monsters, one row of treadmills and storage, and one row that contains a washer and the maintenance area for the servicers. There’s also a row between units that’s got the laundry, closet space and maintenance work areas. As well as the engine mount trainers.”<br><br>“The what?” Jenny exclaimed, her attention dragged away from the diagram.<br><br>“Engine mount trainers. We’re all trained as both ponygirls and engines, and we spend time as ponygirls and engines regularly.”<br><br>“You’re ... you aren’t joking, are you?”<br><br>“Nope,” Daphne giggled. “One of the things I love about raw trainees is their expression when I tell them. I’ll tell you more later.”<br><br> <br><br>“You know the way manufacturing operations structure tasks, right?”<br><br>“Uh, yes. That got covered.”<br><br>“Good. In this unit there are a couple of dozen tasks, but practically there are really three; we don’t have much use for a shift worker who can only do some of the tasks.”<br><br>“So I need to make level 2 on most of the tasks?”<br><br>“Right. Then the second group would be?”<br><br>“Um. What I’d need to train a new worker. That would be level 3 on all the shift tasks and 2 on the rest?”<br><br>“Right. Then you’d need 3 on the rest to be able to train a new trainer. That’s a supervisory position. You’ve got a reasonable length of time to make shift worker, and you don’t have to go beyond that. We don’t expect genius here, just people that can get it before they’re ready to be cremated.”<br><br>“Long before, I presume.”<br><br>“Right. We almost never have anyone fail to get there. Reliable’s selection process is supposed to reject anyone that’s even close to marginal.”<br><br>“Uh. Right.”<br><br> <br><br>“Which brings up why you’re here at Reliable rather than somewhere else. You’re a heartless bitch.”<br><br>“I’m what!”<br><br>“You’re a heartless bitch. So am I, and so are the other crew members. The technical term is borderline sociopath. In plain English, it means you don’t give a shit what happens to anyone except yourself, and you won’t have any qualms about what we do to our ponygirls. Even though some of them are going to be girls you went to school with who were your friends.”<br><br>“Well, you gotta look out for yourself. Nobody else is going to.”<br><br>“Oh, I agree. Here.” She touched her chest. “Most people wouldn’t, or at least wouldn’t take it to the extreme we do.<br><br>“The only way you can work in the stage 1 or stage 2 units is to not be concerned about what you’re doing to them. Most people couldn’t work here. If they had to turn a friend into a ponygirl it would rip them apart. It’s possible to work farther down the line without the same problems, but it’s still not easy if you see someone you knew and liked coming through.”<br><br>Jenny looked at Daphne narrowly. “There’s something you’re not telling me.”<br><br>“Since you asked. We’re going to get one, possibly two girls from your graduating class, and they’re going to be your responsibility.”<br><br>“You’re going to what?”<br><br>“You’re going to be responsible for one or two girls from your graduating class. It’s a test to see if they were right about you. If you genuinely can’t handle it, they’ll put you somewhere else. If you try to fake not being able to handle it, you’ll join them in the next cage.”<br><br>Jenny swallowed. “Got it.”<br><br> <br><br>“Now for what we actually do. We’re the second stage of ponygirl manufacturing. Our job is to take ponygirls from stage 1 manufacturing and bring them along to where we can pass them to stage 3 manufacturing.<br><br>“You just spent a few days in Stage 1 so you know that they do the surgery to install the modifications. Input comes in waves as schools do their graduations; some days they’ve got over a thousand new girls, some days they’ve got almost none. The average for this plant is a bit less than 500 a day. They can handle 800, but if they get hit with a big wave the girls may sit in a cage for several days before getting to surgery. That’s not totally wasted; they use a portable scanner so the computers can start installing the ponygirl functional pattern.<br><br>“Once they finish surgery they keep the girls in their cages for about four days to make sure the jaw block heals properly; that’s the biggest piece of surgery. You went to the head of the line and they kept you for two days and let you recover in a bed while you studied because you’re a worker; they don’t install the throat unit or jaw block in workers. They install the tail socket instead, which is a much simpler operation.”<br><br>“Tail socket? Oh, you did say I was going to be trained as a ponygirl.”<br><br>“Hold that thought. You undoubtedly noticed that this was a big building? Stage 2 occupies 16 buildings, 16 stage 2 units in each building. We’re one of about 500 stage two units. We get an average of one girl a day from stage one, which means that each cell gets one every three days. If they’re processing a backlog we might get two every three days; if they don’t have enough we might not get any on some days. We keep them for about two months, which means we send an average of one a day to stage 3.<br><br>“We start them on three major pieces. The first is what we call the ponygirl functional brain pattern. When they leave here they’ve got that pattern installed and it’s been locked so they can’t stray outside of it. What that means is that they can only use part of their brains. Anything having to do with language or so-called higher functions has effectively been turned off. They’ve also been conditioned to be cheerful, friendly and obedient. The conditioning will stay because it’s continuously monitored by a brain scanner installed in their skulls and reinforced by their collars.”<br><br>“I never realized!”<br><br>“We don’t put it on the 3-V,” Daphne responded dryly.<br><br>“Um,” she continued, “I didn’t think you could change personality that much.”<br><br>“That’s half right. Their personality after we get done isn’t going to be the same as it was before, but they’ll still have distinct personalities. Stage 1 shuttles girls that are likely to have problem personalities over to engine training; they’ll wind up sitting in cages when they’re not installed on an engine mount.”<br><br>“We also do initial rein, strength and stamina training. When they leave here they’re complete on the ponygirl functional pattern, pretty decent on rein training, and frequently but not always past the first checkpoint on flexibility, strength and stamina. Most of the real training happens downstream, in stages 3, 4 and 5.”<br><br>“That makes sense.”<br><br>“Enough talk. Time to show you what it looks like.”<br><br>They turned down a corridor and stopped immediately. “This is a walk-through shower,” she explained. “This thing,” she grasped a rod that came out of the wall on a track, “is a shower rod. When you put a ponygirl through it, you clip the chain on the end to her collar and it leads her through the whole process. When you go through it to take a shower you do the same thing; it won’t activate unless the chain is clipped to a collar ring.”<br><br>Jenny looked at the thing. “This is getting strange,” she said.<br><br>Daphne laughed. “It’ll get stranger. Now let’s look at ponygirls.<br><br>“We load the cells in order, so you can walk the cage rows and see how they look as they progress through their conditioning. That means the unused cells are in a block in the middle. So let’s start out with an unused cell so I can show you how it operates without disturbing one of the girls.”<br><br>“Before we do, I’ve got a question,” Jenny said. “Didn’t I just see a loose ponygirl?”<br><br>Daphne laughed. “That was Melissa; she’s one of the workers on this shift. She likes her tail enough to wear it all the time. Of course it means she has to wear a uniform shirt and shorts instead of a tunic, but that’s acceptable.”<br><br>“Uniform shorts?”<br><br>“Tails don’t go well with skirts. Your uniforms include shorts for when you’re wearing your tail and overalls for when you’re working on equipment maintenance. Now for the cage. You had a glimpse of it when you arrived, right?”<br><br>The sides and back of the cage seemed to be some kind of two inch thick white plastic. It was about three feet wide and three deep. The sides came up about six feet, with shelves of the same white plastic at about the four foot mark. They left enough space in the center so the two workers could see into the cage itself.<br><br>The knobs and switches of a control panel sat in the right wall above the shelves where they would be out of the ponygirl’s line of sight. The back had two 3-V panels: one showed the inside of the cage from the back, and the other showed it from the top.<br><br>The front and a second top were metal meshes with thick bars. The bottom was more of the white plastic, shaped with a lot of ridges and depressions.<br><br>“Here’s the cute part,” Daphne said. “Stand away.” She touched a button on the column between the cages. The front slid up and the bottom slid out into the corridor.<br><br>“Strip and sit on it,” Daphne commanded.<br><br>“Huh?”<br><br>“I said strip and sit on it.”<br><br>“But...”<br><br>“Either you strip and sit on it right now, or you’re going to back to stage 1 where they’ll put the throat and jaw units in, and then you’ll sit on it.”<br><br>“Oh.” Jenny slid out of her clothes, stacking them neatly on the shelf, and then sat on the platform. After a bit of wiggling she discovered that there was only one place she could sit comfortably, and that required her to have her legs spread wide and her feet straight back against the sides. As soon as she discovered this, a pair of shackles snapped shut around her ankles, pinning her into place.<br><br>Daphne touched a button, and the platter slid smoothly back. The front came down, closing it off.<br><br>“Explore,” she told Jenny. “There are a couple of buttons here you can use to slide the top open and shut.” She reached in and pressed them, demonstrating what they did. “I’ll be back in a while.”<br><br>Jenny listened to the almost inaudible sound of Daphne’s shoes as she walked away.<br><br>Now what? she thought to herself. Explore? She spent a little time running her hands over the confines of the cage. The sides seemed to be smooth but not quite slippery. She found that all she could see was a section of corridor and a wall. Well, that wasn’t quite right. The center cutout of the shelves let her see a patch of ceiling and the top of the wall in front of her.<br><br>Now that she’d calmed down, it seemed to be quiet. Really quiet. The whole place must be made of sound absorbent material.<br><br>What else? She might try lying down. She bent forward and discovered that her breasts fell into a cavity, and that there was something that stuck up where her mouth should be. She got back up and looked at it. It seemed to be some kind of a hook. Maybe it would latch onto a ponygirl’s jaw unit and keep her from rising until someone unlatched it? Seemed likely.<br><br>Now what were those buttons about? She pressed one and part of the top slid back. Maybe she could poke her head out? She managed to get onto her knees, ankles still shackled, and get her head out the top. “Eep!” The top had slid back into place, imprisoning her neck. She noticed she was pressed against the front bars, with her breasts stuck out of convenient openings.<br><br>The other button slid the top back again so she could sit down. She noticed that her hands rested, quite naturally, on her thighs. She took a couple of deep breaths and looked around. Try as she might, she couldn’t figure out anything else to do, so she relaxed, took a couple more deep breaths and let herself start daydreaming.<br><br>“I see you’re done exploring,” Daphne’s amused voice jerked her out of her reverie. “Let’s get you out of there.” She touched a button on the controls. It seemed for a moment that nothing happened.<br><br>“Puzzled?” Daphne still seemed to be amused. “Look at the buttons you can get to.”<br><br>“Oh!” A third button had appeared. Jenny put her finger on it. The front came up and the bottom slid out. The shackles unlocked and she scrambled to her feet, grabbing her clothes to get dressed.<br><br>“So what were your impressions?”<br><br>“It’s really confining. There’s nothing to do except play with yourself.”<br><br>“She can’t trigger the stimulation routines in her chastity shield. That’s one of the things that being collared does: your owner gets control of whether you can stimulate yourself sexually, and we turn it off until later in the sequence.<br><br>“Not having anything to do is the point. All she can do is let her mind drift, and that lets us get in and do the conditioning.”<br><br>“That’s wicked,” Jenny said in admiration.<br><br>“It’s efficient,” Daphne said. “The sooner she relaxes and lets the conditioning routines work, the sooner she’ll settle into being a ponygirl and forget any idea of ever being anything else. She won’t be happy until she does.<br><br>“That’s your ponygirl training session for today,” she said, again with a tinge of malicious amusement in her tone.<br><br>“Huh?”<br><br>“Remember I told you we were going to train you as a ponygirl and as an engine? It starts by sitting in a training cage with nothing to do except let your mind drift. They installed a brain monitor and some stimulus-response units during your surgery. There’s an AI program that does the actual conditioning. It’s not fast, but it’s insidious. Once it’s done, the equipment in the collar will keep things on track.<br><br>“By the time a girl gets here she’s already had at least four days of it while she’s recovering, and possibly a few more if they had to hold her for a while before surgery.”<br><br>Jenny shook her head. “I’ve got one question. Why?”<br><br>“We do it so that you’ve got the experience of being trained, and also the experience of what being a ponygirl is like. There are some other benefits as well.<br><br>“We have prosthetics for the throat and jaw units as well as a prosthetic tail and a wig that lets us put your hair up into a fairly decent mane. You’ll learn to put the prosthetics in and take them out, and you’ll spend three of your supposed off shifts a week in a cage with them installed. You’ll be fully trained in less than three months.<br><br>“I think I understand being trained as a ponygirl, but why an engine?”<br><br>“This is one manufacturing operation that does both ponygirls and engines. This unit is stage 2 of the ponygirl process; stage 2 of the engine process is exactly the same except that they do engine mount training instead of rein training. All of our manufacturing workers are trained as both ponygirls and engines.”<br><br>“Uh, right. I hope.”<br><br>Daphne giggled. “I love the way new trainees react. While you’re being trained you’ll spend three of your off shifts a week in a cage going through the same process one of our ponygirls experiences. Well, almost the same. You’ll start with rein and flexibility training, and then shift to engine mount and strength and stamina training. You’ll do a flexibility session the rest of the days as well, but it won’t be combined with cage training. Toward the end of your training you’ll begin spending a day and a half as either a ponygirl in one of the cages or mounted as an engine. That takes up your supposed day off, so you get a real day off once every two weeks. When you’re done training you get your off shifts back, but you’ll keep the day and a half every two weeks schedule.”<br><br>Jenny looked at her. “Are you sure I haven’t gone insane and I’m hallucinating?”<br><br>Daphne laughed.<br><br> <br><br>“This is all highly automated. We give them two rein training sessions, a flexibility and a strength and stamina session each day, and service them four times. That comes out to 320 touches a day when the unit has 20 ponygirls in the cages.”<br><br>“Touches?”<br><br>“That’s manufacturing-speak for the number of times someone has to touch the product on the way from raw material to the customer.<br><br>“With two shift workers and 16 hours a day, that’s about 10 touches an hour per worker, or about 6 minutes per touch. You don’t have to hurry so much you make mistakes, but you do have to keep at it.”<br><br>“Oh!”<br><br>“One reason it’s set up that way is that you don’t have the time to get to know the girls when they arrive. By the time you’ve worked with one enough times for her to stand out of the herd as a real individual, she’s well on the way to being a ponygirl.”<br><br> <br><br>“Well, that’s the talk. Now let’s go look at some ponygirls.”<br><br> `
+                },
+                {
+                    title: "Chapter 5",
+                    subtitle: "Jenny: Ponygirls in their cages", 
+                    content: `“Well, that’s the talk. Now let’s walk over and look at one that’s just about ready to be sent to stage 3. This is Moonshine, she’s got just the most awesome silver mane.”<br><br>Moonshine sat in the back of her cage, legs spread so that they came back parallel to the walls, hands resting palm up on her thighs.<br><br>“How’s she look?”<br><br>Jenny’s brow furrowed. “Kind of content?”<br><br>“Exactly. She’s been here for six weeks, we’ll be sending her on in another two. The mental conditioning has gotten to the point where she just sits here and glows when she doesn’t have anything to do. We don’t have either her arms or her ankles shackled. We do that at the beginning, but she’s far enough into the process that it isn’t necessary.<br><br>“She doesn’t understand what anyone says around her; that process finished up about two weeks ago, and she quit being concerned about it a week ago. That’s pretty much on schedule.”<br><br>“If she doesn’t understand?”<br><br>“She reacts to commands. She doesn’t understand them, she simply reacts to them.”<br><br>“How can you react to something without understanding it?”<br><br>“It’s one of the early adjustments. You’ll find out how it works when your programming gets that far.” The trace of malice showed up in her smile.<br><br>“I suppose so. But...”<br><br>“But what?”<br><br>“It can’t be that simple. She’s trained to stay in that state. I can’t stay in that state and be at all useful.”<br><br>“Exactly. You know that the brain has over a hundred processing units and more than ten times as many connections?”<br><br>Jenny frowned slightly. “We learned that in school.”<br><br>“We call the way your brain works a functional pattern. Most people have only one, what we call their normal functional pattern. We install a second one for ponygirls and engines that we call the ponygirl functional pattern. It doesn’t include the processing units for language or a lot of the higher functions. They’re trained in it, and then they’re conditioned to not slide out of it into their old functional pattern. With me so far?”<br><br>“Uh. Yes.”<br><br>“What we do for our workers is create a third functional pattern. It’s the same as the ponygirl pattern plus some additional processing units and interconnections that let her know who she is and what she’s about in a larger context. It doesn’t include language. We call it the interface functional pattern.<br><br>“There’s also a fourth functional pattern that we call the engine mount pattern. It’s cut to the bare bones of what an engine needs when she’s installed to run her body and do her job. It doesn’t include such basic things as memory; she won’t remember anything that happens from the time the hood goes on to when it comes off, including any sense that time passed.”<br><br>“No memory at all?”<br><br>“Depends on what you call memory. Some things get stored, but they’re nothing she can access consciously. As far as she’s concerned, she knows she’s about to be mounted, and then she knows she’s been dismounted and that things have changed. She might be in the same place, she might be halfway across the country. Part of engine training is to adapt to that happening.<br><br>“We also train in ways of shifting from one pattern to the other. The rules are a bit intricate; some of them are under your control and some aren’t.<br><br>“We’ll make a couple of changes to your normal pattern. One will keep you from getting addicted to the ponygirl state, the other will let you use some of the more useful things that emerge from the ponygirl state that aren’t usually available in people’s normal state. Still with me?”<br><br>“I think so.”<br><br>“Let’s get her up here. Slide the front back and tell her to kneel.”<br><br>Jenny studied the controls for a moment. “This one?”<br><br>“Yes.”<br><br>She pushed it and was rewarded by a section of the top lifting slightly and sliding back. Moonshine’s eyes followed the movement, but the rest of her relaxed posture didn’t change in the slightest.<br><br>“Kneel.”<br><br>Moonshine bent forward and then came up on her knees like a hinge, her head popping through the top of the cage. The top slid forward, capturing her neck in a hole that was too small for the rest of her head.<br><br>“You know what they did to her in stage 1 processing?”<br><br>Jenny looked at Moonshine. “Well, the mane, the brain scanner, the jaw units, the tail and the leggings. Oh, and the gene mods. I think that’s all; the throat unit and the ID tattoo were applied just after she was collared.”<br><br>“Right. How does that compare to what they did to you?”<br><br>“I got the brain scanner and the gene mods. They also did a socket for the tail prosthesis.”<br><br>“Right again. You know how the throat and jaw unit work?”<br><br>“The jaw unit freezes her mouth in position,” Jenny said. “Beyond that? I always assumed it was to keep her from talking. Then on the way over Helen told me the throat unit did that.”<br><br>“That’s right. The throat unit has a tube down her windpipe that keeps the larynx from vibrating, and it also forces her to breath through her nose. She can’t breath through her mouth except in an emergency. If she could, she’d be able to manage a decent number of clicks and unvoiced phonemes with just her tongue. Without the breath she can only do clicks. I’ve heard there were some languages that were completely clicks, hard as it is to believe.<br><br>“That’s assuming she actually wanted to talk, which she doesn’t.”<br><br>“Oh. Talking is not part of the, what did you call it, the ponygirl functional pattern.”<br><br>“Right. The throat unit also has a pipe to her stomach. She doesn’t need to swallow; nutrients go right in. The throat unit is easy enough to install, but the jaw holder is major surgery; they take all of the teeth out and insert the holding rods right into the jaw. Letting that heal properly is what takes most of the time in stage one.<br><br>“The real reason for the jaw unit is that it distorts her face so that her expressions don’t register normally for most people. It helps make her look like an animal rather than a human. It also lets us use standardized bits that just snap in, and it’s sized so that she can suck cock if her owner wants her to.<br><br>“That’s the list.”<br><br> <br><br>Daphne grinned, “I timed it just right. Here comes the servicer.”<br><br>Jenny turned and saw a machine roll up. It rolled to the front of Moonshine’s cage and grabbed the mesh with a couple of hooks. Then something darted out of the top and went between her lips. It came out with the cover from her jaw block.<br><br>Something that looked like a big penis emerged, and Moonshine bent her head forward to where her tongue could flick out and begin caressing it.<br><br>At the same time, a section lower down sucked her breasts into itself, and still farther down another section slid between her legs and nestled in the crack.<br><br>“That’s what being serviced is?” Jenny asked, fascinated. “We never did that with Speedy.”<br><br>“A fully trained ponygirl should be able to take care of herself. She has to puree foods before she injects nutrients because she can’t use her teeth or swallow, but that’s it. Why do you think we do it this way?”<br><br>“It’s more efficient?”<br><br>“That’s part of it. Part of it’s control, and part of it’s sexual programming. She’s being trained to mix up all the associations. By now, sucking cock is associated with eating and relieving herself and having her breasts and vagina stimulated. Some owners are going to want use their ponygirl sexually, so we get it out of the way up front. We keep the stimulation just below where she has an orgasm until right at the end.”<br><br>Moonshine kept licking at the cock while her two minders talked. It stiffened to where she could take it into her mouth. She sucked on it a while, a blissful look on her face.<br><br>“Once she’s got it stiff and has it in her mouth, it locks onto the throat unit so it can shoot the nutrients down the tube into her stomach.”<br><br>A few minutes later she began to breathe rapidly and then gasped, letting the flaccid cock fall out of her mouth. The device released her breasts and withdrew from her crotch. The little arm came back with the gag cover, slid it in under her partly open lips and installed it with a slightly audible click.<br><br>The top lifted back, freeing her neck. “Sit”, the servicer commanded. Moonshine folded back and then sat with a slight thump as the servicer wheeled away and the top slid back on her cage.<br><br>“How does she look?” Daphne asked.<br><br>“Smug,” Jenny answered.<br><br>“She’s got every right to be; the servicer makes sure she gets an orgasm each time she’s serviced.”`
+                },
+                {
+                    title: "Chapter 6",
+                    subtitle: "Jenny: Training Carol", 
+                    content: `“Now here,” Daphne said, stopping in front of cage 96, “is one of our most recent acquisitions. We got her two days ago, and she’s still adjusting.”<br><br>“That’s, um, Carol?” Jenny asked.<br><br>“You know her?”<br><br>“She disappeared a couple of months ago.”<br><br>“The dossier said she was a wild girl. They picked her up on a sweep last week, and here she is.”<br><br>“Well, she had some fun anyway. I always thought she was headed for the bridle and bit.” Jenny shrugged. “She was pretty nice if a bit slow. Speedy seemed to enjoy what she does, Carol should too.”<br><br>The girl who was trying to ooze through the back of the cage made a muffled gargle.<br><br>“Hey, cheer up,” Jenny called in. “I know you’re going to do well.”<br><br>Daphne giggled at the byplay. “I’m going to give her to you to practice on.”<br><br>“Great!” Jenny exclaimed as the girl in the cage tried to shrink back even farther.<br><br>“I want to look you over,” she said as she inspected the cage controls. She pressed a button. “Kneel!”<br><br>Carol looked at her with wide eyes, but didn’t budge.<br><br>“Use the red button,” Daphne suggested.<br><br>“Oh.” Carol snorted and jerked forward as if her ass had suddenly caught on fire. She managed to get her head through the hole. The cage top slid forward, pinning her upright.<br><br>“That’s a good girl,” Jenny purred as she stroked her ex-classmate’s mane. “The sides are nice and straight. Why isn’t the rest of it that thick coat Speedy and Moonshine have?”<br><br>“It’s too soon,” Daphne answered. “They only did the treatment a few days ago; the hair follicles need time to adjust before they create the coat.”<br><br>“Same for her legs, I suppose,” Jenny said.<br><br>“Right. You can feel the stubble where it’s going to come in. Feel her back along the spine between the shoulder blades.”<br><br>“Got it,” Jenny said as she reached into the cage and ran a hand down Carol’s spine. Carol tried to flinch away, but only succeeded in pressing her front more firmly into the bars. “Nice spiky stubble.”<br><br>“Now Carol,” Jenny crooned as she stroked the ponygirl along the jaw and behind her ear. “You know you’re a ponygirl, so just relax and let us teach you how to flaunt your mane and tail.”<br><br>Carol looked briefly at the ceiling and sighed, her breath making almost no noise. She relaxed slightly, leaning into the hand that caressed her jawline.<br><br>“Good girl!” Jenny praised her.<br><br>Carol sighed again and then tilted her head back to give Jenny a better angle.<br><br> <br><br>“It’s time for her next rein training session,” Daphne said, suddenly jerking Jenny out of the sensuous feel of her fingers digging into the ponygirl’s jaw.<br><br>“What is that ... thing?” Jenny asked as she saw ... something ... hanging from the ceiling and heading toward them.<br><br>“The robot exerciser,” Daphne said. “Move back a few feet.”<br><br>Jenny didn’t need any prompting. Once her heart seemed to shift out of overdrive, she looked at it a bit closer. Whatever it was seemed to be standing on the ceiling. At least, it had four wheels that were firmly planted there, holding the center column vertical. She realized that there was a small shaft that went through the ceiling. Now that she looked, it seemed to be on a track; the slot in the ceiling went up and down the corridor and vanished into the distance.<br><br>The rest of the monster seemed to be all hooks, shafts, straps and other things that ought to be safely on the other side of a 3-V epic, or at least in the back rooms of a sex shop. Carol, she noticed out of the corner of her eye, simply looked scared.<br><br>It stopped in front of the cage. “Sit”, a voice commanded. Carol noticed that her head was no longer held in place and shrank back into the cage with enthusiasm, attempting rather unsuccessfully to bond with the far wall.<br><br>The front of the cage slid up, and then the bottom slid out, serving Carol as if she was on a tray. The thing extended a rod with something on the end and clamped onto Carol’s collar. The shackles that held her ankles cuffed to the platform unsnapped. “Up!” it commanded. Carol didn’t move. It pulled up and the ponygirl stumbled to her feet.<br><br>“It’s our turn now,” Daphne almost giggled at the scene. “Put on the headstall. You know that’s the part of the bridle without the bit, right?”<br><br>“Yes,” Jenny said as she found the assemblage of straps on the shelf.<br><br>“Calm down,” she told the scared ponygirl. “It’s not going to kill you.” She held out the headstall and deftly buckled it around the head in front of her.<br><br>“Blindfold next, and then the bit and reins.”<br><br>“OK.” Jenny added the two pieces, and noticed that Carol seemed to calm down as soon as she couldn’t see. She ran a gentle hand down the ponygirl’s back and flanks twice to finish calming her.<br><br>“Now the reins go here,” Daphne instructed, pointing out two levers that sprouted from the side of the central column. Jenny attached them.<br><br>“Boots next.”<br><br>Jenny managed to get the ponygirl’s boots onto her feet without getting trampled in the process, while Daphne stood to the side, giggling.<br><br>“Now the last piece. This wire connects to her collar.”<br><br>Jenny looked at the end and the collar, and then snapped it in.<br><br>“All set,” Daphne said once the wire was connected to her satisfaction, and pushed a button on the column. The two levers twitched, shaking the reins. “March. Knees up,” the robot’s voice said as it followed the blindfolded ponygirl down the corridor toward the far side.<br><br>Jenny shook her head. “Now that is something else.”<br><br>“It sure is. It takes a bit to learn everything it can do. Let’s switch the view.” She touched a button and the two viewers in the back wall of the cage shifted to show what looked like pandemonium.<br><br>The scene sorted itself out into a number of ponygirls walking and trotting around a large room, each tethered to one of the robots. Most of the ponygirls were blindfolded. Some of them, like Carol, were held just by their reins. More of them were locked into hip harnesses which were firmly attached to shafts that jutted out of the robots hanging from the ceiling.<br><br>The scene, thought Jenny, looked like unbridled chaos. Well, she giggled, bridled chaos. “Why don’t they bump into each other?”<br><br>“There’s a routing computer,” Daphne said. “It doesn’t have to work all that far ahead; they’ve got to learn to respond to the reins doing sudden starts, stops and turns anyway. The scheduler is random; there’s no way they can predict what they’re going to be instructed to do next. The blindfolds keep them from getting scared and panicking. We take them off when they’ve absorbed the rein signals unconsciously. That lets us make sure they keep obeying the reins rather than try to figure out where to go.”<br><br>Jenny studied the scene in front of her. Carol, she thought, looked like she was getting into it. Her robot had her walking, legs pumping up and down rhythmically in the classic ponygirl high step.<br><br>“Let’s look at her brain scan.” Daphne touched a button and one of the 3-V monitors switched to what looked like a confusing mass of colored lines that flashed on and off disconcertingly.<br><br>“How’s that work?”<br><br>“That’s the brain scanner I mentioned. Looks like a mess, right?”<br><br>“Horrible mess,” Jenny agreed.<br><br>“Not quite that bad.” She touched a couple more buttons and most of the colors vanished, to be replaced by green, red and gray.<br><br>“Green is a signal that the activity is where it’s supposed to be, red is one that’s in the wrong place. Grey is parts that aren’t active at the moment. There, see that?”<br><br>A piece had just flashed red, and she had stumbled.<br><br>“Not quite.”<br><br>“The robot signaled for a turn, and it leaked into her awareness. She got confused.”<br><br>She paused a moment and flipped through a couple more screens, coming back to the brain scan. “That’s today’s lesson. Remember one thing: we never tell them what they’re supposed to learn. It doesn’t matter how well or poorly they did, they always did well. Your job is to build up her unconscious image that she’s a really good ponygirl. The more you build it up, the happier she’ll be and the better she’ll turn out. That’s the difference between her and Moonshine right now. Moonshine thoroughly enjoys being what she is, and by now she can’t conceive of being different. That ability has been conditioned out of her.”<br><br>She thought a moment, and then switched the views back to the inside of the now-empty cage.<br><br>“She won’t be back for close to an hour, so you’ve got time to start learning your next task, which is how to provision the servicing machines. They have to be cleaned and provisioned every four uses, and that means what?”<br><br>“Um.” Jenny thought a minute. “You said 20 ponygirls four times a day, so that would be 20 reprovisions a day?”<br><br>“Got it. We’ve got four servicers waiting. Take a quick break and then I’ll show you how to do one. After that, Carol should be ready to be unharnessed and put back in her cage, so you’ll do that and then we’ll do the rest of the servicers. That’ll be your job until you qualify at level 2. That and Carol, of course.”<br><br>“Uh, where?”<br><br>Daphne laughed. “We’re not particularly modest. Just snap it in and let your wastes drain out.” She demonstrated by standing in front of a spot of wall that had a flexible tube coming out of it. She lifted her tunic skirt and snapped the end of the tube into the space between her legs and then stood quiet for a minute. Then she unsnapped the tube.<br><br>Jenny blushed and then shrugged. It was, after all, the same way she’d been emptying her wastes since her catheter valve and chastity shield had been installed.`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: ``
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>
