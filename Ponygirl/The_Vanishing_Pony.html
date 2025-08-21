@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>The Reluctant Exhibitionist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "The Vanishing Pony",
+            author: "Cartell",
+            chapters: [
+                {
+                    title: "#1",
+                    subtitle: "Introduction",
+                    content: `Carter Fell is my real name. I am a professional scriptwriter, and an amateur short-story writer; you may have come across my work. My grandfather was the great Gideon Fell, who was England’s most famous detective in the golden age prior to World War II. Now I am aware that it was not a golden age for most people, or even for many people, I use the term solely in respect of the adventures that were possible for a wealthy man with an interest in crime and detection. In those days, a man of my grandfather’s status would be listened to by the police; in our time, as I know from bitter experience, the forces of law will talk about obstruction, and threaten to arrest any individual who ventures to point out a line of enquiry they have missed. If you are interested in the workings of a first-class mind, John Dickson Carr wrote slightly fictionalised versions of Gideon’s cases; some are still available from sellers such as Amazon.<br><br>Ever since I was a young whippersnapper, I have sought to revive the family tradition of detection. As the decades have passed, I have watched impotently while huge and incompetent police investigations have failed miserably in such cases as the dreadful Yorkshire Ripper. Often, my independent viewpoint has given me insights that would have concluded some enquiries at a much earlier date; but my approaches have always been spurned. Fate seems to have been set on giving me a life in which my natural talents have not been allowed to shine, but I am an uncomplaining sort of chap, so I will now move on to my true account of the mystery that dropped right into my lap, the case of the vanishing pony.`
+                },
+                {
+                    title: "#2", 
+                    subtitle: "The Beginning",
+                    content: `On a Sunday, around lunch time, I like to settle down with a crusty baguette, a bowl of red pepper and tomato soup, and Norm Abrams on the TV. Norm fronts a show on carpentry, and he knows his subject. He kicks off by showing us lesser folk a finished piece of work, which can be a boat, a table, a chest of drawers, or just about anything that can be made from wood. As the baguette is consumed, and that damnably tasty soup is sipped, Norm reveals how the piece was made; the man is an inspiration, and I hate it when the phone rings during his show.  Actually, I don’t like the phone ringing on a Sunday at all; why can’t people just leave me alone?<br><br>So there I was one Sunday, enjoying my lunch and admiring Norm’s laser-guided mitre saw, when the bloody thing rang. The cordless extension was on the table in front of me, I snatched it up and barked ‘Hello?’ in my practiced why-don’t-you-just-piss-off tone of voice. But it was Vicky Bovington, so I hit the TV mute button, and I switched myself to friendly mode. Vicky is over forty now, but still a good sport and a bone shaking shag. Well all right, she’s not that great, but she’s better than a bowl of soup.<br><br>‘Vicky baby, how are you?’ One day I will think of an original greeting. One day.<br><br>‘I’m fine Carter, yourself? What are you doing these days?’<br><br>‘Great Vicky, I’m great; I’m just working on a script for the beeb. Are you local? We could meet for lunch.’ I suddenly saw an erotic afternoon ahead, and I pushed the soup bowl away from me.<br><br><br>‘Sorry Carter, I’m miles away from you. Do you know a place called Milton Common?’ Vicky was sounding awfully business-like; I reached for the soup bowl.<br><br><br>‘Can’t say that I do Vicky, some other time then eh?’<br>‘Carter, will you help me? I’ll be very grateful.’<br>Vicky’s gratitude is always worth earning, so I took the bait. ‘Of course I will Vicky, do you mean right now?’<br>‘Yes love, it has to be now. Milton Common is near Oxford, it shouldn’t take you more than an hour. I’m in a pub called The Three Pigeons, see you soon.’ She rang off before I could ask any questions.<br><br><br>Norm was mouthing silently at me, I made a mental comparison with Vicky’s mouth; no contest, I switched the TV off and hunted for my road atlas. Sunday is always a bad day on the motorways, but I was lucky with the traffic, and I was able to cruise at a slightly illegal eighty for most of the way. Milton Common is a tiny place, so I found The Three Pigeons easily enough, and I recognised Vicky’s Renault Kango in the car park.  I entered the pub; Vicky was sat near the doorway; a look of relief appeared on her face when she saw me. I noticed that the glass in front of her was empty; the limp yellow slice in the bottom of it told me what she was drinking. After fetching a G and T for my intended match of the day, and a dry apple juice for myself, I plonked myself down at Vicky’s table.<br><br><br>‘Well then Vicky, what’s the problem?’<br><br><br>‘You’re not going to believe this Carter, but I’ve lost a pony.’ My heart sank; ponies, horses, I just don’t want to know. I think of Camilla Parker-Bowles with a bar of saddle soap and my mind recoils in horror; I’m so glad I’m not Prince Charles.<br><br><br>Vicky continued. ‘It’s impossible, I saw it myself and I don’t believe it. She was there, and then she wasn’t there, she just vanished.’<br><br>I looked at my watch, I could dash home and warm up my soup in the microwave; no way was I going to trudge around soggy fields looking for a pony.<br>Vicky saw my eyes glaze over; she soon snapped me out of it. ‘Not a real pony Carter, a ponygirl. You know, leather straps, tits and arse, all the things you love.’<br>I suddenly thought she was talking far too loud. ‘Steady on Vicky, keep your voice down.’ It is true that I am partial to female flesh, but the people who say I’m a kinky sod are lying or exaggerating. As it happens, I had only ever seen ponygirls on Channel 4, but it had seemed like fine entertainment to me, so I was now very interested in Vicky’s troubles. ‘Go on then Vicky, you know what I can’t resist.’<br><br>‘I’m making a video Carter, a soft porn sort of thing.’ Vicky looked coy; it was quite good acting.<br><br>‘Oh Vicky,’ I shook my head at her as if she were my wayward daughter. ‘You should have finished with all of that now, why make a fool of yourself?<br><br>Perhaps I should explain that in her younger days, Vicky appeared in a number of steamy videos; you may have seen her in such classics as 'Tania’s Turkish Delight' or 'Spank That Schoolgirl'.<br><br>Vicky glared at me. ‘Don’t take the piss, Carter, I’m not getting older any faster than you are, and you had a head start. I’ve got four agency girls, or I did have, now there’s only three.’<br><br>‘And you want me to find the missing one?’ Quick on the uptake, that’s me.<br><br>‘Don’t be silly, you couldn’t find your arse in the dark. No, I want you to take my place behind the camera, and I’ll replace Angie - the one that’s disappeared - on the cart.’<br><br>‘But what about your runaway?’ I was already suspicious about Vicky’s story, she did not seem concerned enough about what had happened to the missing pony.<br><br>‘Well, I can claim back the agency fee for her, can’t I?’ Vicky looked at me so innocently. ‘Well Carter, are you up for it?’<br><br>I ignored the warning bell that was clanging in my head. ‘Of course I am, let’s get started, eh?’`
+                },
+                {
+                    title: "#3",
+                    subtitle: "The Whip And The Cage", 
+                    content: `Apparently oblivious to the amount of alcohol she had consumed, Vicky led me out to her van.<br><br>‘Vicky, ‘ I enquired, ‘Do you really want to loose your licence?’<br><br>She was unfazed. ‘Oh, I lost it ages ago. What can they do to me now?’<br><br>I was horrified. ‘They can ban you for life; they can throw you in jail! Fucking hell vicky, are you stark staring mad? Come on, we’ll take my car.’<br><br>So take my car we did. Vicky slid into the passenger seat; before I had the car in gear and moving she had unzipped my fly, but I pushed her hand away. Sexual relief was certainly on my mind, but I wanted to conserve my limited supply of ammunition.<br><br>Vicky gave me directions from the passenger seat; it was a short run to the shoot location, just a few miles along the main road to Thame, then about five hundred yards down a narrow lane, and a final stretch of unmade track. There was a chain across the track entrance, from which hung a sign proclaiming that the land was strictly private, and that no entry was allowed. Vicky hopped out of the car, move the chain for me to drive past, then fastened the chain before resuming her seat. The track was difficult going, and I feared suspension damage to my precious TR4. There were deep ruts in the surface, evidently from the frequent passage of heavy trucks. If I put a wheel in one of the ruts, the underside of the car would foul on the hard ridges in between. And yet it was extremely difficult to avoid the ruts, because the track width of my car fitted between them with only inches to spare.<br><br>We bumped and banged along for a little way, passing stands of young Birch and Alders, none of them more than about twelve feet tall. Then the track began to descend quite steeply, and the vegetation on either side had a more sparse and scrubby character, there were thick tangles of briars, and huge beds of nettles. Odd pieces of very rusty machinery appeared at the side of the track, none of which I could identify until I saw a decrepit overhead conveyer belt, then I knew we were in some kind of quarry.<br><br>The track veered left to follow the line of the conveyer belt. We jolted along beside the line of corroded gantries until we came to its terminus, a truck-filling hopper situated in a large cleared area. There were crude equipment shelters, a stack of oil drums, and two pre-fabricated huts. One of the huts was clearly marked as a toilet, the other had the words ‘Site Office’ stencilled in large letters above the door, at the side of the door a sign in slightly smaller letters advised the world that ‘All Drivers MUST Report Here Before Loading’. I parked in front of this seat of executive power, and I turned to Vicky.<br><br>‘How did they get here Vicky?’<br><br>‘Who?’<br><br>‘Your girls of course, I don’t see any cars, so how did they get here?’<br><br>‘Oh, they came in a taxi. From Oxford station.’ Vicky’s expression said she was puzzled at why I should be asking daft questions. Then she smiled at me. ‘Come on, they’re inside.’<br><br>She clambered out of the car, and I followed her to the office door, which was reached via three steps. A hefty padlock secured the door; my hostess fumbled in the pocket of her jeans for the key. Now this struck me as being very odd indeed.<br><br>‘You locked them in?’ I asked, although the answer was already obvious.<br><br>Vicky grinned slyly. ‘Well, I’ve already lost one, haven’t I?’ Then she threw the door open.<br><br>Presumably, this small building had once been a hive of activity, but now it felt cold, damp, and dead. I could not see an electric light, but I doubted that the power would be on anyway. Light streamed through two windows that were both on the same side of the building as the doorway. There was a small desk facing the door, and a large one at the side, to the right of the entrance. The small desk had a stack of wire baskets of the sort commonly used as in-trays; they were all empty. It had a PC base on it, but no keyboard or monitor. The large desk was almost completely bare; its scarred and dusty surface was an incongruous setting for the black whip that was coiled on it, it had all the menace of a sleeping snake.<br><br>Three green filing cabinets stood side-by-side along the back wall; a couple of drawers were partially opened, revealing empty hanging files. To left was a table and four tatty wooden chairs, beyond that was a security cage; through its mesh I could see a small safe and three ponygirls. They were sat on the floor, with their backs to the wall, their hands behind them. The light was rather poor at that end of the room, but I could see that they were virtually naked.<br><br>The door to the cage was secured by another two padlocks; Vicky opened them with the same key she had used previously.<br><br>‘Aggregate truck drivers are usually self-employed,’ She commented. ‘They don’t like paying tax, so they get paid in cash, that’s why there’s a safe.’ Well that explained the safe, if not the caged ponygirls.<br><br>The cage door creaked open, and Vicky stepped inside. ‘On your feet, sluts,’ She barked, ‘I’m not paying you to sit there doing fuck all.’<br><br>The girls struggled awkwardly to their feet, and Vicky hustled them out of the cage. As they came past me into stronger light, I could see that their hands were fastened behind their backs with thick leather straps. The wrist straps were passed through brass loops on the leather belt that each had about her waist. From the front of the belts, straps passed up between their breasts to large brass rings below their throats; straps from the rings ran over their shoulders and down their backs to rejoin the belts. Below the waist they were completely nude, and freshly shaved.<br><br>There were welts on all the girls; I was slightly alarmed by this, and I wondered what Vicky had got me into. But at the same time, I felt a growing excitement. Vicky halted the girls in front of the large desk; she picked up the whip, and tapped each of them with its stock.‘Stella, Michelle, and Carol.’<br><br>Now that’s what I call a brief introduction. Feeling rather stupid, I said ‘Hi’ to them, but they could not reply because of the bits in their mouths, held in place by straps around the backs of their heads. Still, they nodded courteously to me, but I saw stark terror in their faces.<br><br>The brunette identified as Stella had a plain face, although she was not ugly. Her bare breasts were slightly over-full, the sort that produce a sensational cleavage when contained by corsetry, but which disappoint when the bra comes off. Breasts of that mildly extravagant design invariably have nipples that point downwards, an undesirable feature to the discerning eye. The rest of her figure was proportionate; a waist that was thick without being fat, strong thighs and a broad arse.<br><br>Michelle had a head of blonde hair that had clearly come out of a bottle; it framed a small and quite pretty face. Her breasts were smaller and altogether more pert than Stella’s, with the nipples situated on the upper slope, a very neat and pretty pair indeed.<br><br>I judged Stella and Michelle to be in their early twenties, Carol was clearly older; she would not see thirty again, and she may have been closer to forty. Nature had kindly given her small breasts, and these were still well shaped. There were stretch marks on her lower abdomen, and there were many welts on her upper arms and shoulders, obviously Vicky had cruelly used her. Her pleading eyes gazed at me, and I briefly wondered about the sad stories she could tell. I felt sympathy for her, but I wished that I had put those whip marks on her, for I found her to be somehow the most erotic of the ponies.<br><br>Vicky was grinning at the bulge in my trousers. ‘Like what you see?’ Of course I liked what I saw, never in my life had I inspected three naked women before. I ignored Vicky’s question, and asked one of my own. ‘They look like they’ve been beaten, Vicky. What the fuck is going on?’<br><br>Vicky was dismissive. ‘Don’t worry about them Carter. They’re used to SM work; they know what to expect, the weirdos who buy the videos want to see ponygirls get a taste of the whip; blood and snot and real screams, that’s what they want.’<br><br>‘So why were they locked up?’<br><br>She was getting exasperated with me now. ‘Because I had to pay them in advance before they’d let the taxi go, and I didn’t want them fucking off when I went to the pub. OK?’<br><br>I persisted. ‘And the missing one, Angie. Did she come with them?’<br><br>‘No Carter, somebody dropped her off at the top of the track. I don’t know who, probably a boy friend. Why does it matter?’<br><br>‘The track we came down?’<br><br>‘No Carter, ‘ Vicky’s face was colouring with temper, ‘there’s another track; you’ll see it in a minute. Now, there can’t be more than two hours of daylight left, can we please get on?’<br><br>‘Of course we can Vicky, I am at your service.’ I was trying to sound casual and unconcerned; I suppose no man wants to appear a nervous ninny in front of women. But inside, I was a world-class nervous ninny. I did not believe Vicky; it did not seem credible that she could find three girls willing to be lashed, just by phoning an agency. It seemed more likely that they had no idea what they were in for until Vicky had them securely trussed. I wondered if they would complain to the Police when their ordeal was over, but I thought it unlikely.<br><br>From the bottom drawer of a filing cabinet, Vicky retrieved a sports holdall, a black thing with a garish purple stripe. Out of the bag came black jodhpurs and riding boots, into the bag went her jeans and shoes. Off came her blouse and bra, and into the bag they went. I paid little attention to this, I have seen Vicky naked on many occasions; the ponygirls were far more interesting to me. The final items retrieved from the holdall were a bodice, black to match the jodhpurs, and a makeup bag. Alas, the bodice was entirely necessary for Vicky, her breasts were heading due south, but a man of my experience knows that such aesthetic considerations count for little when one is up close and personal. Fully dressed as Madam Whiplash, Vicky combed her hair with the assistance of a tiny mirror, and then she powdered her nose and cheeks to prevent shine. She did not give the ponies any attention. ‘Right,’ She announced. ‘Let’s rock ‘n roll.’<br><br>At great risk of broken limbs, the ponygirls were shoved out of the door and down the steps. Vicky marched around to the back of the building, the ponygirls followed, and I brought up the rear. A thought occurred to me.<br><br>‘Vicky,’ I asked, ‘does anyone come here?’<br><br>‘Not any more. There used to be fishing here, but there was a chemical spill, the lake’s dead now.’<br><br>Now I could see the lake; several acres of water that glistened with an oily sheen. The fact that the pit had been allowed to fill was a sure sign that extraction had finished. Between the back of the office and the water’s edge was more detritus of the site’s industrial past; coils of rusty wire, a huge tyre laid on its side, odd lengths of pipe, a couple of concrete foundations with the rusty ends of reinforcing rods poking out. I guessed that generators and pumps had once stood on those foundations, to power floodlights and keep the extraction machinery free from water. Here and there were tall posts topped with light fittings, their reflectors being eaten by ugly corrosion.<br><br>Vicky marched over to a small equipment shed, it was made of corrugated metal sheeting; and like everything else around here, it was falling victim to the plague of rust. The padlock on the door was gleaming new however, and it snapped open readily when Vicky inserted her key.<br><br>The rusty door swung reluctantly open on its rusty hinges, revealing a pony cart of bizarre construction. It was what a deranged welder could do with the wreckage resulting from a high-speed collision between a wheelchair and a baby-buggy. Essentially, it was a platform about three feet wide and five feet long. At the front, tiny wheels were mounted on stub axles; I could see no steering mechanism. A tubular steel framework midway along the platform supported a broad seat, under the seat an axle passed through crudely welded collars on the framework; the axle carried large wheels with pneumatic tyres. Mysteriously, there was another tubular frame bolted to the front of the platform; it had two arms that were angled back over the cart at about forty-five degrees, a horizontal tube connected their extremities.<br><br>‘Who the fuck built that thing?’ I enquired.<br><br>‘My cousin Bob’ Vicky disclosed. ‘He thought his wife would pull it - no fucking chance.’<br><br>Vicky pulled the cart out into the open; it rolled easily enough for her to just use one hand, she placed her whip on the footboard, then she returned to the shed to fetch a Sony digital video camera mounted on a tripod.<br><br>‘You’ll drive the camera,’ she said, ‘And I’ll drive them.’<br><br>She was looking at the ponies now, and her face had drawn tight, her tongue flicking quickly over her lips. When people are doing what they really enjoy, they never look happy; they look like Vicky was looking just then. So often I had seen Vicky on top of me, gyrating her hips as she expertly brought me to climax, while I mechanically kneaded her breasts. Always at that time, her face was wooden and expressionless; she would watch me with her hazel eyes semi-closed, giving her a vaguely oriental appearance. When she saw that I was about to erupt, a small smile would play about her lips, then she would finish it all with a few swift thrusts. There was never any doubt that she was in control, and I was just a slobbering animal who very slightly amused her; I hated it and I loved it.<br><br>I had never imagined that she particularly enjoyed sex with me, or with anyone else for that matter. But now I saw her in a new light, a light that was both sinister and stimulating. I wondered what exactly was turning her on; whether it was the sight of the helpless ponygirls, or the anticipation of what she was going to do them. This was a side of Vicky’s personality that I had never seen before, and I congratulated myself on accepting her appeal for help. I was about to witness a very fine display of bondage and sadism, seasoned with an intriguing hint of lesbianism, and I could expect to round off the afternoon by receiving Vicky’s gratitude. As the phrase of the moment says, game on.<br><br>Turning from her hired flesh, Vicky went back into the shed. She emerged again with both arms filled with straps; they covered the top half of her as if she had blundered into a web spun by the great leather spider. Depositing the straps in pile near the cart, she turned to the ponies, and again I saw that look on her face.<br><br>‘Step forward Stella.’ Vicky’s voice was low, with a husky edge to it.<br><br>Stella was instantly obedient, she stepped towards Vicky, who seized the girl’s shoulders and spun her into a position a few feet in front of the cart. This was repeated twice, so that all three ponies were stood in a row. Then the secret of the tubular frame at the front of the cart was revealed, the whole thing hinged forward over the ponies’ heads, finishing with the horizontal bar positioned in front of their bellies. From the apparently hopeless tangle of straps on the ground, Vicky began to extricate the separate pieces that would make up the complete harness.<br><br>Each pony’s belt was secured to the bar, then her hands were released from behind her back, and also secured to the bar. Next, Vicky connected the ponies’ heads together by means of short traces from bit to bit. Long traces from the outside ponies’ bits formed the reins, completing the harness.<br><br>Vicky turned to me. ‘Hop on, I’ll take you for a spin before we start shooting.’<br><br>I climbed up onto the seat, and looked down on the ponies’ backs. The whip was in my hand, although I was not aware that I had picked it up. From her position in front of the ponies, Vicky’s eyes locked with mine, hers were half-closed, and that familiar little smile was in place. She knew she had her slobbering animal under control. I still hated it, and I still loved it. Putting her arms around Michelle, who was the centre pony, Vicky leaned forward to put her tongue in the girl’s ear, winking at me as she did so. The she stepped back to deliver a short motivational speech.<br><br>‘Now then, sluts. Here’s something for you to think about. When the weirdos reach the end of the video, they’re going to get a little treat. They are going to see one of you tied to a post and whipped; they’re going to hear one of you scream as I cut her to ribbons.’<br><br>‘Which one will it be? I haven’t decided yet. But you had all better impress me with how hard-working you are, because I give you my solemn promise that the least impressive of you will finish the day with a bloody back. And guess what? I’m really going to enjoy it.’<br><br>I thought I heard a moan of despair from one of the ponies, certainly I saw Carol’s shoulders slump. Whereas I did not believe that Vicky was remotely insane enough to carry out her threat, there was probably no reason for the ponies to disbelieve her. In my heart of hearts, I hoped that she was not bluffing, and that I would see - or better yet take part in - the brutal flogging she had described, even if it were to land both of us in jail.<br><br>Vicky joined me on the seat, and told me to lean back a little. I did so, and noticed that the front wheels lifted clear of the ground. A crack of the whip over their heads set the ponies moving, and we were away. At a very slow walk, Vicky steered our conveyance towards the lake. She gave me a serious look. ‘Hey Carter, isn’t this the only way to travel?’<br><br>I had to agree, although the ride quality was appalling. As we neared the lake’s edge, I could discern a grassy footpath. Vicky turned the ponies onto it. ‘This is the other track I was telling you about,’ She explained, ‘ It runs all round the lake, and there’s a spur up to the Thame road.’<br><br>Again the whip cracked. ‘Move it, bitches,’ Vicky cried, ‘Who wants to kiss the post then? Who wants the flogging?’<br><br>Our unfortunate ponies leaned into their work, and we were soon travelling at the pace of a brisk walk. There was sufficient grass on that track to cushion the ride somewhat, so I was able to relax and enjoy the unconventional jaunt. I had been in the company of the naked ponies for some time now; the erotic impact was fading, and my mind turned to less carnal matters.<br><br>‘Vicky,’ I asked. ’Are you going to tell me about Angie now?’<br><br>Vicky sighed, and oddly, she blushed. ‘Oh bloody hell, I’m trying to forget about her. But all right then, this is how it was.’`
+                },
+                {
+                    title: "#4",
+                    subtitle: "The Pony Vanishes", 
+                    content: `Vicky arrived at the quarry as dawn was breaking over the Chilterns. She does not have a lot of money, and she was very anxious for the day to go well. The agency had required a booking fee of £100 per girl, and Vicky had agreed to pay them £800 each; by the time she had given the company covering site security a bung to not visit the place that day, she was over five grand down. There would have been no question of repeating the day if she did not get the footage she needed, and she was praying for the weather to be kind. In the back of her van she had all her equipment: clothing, straps, chains, the whip, the buggy, and the camera kit, which was a free loan from a friend at the Open University.<br><br>By seven she was unloaded, and desperately fearful that her ponies would not arrive. But around eight o’clock a taxi disgorged Stella, Carol, and Michelle, all of whom promptly held their hands out for their cash. Vicky learned that the three of them had worked together in various video productions, and sometimes appeared in clubs as The Sado Sisters, a lap-dancing act with SM elements. The day was bright and clear, so Vicky ignored the morning chill, and swiftly had the girls stripped and strapped. She had them harnessed to the cart when Angie appeared from the direction of the lake, explaining that she had been dropped off at the top of the grassy track.<br>When she saw the other ponies, naked except for their straps, Angie immediately said that she was a model, an artiste, and no way was she going to show her crotch on camera. Vicky’s temper exploded, but Angie kept her cool, and stood her ground. Realising that she could not melt this ice maiden with the heat of her wrath, Vicky had to resort to negotiation; it was agreed that Angie would not strip off, and would not pull the cart, but would accept only half the agreed fee. By this time, clouds were scudding across the sky, and Vicky was desperate to get started.<br><br>Angie removed only her jacket, and mounted the cart clad in jeans and short-sleeved blouse. Vicky placed the whip and reins in her driver’s hands, and took up position behind the camera. There followed some awkward, stilted scenes, with the ponies plodding up and down a short stretch of the grassy track, Angie perched stiffly on the cart seat.<br><br>Vicky bellowed directions at her principal actress. ‘Angie, Angie, will you stop looking like a dummy? Shake the reins, swing the whip, let’s have some fucking movement!’ She was not unduly concerned, for she knew from experience that first footage is never usable, it takes a while for everyone to get into the swing of things.<br><br>Sure enough, Angie soon loosened up, and rapidly gained confidence as a driver. She began to use the whip when the ponies did not respond to her liking, much to her director’s gratification. Vicky got some fine head-on shots, the ponies’ sweaty breasts bouncing nicely as they advanced into the lens, their pained expressions mute testimony to the fact that they were being driven hard. She stood on the cart behind Angie, and filmed the welts appearing on the ponies’ backs immediately after Angie whipped them, nobody could say that was make-up. All in all, she was pleased with her morning’s work, and pleased with Angie.<br><br>At around eleven, Vicky called a break. She had brought a large flask of tea, and enough sandwiches for all of them. Telling Angie to un-harness the ponies, she went to her van to fetch lunch. Halfway back from the van, she heard screaming, and broke into a run. Rounding the office building, she found all three ponies were pulling at their straps in a frenzy; the only one of them who had had her bit removed was Carol, and it was her screams that Vicky had heard - Angie was applying the whip to her with cold ferocity.<br><br>‘What the fuck happened?’ Vicky was incredulous. ‘Angie, leave it - you’ll cut her!’ She wrenched the whip from Angie’s hand.<br><br>Angie turned to her temporary employer; she shook her head to remove a lock of hair from her forehead. ‘I took her bit out, and she was mouthy to me. So I whacked her. Nobody gives me shit - OK?’ Then she returned to Carol, and brutally refitted the bit. She was cool as a cucumber when she turned back to Vicky. ‘They’ll be OK without lunch. Let’s you and me eat together, then we’ll carry on.’<br><br>Something in Angie’s tone excited Vicky, she instantly agreed. Angie advanced on her, kissed her lightly, and fondled her breasts. ‘You put our lunch out Vicky, and I’ll fix these fuckers so they can’t go anywhere. Oh, and Vicky ...’<br><br>‘Yes Angie?’<br><br>‘I’ll be bringing the whip.’<br><br>Vicky’s stomach turned over, and her mouth was as dry as parchment. Shocked, frightened, and excited, she turned towards the office, clutching the lunch hamper. She wondered if Angie would beat her before or after having sex, and she wondered what she would be expected to do; she decided that she would improvise with her fingers and tongue. As she rounded the corner of the building, she turned her head to look at Angie, to reassure herself that this was really happening. This was actually when Angie slipped over the event horizon, and was gone, but Vicky merely assumed that the line of ponies was blocking her sight, and proceeded into the building.<br><br>Once inside, Vicky forgot all about lunch. She tore her clothes off, and fingered herself urgently. She knew that she would be readily brought to climax, and she hoped that she could do the same for Angie. Crazy fantasies slipped across her mind; they would move in together, grow old together, buy tweed skirts and sensible shoes together. She was unhinged by the sudden passion that had seized her, and achingly hungry for the experience of another woman. Minutes passed, no more than ten or fifteen, and there was no sign of Angie. Suspicion waxed as ardour waned, lust became irritation, became anger. Vicky threw her clothes on almost as fast as she had taken them off, and then she stormed out of the building.<br><br>Of course, she found the ponies exactly where she had left them; their erstwhile driver was nowhere to be seen. Vicky studied each of the ponies’ faces; trying to decide which one she could talk to. She decided that Michelle was the most scared looking, and removed her bit.<br><br>As soon as she was able, Michelle began to speak. ‘Please, Vicky, please let me go-’ Vicky cut her off with a slap across the face. ‘Shut up. Where’s Angie?’<br><br>‘She left as soon as you went away. Please Vicky-’ Michelle was starting to blubber now.<br><br>‘Shut up. Which way did she go?’<br><br>‘She went along the path by the lake. Please Vicky-’<br><br>Another slap silenced the girl, and then Vicky refitted her bit. Pacing up and down, she tried to think things through. Who was Angie? And what was her game? Vicky was irate that the girl had fooled her so easily, had sent her away on the promise of some hanky-panky. She was tempted to cut her losses, to pack up and get the hell out of there. But she only had about forty minutes on tape; she needed at least eighty. A drink would help, so she locked the ponies in the security cage, and motored up to The Three Pigeons in her van.<br><br>After three large Gin and Tonics, a name came into her head; Carter Fell. She fished her mobile phone out of her handbag.`
+                },
+                {
+                    title: "#5",
+                    subtitle: "Carter Takes The Reins", 
+                    content: `When she had finished her story, Vicky fell silent.<br><br>‘So,’ I said. ‘Angie never really was a pony.’<br><br>Vicky made no reply, I continued. ‘And you spun me the vanishing pony line to keep me interested?’<br><br>Vicky smiled ruefully. ‘It’s an old storyteller’s trick, Carter. You should know.’<br><br>‘Vicky, you must have thought about this. Who would bother to play along for half a day, and then disappear? We’re both thinking the same thing, aren’t we Vicky?’<br><br>‘Maybe we are Carter, and maybe we aren’t. But I need to get this video to the duplicator, or I won’t be paying next month’s rent. Will you stay another hour, and we’ll get it finished? You can have a drive.’<br><br>Well, a horse’s head on my pillow is an offer I can easily refuse, but I might never get another chance to drive a team of ponygirls. ‘OK Vicky, when do I get my drive?’<br><br>‘When we’ve finished Carter, when we’ve finished.’<br><br>We had completed a full circuit of the lake, and were coming up to the spur. Vicky turned the ponies onto the spur, and cracked the whip over them. ‘Trot sluts! Let’s see some speed!’<br><br>In all truth, it was more of a fast stumble than a trot, but we were definitely going faster. The track started to rise, and the ponies began to struggle, I could hear Carol breathing like Darth Vader. Now Vicky let them feel the whip on their backs, just flicks really, she did not draw the lash back over her shoulder. It was enough to keep the cart moving though, and in a few minutes we reached the top of the track. Vicky halted the cart about fifty yards from the entrance gate, beyond which I could see traffic flashing past. Her face was slightly flushed; I realised that using the whip had aroused her, and my erection had returned. She had to dismount to get the cart turned around, then she took us back to the camera at a modest walk.<br><br>We both jumped down from the cart, and Vicky gave me my instructions on how to use the camera. ‘Just leave it on auto-everything, keep us in frame, and don’t zoom in and out while it’s running, that makes people sick.’ And that was it; I was now a fully trained cameraman. I put my eye to the viewfinder, and pressed the Play button, only to see a snowstorm. I held Rewind for a few seconds, and then released it. Vicky’s final shot from the morning was played.<br><br>The now-familiar ponygirls advanced towards the camera in black-and-white. They looked just as strained and frightened as I had been seeing them. Behind them, eyeing the camera in curiously detached way, I at last saw Angie. Knowing, as I did, that she had just been whipping the ponies along, the lack of emotion on her placid face was almost shocking. Vicky had not told me how pretty she was, and I sorely regretted that she was fully clothed. Ponies, cart, and Angie swept past the camera, and then the snowstorm was back. The tape remaining counter was flashing in a corner of the viewfinder; there were only ten minutes of tape left.<br><br>‘Vicky,’ I hollered, ‘We need another tape here.’<br><br>Vicky frowned. ‘Oh bollocks, I’ll have to go to the office.’ And she jogged away.<br><br>I looked at the ponies; I looked at the cart. I looked at the whip, which was on the seat. Seconds later I was on board. It would be impossible to adequately describe the feeling of power that possessed me as I picked up the whip and the reins. Possibly the ponies sensed the danger to the skin on their backs, for they shot off when I just shook the reins. I steered them through the cluttered area behind the office, and across the clearing. For I had a yen to tackle the rough track up to the road, not for me was the tameness of the grassy track.<br><br>As I turned the ponies onto the track, I heard Vicky calling to me. ‘I knew you would, you bastard! Don’t fucking kill them!’<br><br>Vicky is very dear to me, but I do wish she could stop swearing. Steering carefully between the deep ruts, I urged the ponies up the slope with threats and whip-cracks. Eventually, the threats and cracks were not enough, and the cart slowed almost to a stop. At this point, the real me bubbled gleefully to the surface; I whipped those girls, and I could not hear their cries for the blood rushing in my ears. The effect was remarkable, it was if the whip had given the ponies fresh legs and lungs; speed was regained, and we swiftly reached the point where I had planned to turn, just out of sight of the entrance. I had to dismount for this awkward manoeuvre; not having mastered reversing, I could not perform a three-point turn.<br><br>Perhaps I had been drunk with power, but leading the ponies through the turn sobered me up, for I could see what I had done to them. Stella had a nasty gash on the side of her face, Michelle had deep welts on her shoulders and chest, as had Carol. I resolved to take them back down the track at a sensible pace, and to salve their wounds with hard cash when the day was over. But then something happened to destroy my good intentions. As I resumed my seat on the cart, I felt someone watching from the side of the track; I turned my head, and found myself looking at a woman’s face. I knew that face; it was Angie. She had reappeared, and most distressingly, she was now wearing a police uniform.`
+                },
+                {
+                    title: "#6",
+                    subtitle: "The Ending", 
+                    content: `Maybe I’m like most guys, I do like to see a pretty girl in uniform, especially a police uniform; the crisp white blouse, the pleated skirt, and the dark stockings - oooh! But not under those circumstances. Angie looked at me; I looked at Angie. She glanced quickly up the track; I followed her eyes, to see a Range Rover making cautious progress towards us. It was a white Range Rover, with a large orange stripe along the side and blue lights on the top. So, Angie had brought reinforcements. There were two options for me; surrender or flight. It was an easy choice to make; I gave the ponies a savage swipe with the whip, they squealed, and set off at the gallop down the slope.<br><br>Was Angie going to chase after me? I looked back over my shoulder; she was stood at the side of the track, waving the Range Rover on urgently. As it passed her, she tore a door open and leapt in, I could see her stood up in the back, shouting at the driver. The swivelling blue lights came on, and the siren started its deafening whooping. I turned to my beasts again, they were slowing after their initial spurt; I applied righteous correction. Above the noise of the siren, I could hear the ponies shrieking round their bits. Again and again I whipped them, with the powerful assistance of gravity, and with the irresistible urge of the torturing lash, we got up to a good speed, certainly faster than I would have dared run on that dangerous surface. But I cared nothing for the ponies’ ankles, or their legs, or the skin on their backs. When I looked around again, the Range Rover was slowly gaining. It was lurching badly in the ruts, and no doubt the occupants were having a very rough ride, but there was no way I could pull away from it.<br><br>My plan, if I had a plan, was simply to reach my car and attempt to drive up the grassy track to the other exit. I decided to take a short cut. Pulling back hard on the reins, I brought the cart to a halt, and then turned the ponies to face the left-hand rut. I jumped to the ground, then went to the front of the ponies. The police vehicle was only yards away now; I seized the leather trace that connected the ponies’ heads, and leapt across the rut. Having no choice but to follow or just about have their heads yanked off, the ponies leapt after me, and the cart bounced across behind them. Ahead I could see the buildings in the loading area, about sixty yards away, with a sea of tall nettles in between. Will barelegged girls run through nettles? They will if you whip them hard enough. I jumped up onto the cart, and commenced to flay their shoulders; the cart shot forward, and the chase was on again.<br><br>Through the nettles we flew, I realised that I was having the time of my life, and I wanted it to never end. But just looking ahead, I could see that the end was very close. The clearing was buzzing with the boys in blue, a transit van with riot grilles was blocking my proposed exit up the easy track, there was nowhere for me to go. I was not about to give up though, and I flogged the ponies on, we emerged from the nettles into the thick of the police raid, they were everywhere. Behind me, the driver of the Ranger Rover had killed the siren; I could hear its engine revving as it stormed along in low gear, so close that I fancied I could feel the heat of the engine. Straight ahead was a cluster of astonished coppers; two of them lunged at the ponies’ traces, as if trying to stop a runaway horse. I heaved the reins left, and then right, successfully evading their grasp, all the while lashing the ponies like a thing possessed; like I said, I was having a good time.<br><br>As I raced past the site office, I saw Vicky up on the roof.  It looked like half the Thames Valley Constabulary had surrounded the tiny building, she was shouting down at them; ‘What’s the charge? What’s the charge?’ Seeing me hurtle by in a passable re-enactment of the chariot race from Ben-Hur, she jumped up and down with delight and shouted at me ‘CARTER FELL, YOU ARE A TRULY GREAT MAN’. I raised a hand to acknowledge her praise; that was a mistake, the whip jerked back and its tip caught me in my right eye. It’s funny, but when anyone gets a good poke in the eye, they always clap a hand to it, as if pressure is a sure cure for eye injury. I howled in pain, applied the obligatory firm hand to the wounded organ, and of course I let go of the reins.<br><br>The ponies were already starting to slow, from the effects of exhaustion. As soon as I ceased tormenting them with the whip, and the reins went slack, they started to slow somewhat. But they had not been pulled to a halt, so they kept going. And they had not been turned left or right, so straight ahead they went, towards the lake. It was an interesting demonstration of obedience; I sincerely believe that I could have driven those ponies into the fires of hell.<br><br>A tubby policeman, who had been staring at the ponies in disbelief, now roused himself to shout ‘Oi you! Come here!’<br><br>I am sure he was shouting at me, but the ponies heard, and they turned sharply towards him. I had been about to hop off the cart to avoid a soaking, so my weight was off-centre; as the ponies made their sudden turn, the cart began to topple. I found myself struggling to stay upright as the cart leaned over at a crazy angle, then I jumped off it, and landed on the edge of the bank. The laws of physics now conspired against me; momentum took me forward, gravity took me down.<br><br>I rolled over and over, down the bank, and into the shallow water at the edge of the lake. I had taken my hand away from my face now, for a few moments I lay there like a soggy Cyclops, gazing up at the sky with my one good eye, the wounded one was completely closed.  I heard splashing footsteps, and then Angie appeared above me, staring down contemptuously. My bad eye hurt like hell, and I was winded from my fall, but I am dedicated to my calling, so I did not miss the chance to peer up her skirt.<br><br>‘You Sir,’ Said Angie, ‘are a sick fucking pervert.’<br><br>‘And you Officer,’ I replied, ‘Are a damn fine piece of pussy.’<br><br>* * * * * *<br><br>My legal team, actually it’s just Bernie Finestein, is going to base my defence around the dubious notion that what consenting adults do in private is not a matter for the law, and that the police action infringes the ponygirls’ employment rights. He’s slightly concerned about the assault charges; apparently the legal precedent is that people cannot consent to being beaten. Vicky is blissfully unconcerned about the proceedings, and is revelling in the publicity. She arrived at the preliminary hearing in a hired limo, like a movie star, and posed with a whip for the photographers. I skulked in with a coat over my head. You will not be surprised to learn that the tape Vicky shot has disappeared, and that Angie is denying that she touched the ponygirls with the whip.<br><br>If I do get a prison sentence, I’ll rent my flat out, and use my time away to write a sequel to the Kern stories. At the moment I’m keeping a very low profile, but when the time is right I plan to do some more pony driving. And I know just the pony for the job; after all, Vicky owes me a very big favour. And she’s still better than a bowl of soup.`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

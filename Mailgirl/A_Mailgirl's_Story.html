@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>The Reluctant Exhibitionist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "A Day in the Life of a Mailgirl",
+            author: "sbjdaniels",
+            chapters: [
+                {
+                    title: "Chapter 1",
+                    subtitle: "9:25 a.m",
+                    content: `At 9:25 a.m. everyday I get into position. I’m kneeling on the blue mat next to the copy machine, a big Kyocera Office Station that takes a full carton of paper to refill when empty. It almost never is. I start work at eight o’clock and see to the whole tenth floor; all mail delivered, all stationary replenished, and top off the paper and toner of the copier standing next to me. Like myself, the copier gets a pretty good workout everyday. The tenth floor is a trading floor, after the stock market opens at 9:30 restock and resupply becomes almost impossible. In a few moments from now the phones will start ringing with orders to execute, deals to be cut, trades to be made; there will simply be too much running around to do and also fetch pencils. We have to be prepared ahead of time.<br><br>The tenth floor is my responsibility and I run a tight ship. That’s one of the reasons I’m proud to wear the number 10 on my left breast, on both hips and the small of my back. I want everyone to know I’m part of this floor, that I’m the one who set them up and will take care of business when things get crazy.<br><br>We’re ready for the opening bell. I can feel the anticipation building. It’s only 9:26.<br>That’s why I get in position five minutes ahead of time. Everything is primed, poised and ready; And that is beautiful. These five minutes are the closest I’m going to get to serenity all day.<br>Technically I’m on break from 9:15 to 9:30 but after I use the restroom, eat a protein bar and drink a bottle of water I’ve pretty much seen to my body’s needs. There is no reason for me to linger in the breakroom anymore, no one will talk to me unless they have something for me to do, and if they do I have to tell them to request it through the app anyway. Forty-five days ago I was a stock broker just like them, part of the tenth floor chaos. In the break room we’d laugh at dirty jokes, complain about clients, and gossip office politics at the coffee pot. But now it’s easier for them to treat me like the copy machine, just another piece of office equipment that makes the workplace run smoother.<br><br>And why not treat me like the big Kyocera copier? We both have serial numbers now. We’re both connected to the office Wi-Fi, activated at the push of a button-<br><br>No. I’m not going to fall down that hole today. There is no time for negativity. Despite appearances I’m a confident career woman and I will make the best of this fifteen minute break.<br><br>It’s 9:27. I won’t get another break until at least 12:30.<br><br>So I kneel as they taught me, thighs spread slightly farther than shoulder width apart, chest out, back arched, ass sitting on my heels with my hands at my sides. From this position I can see right down main street, what I call the narrow expanse of carpet between the blocks of cubicles that run the length of the tenth floor. Anyone walking up main street or leaning back in their office chair can see me as well; All of me.<br><br>I’m not sure I’ll ever get used to the nudity, not when everyone else is clothed.<br>I close my eyes and lower my head a little, trying not to think about the manager who was staring at me as he strides up main street. Or the new guy who keeps dropping his pencil so he has to lean out of his cubicle to retrieve it, taking a quick gander at me in the process. I push the feeling of leering eyes off me as I exhale; once, twice, a third time. If you had my job you would get pretty good at finding inner peace. You have to as your body is constantly on display.<br><br>I breathe, pushing the negative thoughts from my mind as I pull the elastic ponytail holder off and shake out my hair. It has strong natural waves and if I don’t tie it back properly stray locks will start to pull free and my head will look a mess by mid-morning. Periodically I have to shake out my tail and pull it back again to keep it tidy.<br><br>9:28 a.m.<br><br>As I’m combing my hair back with my fingers my MMU, the smartphone strapped to my left bicep, buzzes twice and makes cartoon “bonk” noises in quick succession. The display reads:<br>“1 Demerit – Uniform Violation, Excused. 1 Demerit – Positional Violation, Excused.”<br><br>Someone is trying to give me demerits but they don’t realize I’m on break.<br><br>I open my eyes and look up main street as I tie up my hair. Carol Nelson, a middle aged woman pushing three hundred pounds, is glaring at me over her cubicle wall about fifty feet up the floor. She has always been unpleasant since I started working here, even when I was just another trader. Carol seemed not to like women who were younger or more attractive than her on principle, so pretty much everyone. My existence must really piss her off now. The way she is glaring at me over the rim of her glasses makes her look like a very fat, angry librarian. I finish tying my hair back and turn to show the face of the MMU strapped to my left arm. The screen is gray-white, an indication I’m not on duty. The damn screens are color coded so any idiot can tell who was on duty from a distance. The white screen meant I was clearly not. Carol pushed her glasses back up her nose and sat in a huff.<br><br>“It’s a Monday,” I said to myself, “they are already gunning for me and it’s only Monday.”<br>I check the time, 9:29 a.m. One minute to bell time.<br><br>I rise from the blue mat, standing with my feet shoulder width apart, chest out, arms folded behind my back so I can hold my wrists with the opposite hands. The Kyocera printer next to me leaps to life, the exhaust blows on my bare legs and it feels darkly ominous, like dragon’s breath. Maybe the copier is anxious too? My feet are sweating in anticipation. My nipples are hardening from the air conditioning vent blowing down from above; It’s too cold for me, set at a temperature to make the 200 clothed people in the room comfortable. My clean-shaved vulva is somewhere in the middle, feeling both the heat rising up and the cool air creeping down. It’s starting to tingle. What I’m feeling down there might have noting to do with the room temperature.<br><br>I have got to remember to look down, not to look any of my coworkers in the eye. I can’t let them see this part of me, the part of me that is just as excited as it is humiliated.<br><br>I am the mailgirl assigned to floor ten.<br><br>I am the only one naked in the room.<br><br>It is a very big room.<br><br>My MMU mimics the “ding-ding-ding” of the opening bell of the New York Stock Exchange. No time to waste now. I punch my passcode into the keypad of the Kyocera and digitally sign the authorization by pressing my thumbprint to the security panel. The biometric scanner confirms my identity as Mailgirl #10 and Kyle the Copier begins to print out the trade confirmations that were already in the queue.<br><br>I think this might be the day I go mad. I just named the office copier.<br><br>I blink the thought away and look at the assignments come in on my MMU. This is the new version of the Mailgirls Monitoring Unit, the MMU 2.0 has a lot more features than the old model. The old version would force you to do one delivery at a time, back-and-forth, all day going from copier to cubicle and back to the copier. I guess that system is okay if you are only moving messages around and the mailgirls are extraneous to the actual functioning of the business. But this is a trading floor. Time is money. The first twelve things Kyle printed up were trade confirmations done after the market closed yesterday, low priority because the stock price was fixed at the time but high security because the amounts exceed ten thousand dollars. Their delivery speed is ‘Standard’, according to the training material I should be able to maintain a brisk walk and make all deliveries on time. But that could take half the morning. Instead the new version MMU lets you batch all 12 deliveries together and arrange their order on the fly. I could go from the front of the room to the back, or do a big loop by starting at one side and working around to the other, and even change the delivery order as needed. The MMU just adds all the estimated delivery times together. So long as your actual time is less than the total estimated time you get a positive efficiency score for the run.<br><br>With nothing popping up in the MMU more urgent than Standard I decide to start at the farthest delivery and work my way forward. This would give me a chance to warm up a little by running down to “M. DiMaria – Workstation 194 – Floor 10”, a cubicle on the far side of the floor.<br><br>(I can’t help it. I’m a mailgirl now. I want to run.)<br><br>Grabbing all 12 confirmations off the printer I begin my run up main street, trying to avoid eye contact and still look out for any obstacles in my path. I feel the eyes of my coworkers on my naked body. Some are judging me, shaming me. Others are appreciating my curves. I’m not sure I’ll ever get used to that feeling, or that I ever want to. I wonder how my former colleagues feel about it? Some must have grown used to the sight of me naked but for other’s this might be their first time. There is a lot of turnover on a trading floor, you either make you sales goals or you find a new job. I didn’t hit the mark a month-and-a-half ago and look at me now.<br>I keep my pace quick and even, wishing the rules allowed me a bra or at least to hold my chest with one arm as I ran. I’m not a stick with tits like the other mailgirls in the building. I’m a little older, almost 30, my body is more mature. I have hips and a full bust that sways with every stride I take. If my tits were just a little bit smaller I would enjoy jogging more.<br><br>I glance away from my bouncing chest to see a man lean out of his cubicle and smile broadly. I don’t recognize him. He’s handsome. Reactively I smile back, forgetting my place for a brief moment. I look down quickly and push forward, one foot in front of the other. I feel the blood warm my cheeks a little. As I get about fifty feet away I give a coy glance over my shoulder. He’s still smiling, staring and quickly ducks behind the partition when he realized I caught him looking at my ass.<br><br>I can’t blame him. 45 days of this has given me a nice round bottom.<br><br>I slow to a trot as I approach the first workstation. Standing just outside the boundary of the modular office I see a man typing away at his computer. He hasn’t noticed me yet. I stand as I’m supposed to, feet more than shoulder width apart, chest out, head down, 11 other confirmations behind my back as I offer his out with my right hand.<br><br>“Excuse me, sir. I have a delivery for you.”<br><br>He swiveled in his chair. It was Manuel DiMaria, Manny to his friends. He had been in this office a few years before me, was nice enough to show me around the place when I first arrived. I hadn’t seen much of him since I switched departments. Maybe he was avoiding me?<br><br>Manny looked surprised to see me. “Good morning Maddie, how have you been?”<br><br>I blush. I wanted to answer him. He was being pleasant. I like pleasant. But mailgirls have to keep decorum.<br><br>“Sir, as I am on duty please refer to me as “Mailgirl 10”, “Number 10”, or simply “Ten”; whichever you prefer.” I recite it to him directly from the manual. As much as I appreciate him treating me like a human, I have a job to do. It’s better if he uses my number, neither one of us gets confused that way.<br><br>“Uh, okay. Sorry.”<br><br>“That’s alright sir, and I am doing fine. Thank you for asking.”<br><br>Manny took the offered paper and glanced it over as best he could. His eyes kept getting drawn to my tits. I couldn’t blame him. With him sitting and me standing my 36D’s were pretty much in his face.<br><br>“You got this here quick,” Manny was actively trying not to stare. “It’s barely a minute after opening bell. I feel like I should give you a tip or something.”<br><br>I felt a little pride swell inside me. “Thank you again, sir. If my efficiency pleases you can open up the Mailgirls App on your desktop and leave a positive review.”<br><br>He nodded mechanically, first looking up to my face, then back down to my chest, and then even lower, blinking in disbelief. This is my first delivery to him since I got back from training. He must have seen me running around the office but not up close, there are over 200 workstations on this floor, and that is not counting the proper offices that dotted the corners and entire south wall. Had Manny actually managed to miss most of my debut month?<br><br>I get the feeling he could stare at my body all day if given the chance. Considering the picture of a young wife and smiling baby on his desk, I could safely say I was making him very uncomfortable.<br><br>“If there is nothing else sir, I have other deliveries.” I pointed with one finger to the clock that was counting every second on my MMU.<br><br>“No. That’s it. Thanks.” He stammered.<br><br>“Sir?” I pointed to his computer terminal, “You have to click ‘received’ in the app to dismiss me.”<br><br>“Oh, right.” He popped open the app and clicked ‘delivery received’. Perfect.<br><br>I nodded and smiled before making a b-line for my next delivery. Hopefully Manny would leave me a good review. Through the app they can rate our deliveries with star ratings and comments. I could use as many positive comments I could get on my weekly performance review.<br><br>The next eight drop-offs went well enough that I barely remember them. I remember the names in the task window of my MMU more, “R. Alcuna – Workstation 181”, “E. Leslie – Workstation 163”, “K. Ng – Workstation 130”, etc. For efficiency I try to remember the location of each work station. It had taken me over a month to learn my way around, but I can still get lost in this cubicle maze if I get turned around. I only have a default 30 seconds between deliveries but mapping them out the way I did accomplished most in less than 20 seconds.<br><br>That is the real key to being an efficient mailgirl, always deliver at a speed one level higher than the requirement. If the manual says Standard delivery is a “brisk walking pace”, jog instead. If Express is supposed to be a jog, you run. If Premium says run, you sprint. And when you get that late day Premium Rush, run like your ass was on fire. I guess the other thing to keep in mind is to always maintain your uniform (Ha!). The mantra of a successful mailgirl, maintain your uniform and deliver faster than expected.<br><br>Banking time early in a run was a good feeling, like I was starting the day off right.<br><br>Unfortunately it was not going to last.<br><br>My ninth delivery, “M. Pederson – Workstation 76 – Floor 10” was a kid I did not recognize.  Caucasian, brown hair, glasses, couldn’t be a day over nineteen. He sort of looked like a post-puberty Harry Potter. I offered him the delivery like I was supposed to; feet apart, chest out, one hand with other deliveries behind my back and his offered out in the other. He spun around sharply, like a man of action, but all the little bugger could do was stare. I suspected I might be the first naked woman he saw that was not on the Internet.<br><br>“Sir, I have a delivery for you.”<br><br>He didn’t answer.<br><br>“Sir?”<br><br>He stared blankly at my navel. Or maybe he was trying to stare at both my tits and my pussy at the same time and his brain broke from the strain.<br><br>“Sir?”<br><br>He blinked slowly, like he was waking from a dream, “Hello? Yes?”<br><br>“I have a delivery for you sir.”<br><br>He looked me up and down with a disbelieving smirk, “You are very naked.”<br><br>“Yes sir,” I smiled still trying to be pleasant, “completely nude for your enjoyment, sir. All day, every day.”<br><br>“Wow,” he beamed, “A real live mailgirl! What’s your name?”<br><br>“I am “Mailgirl #10” when on duty sir. But you may call me “Number Ten” or just “Ten” if you so wish.”<br><br>“Okay Mailgirl,” his smirk spread into a smile. “I have so many questions I want to ask.”<br><br>I knew he did. I could see an inquisitive glee brimming around behind his eyes. It was clear my existence enticed him, excited him. If I was a boy his age I would probably react the same way, but there was more than a decade between us, I find that a little creepy. I might be old enough to be his mother, (granted it would be one of those fucked up trailer park pregnancies, but technically I was old enough), I didn’t have time for his Oedipal Complex. I’m in the middle of a run here. I’m required not to give M. Pederson of Workstation 76 any more than his allotted time.<br><br>“Sir,” I’m trying not to sound annoyed, but he has already cost almost a minute. “I will be happy to answer your questions soon but right now there other deliveries that need to be made.”<br><br>He pushed his glasses up his nose and took the trade confirmation, giving me a sideways glance as he did. “It’s just a couple questions.”<br><br>I nodded, making sure not to make anymore eye-contact than had already happened. “The Mailgirls Program Introduction and Service Guide is on the company server, sir. I suggest you read through that at your leisure, then perhaps summon me through the Mailgirls App this afternoon when things are less busy and I can answer any additional questions you may have.”<br>I was trying to be friendly, helpful, the exact opposite of rude but it was obvious from the look on his face that I had offended him somehow.<br><br>“I’m pretty sure you’re not supposed to talk down to me Mailgirl.” He looked me in the face. I kept my eyes down, looking between my breasts at my toes, trying to be as deferential with my body language as I possibly could. I was pretty sure he would see any other response as backtalk.<br><br>The MMU buzzed and broke the uncomfortable silence. He could see the one minute countdown on the now blinking display.<br><br>“I’m sorry If I offended you sir. I do not mean to. You will be seeing at lot of me sir, and I do not wish to start off on the wrong foot. You have my deepest apologies and I will be back anytime you have need of me using the app.”<br><br>“Oh, I will be seeing a lot more of you Mailgirl. You can be sure of that.” There was a strange quality of menace to his voice, somehow simultaneously over-the-top and earnest, like a child playing villain in a superhero fantasy. I think he meant to creep me out. He clicked the ‘received’ button on the open desktop app and waived me off dismissively. I ran.<br><br>I ran as fast as I could. I didn’t run because he scared me, I ran because I had three more deliveries and 50 seconds to get them done. At least that is what I told myself; the way he stared at me with his little bug-eyes, the way he curled his lips when he smiled, for the first time as a naked mailgirl an employee skeeved me out.<br><br>As a mailgirl I’d felt exposed, humiliated and ashamed almost daily. This was the first time I had ever felt disgusted. My skin crawled and had to resist the urge to cover myself even more than normal. I knew it wouldn’t be long before I saw that kid again.<br><br>`
+                },
+                {
+                    title: "Chapter 2", 
+                    subtitle: "11:00 a.m",
+                    content: `From 9:30 to 11:00am I am in constant motion. That’s good. Busy days are always good. The more I’m moving the less time there is to think. I can’t dwell on my situation if I’m trying to calculate the quickest route from Kyle to Workstation 184 and all drops in between.<br><br>While I’m not thinking, that doesn’t mean I’m not feeling; the cold zones of the spotty air conditioning coverage, the warmth of the sunlight through the windows on my bare skin, the sensation of my breasts bouncing as I go, well-worn carpet under my feet, the feeling of eyes on my backside as I rush pass. I feel all the joy, all the judgment. I’m not actively thinking but I am actively feeling everything.<br><br>A brisk trading morning means I don’t have to think about anything more than the job and how to get it done as soon as possible. A good run keeps me away from the copier for five minutes at a time, a rough one ten. The majority of the traders don’t have time for chit-chat or petty derision, not when there is money to be made. Most barely give me a glance as they take the order or confirmation from me, click ‘received’ on the desktop app, and go on with their work without paying me any more attention than absolutely necessary. I love that, indifference is acceptance, I’m just part of the process. It feels like the way things are supposed to work.<br><br>If half of the traders ignore me completely I’m having a great day.<br><br>Then there is the thirty percent or so that have to do something extra; a “thank you”, a nod or a wink, maybe a judgmental sigh or roll of the eyes, something that acknowledges my existence as something unusual. I hate that. Whether they are being polite or prudish, I would rather have a few extra seconds to complete the next run, or if you want me out of your space faster click ‘received’; that’s the best way to say either “thank you” or “f*** you” for a busy mailgirl. Trust me, we get the intended meaning.<br><br>But then there are the others, the minority that wants to remind you of your place in the pecking order with any chance they get. They act like somehow trying to do your job well is being uppity. They are the ones that keep me up at night, when my tired body just wants to rest but my unquiet mind won’t stop thinking about the jerks that simply had to hit me with an extra demerit or waste time out of spite.<br><br>“A. Schranz – Workstation 85 – Floor 10” was one of the latter. Shorter than me, maybe five-foot two and almost as broad as he was tall, balding, middle-aged, with a face twisted in contempt every time he looked at me. I don’t remember him when I was a trader, but he had apparently been around for years before I started. A career stuck is sales is one of extremes, feast or famine as traders live on sales commission. Mr. Schranz looks like he hasn’t missed many feasts, and I thought being a mailgirl was better than famine. You would figure we were kindred spirits, each doing their best to keep food on the table. But that’s not how it is. At worst I should be tolerated if not enjoyed, an attractive nude woman who comes running when called should be a kinky thrill to a thoroughly unattractive man like him. Instead he goes out of his way to laud his position over me, seemingly getting a charge out of keeping me down.<br><br>As I collected the next batch of trades from Kyle, six deliveries in total, I saw Mr. Schranz’s name pop up in the task window and suppressed a shudder. On his best day he was so busy he ignored me, on his worst I would hide in the bathroom and cry.<br><br>To make things a little worse, his workstation was near the exact middle of the trading floor. In a building whose footprint took up an entire city block, his workstation was neither convenient to end a run on or begin one, meaning I could not easily bank time before or make up any time after attending to his delivery.<br><br>I exhale, deciding to just bite the bullet and get Mr. Schranz out of the way first. I moved quickly up Main Street, feet pounding on the coarse carpeting, eyes down so I could not see who was taking in the fullest look. Mid-mornings are all crazy, after the initial rush of orders at market opening the phones and keyboards start to fade into a background din. Nothing stops but it all becomes part of the heartbeat of business, my feet move in time to the pulse.<br><br>I make my way through the maze of cubicles and arrive just outside Workstation 85. Mr. Schranz is on the phone, energetically talking with whoever is on the other end, most likely the client. I take an extra second to make myself as presentable as possible, feet planted more than shoulder width apart, chest out, belly in, eyes down, as textbook a mailgirl as the example right out of the manual. The other trade confirmations behind my back, his the lone one in front. I wait patiently for a moment…<br><br>Two…<br><br>Ten…<br><br>I risk a little look at my MMU. The countdown clock persists. I’m staring at his bald spot, losing time as Mr. Schranz is yammering on the phone about Saturday’s UConn game.<br><br>I hold fast for another moment, finally venturing to speak. “I have a delivery for you sir.” I said as politely as possible and held out his confirmation.<br><br>He doesn’t turn. Instead he extends a finger in my direction, wordlessly telling me to hold on.<br><br>I don’t know what to do, I really don’t know. The Mailgirl’s Code prevents me from being disrespectful, but above that we are supposed to be prompt. I have five other deliveries and barely three minutes left to get them done. There is no way to keep everyone happy. I made the only logical choice.<br><br>Knowing that this would come back to bite me, I used the on-the-fly feature of the MMU to bump ‘A. Schranz’ to a later delivery. “I’ll return as quick as I can sir.” I said as I ran off, arms and legs pumping to make up some time.<br><br>I knew what was waiting for me when I got back, but I couldn’t waste the whole run on Mr. Schranz. If I stood there for the next 3 minutes I would get 6 demerits for not making any of my deliveries on time, by jumping him in the order I might save 3 or 4. Either way I am screwed. This might hurt more now but cost me less in the long run. At least that’s what I hope would happen.<br><br>Once you get off Main Street the cubicles are arranged in a confusing labyrinth organized in such a way that traders specializing in certain financial instruments are grouped near each other. Tech stocks, real estate investment trusts, perishable commodities, it is all laid out in a patchwork system that is completely indecipherable if you did not know where you were going. That was one of the perks of having a mailgirl who used to trade on this floor, I mostly knew what went where without having to look it up.<br><br>None of that meant I had more time than was allotted on the clock. I scramble, cutting it so close on the corners I actually got rugburn from grazing the partition wall with my right hip. Mailgirls can’t run flat out, not like an Olympic sprinter or anything like that. We are mostly carrying something and it was never a straight path, not to mention the office pedestrians that would obliviously get in your path. I could not run flat out but I could move my ass at a pretty good clip if I had too. This was one of those times.<br><br>I delivered to “R. Saladin – Workstation 123” in 22 seconds, “G. Donahue – Workstation 108” in 18 seconds, and “H. Curtis – Workstation 96” in just under 28. All of them were great as far as I was concerned, barely more than a smile or a leer before releasing me to the next stage of my run. Getting that done in a little over a minute helped.<br><br>But now I had to double back, the other two deliveries were on the far side of Main Street, and the fastest way was right past Mr. Schranz’s desk. Wonderful.<br><br>On the return run I resolved to decide on the fly, if Schranz was still on the phone I could hustle past and triple back after the other deliveries, if not I would deliver his and take my tongue-lashing now. In a way it was up to him. It wasn’t a good plan but it was the best I had.<br><br>Slowing as I approached, I listened for his gravely voice from a few cubes away. He was still on the phone, loudly laughing with the unknown party on the other end. I dropped to a trot and then a walk as I came to a stop behind him.<br><br>He turned his eyes to me as he sneered into the phone. “The bitches in this office; Impatient, rude, and lazy. You wonder what they are teaching kids in school today? That they are ‘unique little snowflakes’, ‘everybody’s special’, what bullshit. Where are all my tax dollars going, right?”<br><br>He laughed. Laughed while I stood there and the clock counted down and talked about me to his friend on the phone.<br><br>I did the only thing I could, stood with my feet wide apart, back straight, chest out, belly in, eyes down and with his confirmation extended in my right hand, others concealed behind my back.<br><br>Mr. Schranz stared at me as he spoke into the phone. “We got this one girl in my office over here, she really thinks she is hot shit, like she was hired for her brains or something. She struts around here with everything hanging out for everyone to see, thinks she owns the place. Wouldn’t know a winning stock from chicken stock. Total moron. I doubt she’ll be working here this time next month. I only hope whoever hired her is pounding her on the regular, it’s the best use of her talents you know, boost company morale.” Mr. Schranz laughed a gravely, obnoxious, perverted laugh. He couldn’t stop staring at me in sick glee, laughing with his buddy on the phone like they were two chums in a locker room or something.<br><br>I couldn’t take that and shouldn’t have to. “I have other deliveries sir. I’ll return as quick as I can.” I said as I bumped him down the delivery list on my MMU. I caught the look on his face with the briefest glimpse, Mr. Schranz was gawking in flabbergasted shock as my naked booty disappeared around the corner.<br><br>Once free of his sight I broke into a run. All I can do now is move, the damage had already been done.<br><br>Maybe I could have gotten away with little more than what was said already, but I just couldn’t stand there and take it, not with deliveries left to do.<br><br>I ran across Main Street, into the cubes beyond, arms and legs pumping to make up for lost time, narrowly dodging around the file cabinet drawer that someone left open at ankle height.<br><br>I suppose fear is a good motivator as I delivered to “D. Shafkey – Workstation 61” with just under a minute to spare, rolled back up the side alley to “H. Carringer – Workstation 66” only nineteen seconds after that.<br><br>“Maddie,” came a voice I’d forgotten from the lady at Workstation 66, “is everything okay? You look terrified.”<br><br>It was Cindi Carringer, the only friend I had made in the whole eighteen months I was a trader at Columbia Mutual. She was born well off with a nice body and a pretty face, a Wharton grad with everything going for her. And I mean everything. All the things I had to scrimp, save, and strive for in life she was just handed. I thought I would hate her guts once I was assigned the workstation next to hers, but she won me over with her personality. Cindi did work hard, she was grateful for the advantages she had, and she was not in the least bit full of herself. That was part of the reason I barely recognized that I was delivering to Cindi’s workstation. Her first name was “Hyacinth” but she preferred to go by the much more common sounding “Cindi”.<br><br>And now she looked up at me with her bright blue eyes under the yellow bangs with nothing but concern on her face.<br><br>“I’m…” I’m freezing up. I’m not scared, not of judgment from Cindi. In fact when I blew my sales goal last quarter she was the only person I told about the mailgirl job offer. We laughed about it, did a whole ‘imagine if’ scenario, but when reality crept in she was the only one who encouraged me to go for it. And to her credit she had never judged me for it either. This wasn’t my first delivery to her. She had always been pleasant and tried not to stare or anything to afford me a modicum of modesty.<br><br>My stupor was snapped as my MMU buzzed. That shouldn’t happen, I still had a little time. It could not be a late delivery penalty.<br><br>Indeed it wasn’t. 00:22 seconds were left on the countdown clock. The MMU perked up and said, “1 Demerit Issued – Conduct Violation (Designation).”<br><br>Cindi had called me by my name and not my mailgirl number. I did not correct her. Someone must have overheard. Giving a quick look around the area I didn’t see anyone paying attention, everyone adjacent seemed to be doing their jobs.<br><br>Then I felt eyes on my back and looked over my shoulder. Like an evil prairie dog I could see the top of Carol Nelson’s face as she eased back into her chair, glaring at me over her glasses like the fat, angry librarian she was at heart. The edges of a smile where visible in her crows feet around her eyes, before she dropped out of sight.<br><br>How she heard the exchange over all the phones and keyboards I could not know, she was a whole bank of cubicles away. This day was going from bad to worse.<br><br>“Maddie?” Cindi whispered. “Are you alright? You’re trembling.”<br><br>I was shaking like a leaf, broke out in a full body sweat. My heart was racing. Maybe it was out of fear at first, but now it had morphed into anger. I was trembling with rage, a completely unfamiliar feeling for me. All I knew how to do was work through it. I stood straight up, feet apart, tits puffed out almost as far as I held out Cindi’s trade confirmation.<br><br>“I’m sorry ma’am, everything is fine. And as I am on duty please refer to me as “Mailgirl 10”, “Number 10”, or simply “Ten”; whichever you prefer.”<br><br>Cindi gave me a cross look. She knew I was lying. I knew that she knew I was lying. But she also knew enough not to push me for answers right now. I was better off a robot than an enraged nudist.<br><br>“Well,” Cindi started as she took the offered confirmation, “I’m sorry to throw you off your game Mailgirl Number 10. If you could relay a message to Ms. Madalaine Aubrey please let her know that I am available to get drinks tonight if she wants to blow off some steam, or she can give me a phone call if she just wants to talk. Is that permissible, Mailgirl Number Ten?”<br><br>“Very well ma’am.”<br><br>She smiled. I smiled. Cindi clicked ‘Received’ on the desktop app with a second to spare.<br><br>The face of my MMU turned red, buzzed, and displayed a clock clicking up. “1 Demerit Issued – Late Delivery (00:00-00:05).” Only one delivery left. Cindi clicked just in time or I would have a second demerit.<br><br>I didn’t have time to waste. The clock was always ticking. Mr. Schranz was waiting. I gave my secret friend a thankful nod before running off.<br><br>By the time I got back to Workstation 85 my MMU had buzzed a second penalty; “1 Demerit Issued – Late Delivery (00:06-00:15).” I was halfway to the next level before I stood at the entrance of Mr. Schranz’s cubicle for the third time; feet apart, chest out, tummy tucked, eyes down, his confirmation extended out in my palm.<br><br>“I have a delivery for you sir.” I said trying to hide the dread in my voice.<br><br>Mr. Schranz snatched it out of my hand and slapped it onto his desk. “It’s about time, don’t you think Number Ten?”<br><br>“Sir?”<br><br>“Don’t you think it’s about time I got the trade confirmation you were supposed to drop off three minutes ago?” His voice dripped with malice and sarcasm. I knew better than to argue. This would not be a dialog. “What’s the matter? Cat got your tongue?”<br><br>My MMU buzzed as the countdown clock on his desktop app blinked red and continued relentlessly upwards. “1 Demerit Issued – Late Delivery (00:16-00:45)”.<br><br>“Listen Mailgirl, I will take shit from customers, I will take shit from management, I will take shit from my ex-wives and all my ungrateful kids, but I do not have to take a single ounce of crap from you!” Mr. Schranz got up abruptly, so quick I flinched like he was going to hit me. “Of all the things I do for this company, of all the sales that I bring in, they can’t get competent help to deliver a confirmation from the photocopier to my desk in less than three minutes.”<br><br>I wanted to argue that I was there and waiting twice already, but any lip would just anger the little troll-man more. Instead I lowered my eyes as much as I could, chin down to my chest, eyes staring at the tops of my breasts, but with my slightly above average height and his short stature Mr. Schranz was right in my face, backing me up until my butt hit the scratchy fabric of the cubical wall across the way.<br><br>“I was on the phone with an important client, the client who just gave us another $12,000 to invest. I’m sorry if generating investment capital is inconvenient for your naked-prance-about duties. How fucking inconvenient that you have to wait twenty seconds while I say a nice goodbye to the guy who just gave us 12k.”<br><br>I tried to back away, but he advanced for every inch I gave. He just kept pushing and I kept giving, the harsh fabric of the partition liner scraping my ass checks like a Brillo pad.<br><br>“Seriously, what is wrong with you?” He stuck a finger in my face as I continued to back away. “Are you jealous? Is that it. You couldn’t hack it as a trader and so you have to take it out on successful ones?”<br><br>“No sir.” I said as I was backed off the last link of the cubicle wall, now slowly retreating across Main Street. “I didn’t mean to offend you. I’m just tying to do my job.”<br><br>“Shut it!” He yelled loud enough for work around us to stop. “You don’t think I remember you when you started here, the hot young honey that had the world in her hands. You used to strut around then just like you do now, like you own the place. Well you don’t! And you won’t, ever!”<br><br>He was furious, off his rocker more with every word. I didn’t fight back, couldn’t in fact. Not with so many pairs of eyes watching us. I couldn’t defend myself or run away. All I could do was take it.<br><br>I dropped to my knees, resting on my haunches as was permitted by the manual and made sure my legs were far enough apart for regulation. Back straight, chest out, my hands on my thighs as the little troll-man continued to berate me.<br><br>“You got the gall to think you’re better than us, better than me, but look at you; I have daughters your age! And here you are setting back the women’s rights movement to the Roman Empire? Please.<br><br>“The difference between you an me is more than age and gender. It’s more than clothes, Missy. I produce. I get results. I’ve been making my sales every quarter for ten years; and ten more years at National Fidelity before that. I produce revenue.<br><br>“You, you just take. You bounce around here for a year and barely make your quota. Then the second year, when things get tough, you fail. No mommy or daddy or boyfriend to bail you out. Left all alone in big, bad reality and you failed. But it’s only one quarter, you got a whole financial quarter grace period, you can make it up… until you failed that too.”<br><br>He was ranting, raging, getting personal. He wanted tears. He wanted a big ugly cry in front of all these people, to break me down and prove how much in control he was. But fuck that. I didn’t have to. Yes I have to sit here and take it, and I will, but nothing in my contract or the Mailgirl Code says I have to cry for anyone’s amusement.<br><br>“So here we are,” he continued, “me and you. Producer and parasite. The maker and the taker. That is the difference, that is the real difference. When the going got tough I passed. I keep passing. I’ve proved my worth. But you, you fail. You’re a loser. You’ve lost your position and your pride and all that you’re qualified for now is what? Stripping? Pizza delivery?”<br><br>He got right down next to me, right in my face. I could smell the rank-ass coffee on his breath. My body involuntarily quivered in disgust at the thought he might actually touch me. I braced for his tirade but instead when he spoke he was menacingly quiet, “I guess you found the best of both worlds, didn’t you? You get to run around here and show everyone the goods, your minimally difficult job enabled because employees like me get big money through the door.<br><br>“Is that how it is?” He smiled like he had a brilliant idea. “It is, isn’t it? You like showing off your goodies. You get a real kick out of it. You’re a real exhibitionist, or nudist, or pervert or whatever. You LOVE this job…” He said the last with a disgusting flick of his tongue.<br><br>“…but if somebody doesn’t give you the attention, if someone is more focused on their job than staring at your big round tits and your big round ass, well that must really piss you off!”<br><br>God my heart was racing. I felt like crying but refused to give him the pleasure. He was exactly wrong. I know I’m the opposite of what he’s describing but he’s whispering loud enough that thirty people must be staring at me right now. I wish I could just fade into the floor and disappear, but the relentless troll-man had to down-dress me in middle of the whole tenth floor.<br><br>“That’s it isn’t it. Admit it. You want everyone staring at your body all the time; And when I ignored you to make my customer happy you just had to run off with my confirmation, trot around like a trollop and make me wait to finish the trade. You wouldn’t let me do my job, get the commission I earned! Not without giving you the attention you think you deserve!”<br><br>His words dripped with venom. “You you have all the attention now. It’s the Mailgirl Ten show! Everyone can see you.” He pointed left and right but I didn’t follow his finger, I didn’t need to look to know people were staring, “Does that make you happy? Do you have enough attention now?”<br><br>I could feel the eyes of every head above every cubical burning into my bare skin, my lip quivered. I had to put an end to this if no one else would. That was the only reason I said what I said…<br><br>“…Yes sir.”<br><br>“What was that?” He mimed to speak up, “Are you happy now?”<br><br>“Yes sir,” I said from my place on the floor, “Yes I am happy now.”<br><br>“Well good.” He stood up to tower over me, confused and befuddled to have won so easily. “Then let the rest of us do our jobs.”<br><br>Finished with his grandstanding, Mr. Schranz strut back to his cubicle. I sat there on my haunches, waiting for the next shoe to drop. Everyone else slowly went back to doing their jobs, the show was over and now it was just the naked girl on the floor.<br><br>I chocked back the tears and rage and tried to stand. My MMU buzzed again as Mr. Schranz finally hit ‘received’. The whole escapade had net me 5 demerits. I had actually saved one.<br><br>I pulled the tie out of my hair, shook it out and pulled my wavy hair back into a pony tail. My MMU buzzed again and I looked at the face: “1 Demerit Issued – Positional Violation”.<br><br>I looked first towards Carol Nelson’s cubicle, then Mr. Schranz’s, neither were paying me any attention. It wasn’t worth looking for the culprit, not now. I had to move.<br><br>That is life as a Mailgirl, take it and keep moving.<br><br>`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "11:45 a.m", 
+                    content: `It’s been forty minutes since Mr. Schranz down-dressed me in front of the whole tenth floor. I was embarrassed to the point of tears, somehow driven to my knees, but I didn’t cry. Even if it was just out of spite. I didn’t want to give the little troll-man the satisfaction. I was already naked and humiliated, that should be enough for anyone.<br><br>‘Down-dressed’, what an awful term for someone in my position.<br><br>I tried to move on with my day, bury myself in my duties, but I could not forget how that moment felt. Blinking back tears, body trembling, lip quivering, skin hot and red from so many eyes watching; I was having trouble coming back from it. The situation had ended but the emotions were still bare inside me. My cheeks still flush from embarrassment, palms sweaty, nipples hard, lip quivering; I managed to push the nervousness deep down into my gut, below my belly-button where it intermittently flip-flopped between a sensation like a swarm of butterflies ticking everything between my hips and a little twinge happening even lower than that which I was not comfortable with. I could hide most of the effects behind my best poker-face but my body was betraying me. Sweat collected at my brow, under my arms, and to my embarrassment between my thighs. I had to do something to release this nervous energy.<br><br>So I ran. Every delivery for the rest of the morning, no matter what the priority was, I ran it from one place to the next as fast as I could. I turned the morning from a marathon into a series of wind-sprints. Within fifteen minutes my body was covered in a fine sheen of sweat, no one would ask why my skin was red or why I was panting. So long as I kept running I didn’t have to explain anything to anyone.<br><br>Except for maybe my nipples. They were so erect and sensitive, I could actually feel the wind as I ran, the chill from the air vents and the bounce in my stride. My nips felt hard enough to cut glass. They turned from their normally pleasant pink to an angry crimson. My poor little nipples were so overstimulated I was in as much pain as I was pleasure. I just wanted my body to return to normal but the butterflies in my stomach and the tips of my nips prevented that from happening.<br><br>But I was really moving now and I didn’t have to explain anything. I kept pushing. My blood was up, my nipples were hard. That wasn’t so bad as a few times they drew attention to themselves instead of the rest of my body. I was getting more and more scared of someone noticing just how much sweat I had between my legs. I pushed even harder, hoping to drench out any other scent than sweat. I had to keep pushing. Slowing down was not an option.<br><br>Delivery after delivery I got it done. I had just completed the last delivery on a run and my MMU buzzed to life:<br><br>“CONGRATULATIONS!!! Efficiency Bonus Earned! 1 demerit removed for every 60 seconds saved! Keep up the good work!”<br><br>I was so engrossed with staying in motion that I had not paid attention to my efficiency scores. I had plus 11 or 12 seconds before that disastrous run this morning. I was keeping myself so busy I’d lost track of how many positive runs I was completing. In barely forty five minutes had beaten the clock enough to get a demerit removed! If I kept this up I could really mitigate the damage Mr. Schranz had done to my score this morning.<br><br>I was starting to feel good about myself. I was still embarrassed about what my body was doing, but that was okay I guess. Everyone got excited sometimes. I was putting in a lot of effort but there was a joy in running naked. I was free. I could run free between these cubicles while everyone else was chained to their computers and phones. So what if I was naked? I was gorgeous and young, free to move around unhindered by clothes and the constant pressure of sales goals. I was not in such a bad place. Maybe this was going to turn out to be a good day after all.<br><br>It was 11:45 when I returned to base. I punched my security code into the copier and saw twenty confirmations in the queue to print. I had a moment to take a knee and plot out the best route, so I took a step toward my mat when it hit me. I swooned. The exhaust from the activating copier caressed my body in a most unexpected way, a full body thermal massage that sent pleasurable impulses up and down my spine. The metallic scent of toner invaded my senses and my knees went weak. I had to grab on to the side of the photocopier for support. My body was so erotically charged it nearly released right here on the north wall of the tenth floor.<br><br>“Don’t tease me Kyle.” I gasped under my breath as I got hold of myself.<br><br>“Are you okay?” Came a new voice from behind me.<br><br>I turned to see Cindi Carringer in her expensive business suit with a paper coffee cup in her slightly trembling hand. I felt a new pang of embarrassment as my only female friend in the company was obviously not expecting to seeing a stark raving naked Mailgirl almost brought to orgasm by the office equipment.<br><br>“Never better ma’am.” I said. “Is there something I can help you with?”<br><br>“No Maddie- I mean Mailgirl Ten,” Cindi stepped a little closer. She lowered her voice to a whisper. “Are you okay? Are you on drugs or something?”<br><br>“No ma’am.” I said as I tried to straighten up and simultaneously wipe the sultry smirk from my face. “I’m just a little overheated from the work.”<br><br>“Bullshit,” she whispered, the paper cup no longer trembling in her hand. “What happened to you this morning was borderline abuse.”<br><br>“That’s okay ma’am. Mr. Schranz was just blowing off steam.”<br><br>Her sweet little face twisted in something close to contempt. “Don’t defend him. What he did was wrong.”<br><br>Oh God no. Don’t be a crusader, Cindi. My friend could be the type of woman full of idealism and political correctness, willing to fight for the oppressed without forethought to how it could screw up their life. I know Cindi was wealthy but she wasn’t the type of privileged person who had never made a hard choice in her life. Please think, girl! Respect my decision. The last thing I needed was a Social Justice Warrior kicking the beehive at Columbia Mutual.<br><br>“Yes ma’am,” I agreed with her and lowered my own voice, “Mr. Schranz was wrong. But what you didn’t see was I chose to skip him in line. I knew that would piss him off but it was the best way to keep everyone else happy. I chose to get one person mad at me than the rest of the floor angry, yourself included.”<br><br>“And that somehow excuses how he treated you?”<br><br>“No it doesn’t. He’s a pig and that was why I chose him. He just let every other woman on this floor know what a pig he is. His odds of getting laid ever again just dropped exponentially.”<br><br>She chuckled a little. “Still someone should report him to HR?”<br><br>I couldn’t disagree. “Maybe so, but I don’t have to be the one to do it. I’ll dispute some of the demerits I got for lateness with the program director as the transcript was delivered but he just refused to receive it. The program director will talk to human resources and they will take the appropriate measures.”<br><br>“You have a lot of faith in the system.” Cindi was acting a little funny. For this whole conversation she was looking at my eyes a little too long before alternating to stare at my bare feet. I quickly came to realize that my friend might be interested in more than striking a blow against misogyny in the workplace.<br><br>“I’m a Mailgirl now. I do everything I can to make the system work as efficiently a possible.” I looked at the batch of confirmations Kyle had finished printing with a little sarcasm. She smiled. I smiled. No one else in this section had noticed our conversation yet, they were all working the phones pretty hard before the noontime lull, but that would not last forever.<br><br>I turned my back and bent over to pick up the batch, taking an extra second to make sure the pages were all piled straight. I knew she was looking. That’s okay. Guy or girl, businessman or businesswoman, even friend or foe, all employees should enjoy a Mailgirl in uniform; it was in the manual.<br><br>I turned back to say goodbye. Cindi’s eyes rose up to meet mine slowly but never quite made it. Her bright blue eyes followed a bead of sweat as it dripped from my brow, ran down my cheek, the expanse of my neck, over the number ‘10’ tattoo on my breast and curved inside my cleavage where it joined with other rivulets to run over the bumps of my abdominals and mix with the moisture at my cleft of my sex. The paper cup was trembling slightly again.<br><br>“I know you have to get back to work,” Cindi said absent-mindedly, “it’s just that sometimes I can’t believe it’s really you running around here like this.”<br><br>I shrugged. “It’s really me, Mailgirl Number Ten, in the flesh.” I looked at my MMU and saw I had already lost 30 seconds on this run and could not waste any more time.<br><br>“Go.” She waived me off.<br><br>I gave her a glad smile over my shoulder as I ran up Main Street. I had to haul ass all the way to the southwest corner of floor ten. I have no idea how long she stared at my backside but that was okay. I had to remind myself to reassure her next time I saw her, that it was okay to stare at me. I was required to be on display, it was what I agreed to when I signed the contract. I was good for her to stare. She should enjoy my body. That is what I am here for. The only thing I had to be embarrassed about was how turned on my body still was. I hoped that would have subsided during my brief conversation with Cindi but instead I was turned on again.<br><br>I ran up to Workstation 179 with my breasts almost painfully bouncing all the way, handed them their order confirmation and moved on to the next stage of the run. I could not slow now for love or money, I was behind and had to make up the time. If I was still this horny at 12:30 I would do something to take care of it at lunch. I doubt I could do the rest of the day at this pace.`
+                },
+                {
+                    title: "Chapter 4",
+                    subtitle: "11:59 a.m", 
+                    content: `It was easy to keep positive so long as I kept moving. Twenty deliveries was a lot of stops and after the first completion I had to take a moment and reorganize the schedule on my MMU. Because of the layout of the trading floor it was not efficient to complete tasks in the default numerical order, a grid layout like a checkerboard. Instead it was best to hit the pockets of workstations bunched near each other despite what the assigned numbers were. It was a trick that took me longer to learn that I would like to admit, but once I did the late demerits almost disappeared.<br><br>Quickly I started making up some time, trying to bridge that gap I’d made in stopping to talk with Cindi, but the problem with my planned route was twofold: the Eastern Skyway and Penny Stocks.<br><br>The walls of the Columbia Mutual building were Plexiglas and steel like a thousand other office buildings you have probably seen. The north wall of floor ten was where the break room, bathrooms, elevators, and resting mat near the photocopier were placed. Along the southern wall were offices, including the big corner office for the Vice President of Trading, principles and supervisors had the offices between the corner and the fire stairs in the southeast corner. But the eastern and western walls were floor to ceiling windows, an open design to let the sunlight through. I guess it was to make the place seem more cheery but instead it made you wonder if some office worker had ever accidentally broken through that one inch glass and fell all the way down to Constitution Plaza.<br><br>I had never heard of it happening yet, but every so often I got the urge to push a troublesome employee in a wheeled office chairs against the window and see if it held. It would be great if it was Carol. Maybe if I got low and had a running start...<br><br>But I digress. I call the eastern wall the Skyway because unlike the west there were not cubicles pushed all the way up against it. Someone wisely figured out that the cubicle maze they were building was difficult to move through so they left a six foot wide clearance up the eastern wall. It was nice in the morning as it let in the light, but it was positively terrifying for someone in my position. Not only did I get the jitters in my legs from the height, you know that feeling you get when on a high balcony and your brain feels every little sway in the concrete floor, but I got the distinct feeling of being watched. It didn't matter if it was the early in the morning or the middle of the day, I felt like every pedestrian on Columbus Boulevard to the traffic stopped out on I-91, all eyes were looking up and my naked ass through the floor-to-ceiling windows. As a mailgirl you got used to being in uncomfortable situations, that territory came with being the only one naked in a professional business environment, but just the notion of being on display for the whole world to see was enough to make my hair curl.<br><br>I know how irrational it is. Much like that fear of heights in a sturdy building, it didn’t matter. You always know there is a chance and that is enough for fear to worm its way in.<br><br>On the opposite wall from the Skyway was where the penny stock traders were sat. It wasn’t a large section or an especially busy one. Because of the low demand on unlisted stocks and high commission bonuses the unit was staffed with a bunch of kids just out of college. Six or seven guys barely in their twenties. You could smell the fresh ink of their financial licenses mixed in with the odors of zit cream and cheap whiskey. As the least busy section of the trading floor they had a lot of time on their hands, most of which they used to get into trouble. It was never malicious or abusive, more of a bunch of practical jokers sitting next to each other in a constant game of one-upmanship. My actual deliveries to that section were rare. Knowing this, I figured it was best to put them off to last and try to bank precious seconds before I made it over there.<br><br>This meant I had to do the first 15 deliveries on the southern end of floor ten, run up the Skyway to deliver the next four, then halfway back down the Skyway to cut across the entire middle of the trading floor. Not an easy task even before the thirty second deficit I started with.<br><br>God I was really hustling about as hard as I could. According to the manual a mailgirl was allowed to have “a light sheen of perspiration”. Unfortunately I was sweating like a pig. Anyone could call for an inspection and send me to the showers after this run. I didn’t think that would be all bad, I could probably really use one, but I did not need the delay. At noon the phones will stop ringing and the chances of my uniform being scrutinized will increase exponentially. If I had to get sent to the lockeroom I would rather do it when there were no deliveries. Just a little more motivation for the hardest working naked girl on the tenth floor.<br><br>So I kept moving, delivery after delivery. Luckily everyone seemed to be focusing on their work, receiving and sending me on to the next workstation, fifteen in a row, so I was able to make up some time. Good. I needed a win right now.<br><br>Then came the Skyway. I hate this part. If I moved fast enough I wouldn’t have to worry about the outside world spying on my naked booty. I would just be a momentary streak of skin in a tenth floor window.<br><br>With my silly plan in play, I sprinted. Tired legs pumping as fast as they could, I was overexerting myself all morning and it was starting to take its toll. Still I pressed on. I was fine for the first few strides because the angle of the sun had me in shadow. After that however, I was in gloriously bright sunbeam. With as much sweat that had beaded up on my skin I must have been sparkling like a damn vampire in a Twilight novel. My lungs were burning and my skin was rapidly warming. This morning was really pushing my physical boundaries.<br><br>I took a quick glance ten stories down. Traffic seemed to be moving along I-91 alright, foot traffic on the street was sparse. I didn’t have anything to fear except the way my head swam and knees almost buckled. I still don’t like heights. Rushing past them only helped a little.<br><br>I rounded the cubicle corner away from the windows and back into the maze of partitions, made the next four deliveries in just over 55 seconds, and turned back towards the Skyway.<br><br>As I moved back into the sunlight I could see a faint reflection of myself running along side. How many times have you seen you seen yourself naked doing something active? Not often I bet. It’s pretty amazing. The muscles in my arms and legs flexing and releasing as they propelled me forward, large beasts swaying with each stride, my freaking abs rippling in sun and shadow. I was pretty freaking hot if I do say do myself.<br><br>Then just as the heat of the sun was warming my body, my heart went cold. The bloated figure of Carol Nelson rounded the corner. She was walking alongside another woman, a younger mouse of a girl that I did not know. She seemed to be getting the grand tour of the place judging by her wide-eyed look, smart business suit, and Carol’s corpulent gesticulations. Unfortunately they were between me and my turn, coming towards me at a slow walking pace.<br><br>The girl stopped dead in her tracks and stared. I approached quickly, but had to slow down. Carol’s bulky frame was in the middle of the Skyway and pushed the girl to the inside lane. While they did not take all of the ten foot span I was prohibited from just dodging around them, even if I easily could. According to the manual I had to step to the side at attention an wait for them to pass.<br><br>Such bullshit. I’m the one with the time limit and I am the one who has to give way? And I was still sweating like a pig, there was no way Carol would let me go without at least a uniform violation.<br><br>I jogged up as close as I dared before slowing to a stop and stepping to the side, feet apart chest out, eyes down, hands wrist-locked behind my back. I hated this position, especially now. I had to turn my backside to the window so Carol and this woman could stroll by, which was demeaning enough, but with my naked back to the window it felt worse. I had joked about my ass being on display to everyone who looked up and now it was picture-framed. I felt so humiliated I had to bite my lip to get it to stop quivering.<br><br>“And so,” Carol addressed the newbie, “this section over here is for mutual fund traders. It’s a big market during a downswing or when investors want to take some of their winnings off the table. You’ll start with me in large caps so we often work with bonds hand in hand.”<br><br>Carol gave me half a sneer, turned up her nose and walked on. Her apprentice however continued to stare.<br><br>“Am I supposed to ignore the naked woman standing there?”<br><br>Carol gave her a condescending glance. “Go ahead and stare if you like, that’s about all they are good for.”<br><br>The newbie seemed excited but was trying to hide it. “I thought they only used mailgirls out in California or Japan. I never thought I would see one in the flesh.”<br><br>“Yes well,” Carol was trying to move on but she could see the newbie’s interest was piqued. “The Mailgirl is part of our new 100% Security Guarantee. We’ll go over how to use her after the tour, but for now she should be more useful to you as a reminder of the importance of making your sales goals. Six months ago this mailgirl was a young trader just like you.”<br><br>“Wow.” The girl was either impressed or shocked, maybe a little of both. “What is her name?”<br><br>Carol dismissed it with a wave. “It was Maggie Something-or-Other, I confess I don’t remember as she wasn’t very good at her job (not like she if very good at her new one either), but she is just Mailgirl Ten during business hours.”<br><br>“Umm,” the newbie stuck her hand out, “Pleased to meet you Mailgirl Ten.”<br><br>Carol forced the girl’s hand down before I had the chance to shake it. “Don’t touch her,” she nearly yelled before catching herself, “it’s not sanitary.” Carol gave me the stink-eye before addressing me directly down her nose, “Number Ten you are looking very wet today. I take it you will correct your uniform at the first opportunity?”<br><br>“Yes ma’am,” I said reflexively. “I am in the middle of deliveries ma’am.” Yes, deliveries that were not getting done. The sun was beating down in my back now, but my whole body still covered in a thick sheen of sweat. My naked ass must be shimmering for all Constitution Plaza to see and my tits were getting cold from lack of movement. I was caught in a twilight zone between hot and cold, trying to suppress the panting from my exertions, nipples hardening up again. I don’t know what this might look like to the newbie, a sweaty naked woman all erotically charged. I couldn’t look at her a I was ashamed to be in such a state before a stranger.<br><br>The worst part was I was close to making up some time before Carol decided to take to the Skyway.<br><br>“Well,” Carol continued, “go take care of yourself after you’re done. I don’t think you deserve a demerit for working hard. Just make sure your uniform is in order before you return.”<br><br>My jaw slipped open dumbfounded. Kindness? From Carol? Something close to understanding? Maybe I was in the twilight zone.<br><br>“See,” Carol turned back to the newbie, “I can’t say that she is lazy but she is not very quick on the uptake. I excuse her and she is still standing here. No wonder she couldn’t make it as a trader.”<br><br>“Yes ma’am.” I said before another heartbeat. “Thank you ma’am.”<br><br>I turned and ran, not willing to waste another second on Carol or the new girl. It was after 12:00 now and the phones had stopped ringing. Many of the traders were standing now, finding their coats and purses before heading to the cafeteria on floor three or out to the streets for lunch. Half the floor would be heading to the elevators in a second and clog up the thoroughfares. I had maybe 10 seconds to cross the center of the trading floor before it got jammed and I would have to step aside while everyone passed.<br><br>Finding that last ounce of energy I dashed down the alleyways, arms and legs pumping as hard as they could. I know I had under a minute but I could still make it, at least break even on this run.<br><br>Sprinting as fast as I was I had to be keenly aware of my surroundings, the slightest hesitation could be disastrous. Lucky I was focused. I saw the whole run unfolding in slow motion. As I approached Mr. Schranz’s workstation the little troll-man pushed away from his desks and stood in an exaggerated cartoon-like motion. While it was possibly the least efficient way to stand it was very effective at rolling his office chair directly in my path.<br><br>At full gallop with a cubicle wall on one side and my least favorite person on the other all I could do was dive forward, over the arms of the chair without touching the back and roll forward into a somersault I probably haven’t tried since me teenage years.<br><br>I did it perfectly without missing a beat, like clockwork.<br><br>Coming up with whatever nastiness was on the office carpet now on my hair and naked back, in continued my sprint.<br><br>At the halfway point I had to dodge the fast mover heading for the elevator with a spin move that would make an NFL linebacker proud. I lost no speed as I hit the other side of Main Street and drove into that half of the cubicle maze.<br><br>Weaving around the departing workers I finally arrived at “M.Nesmith - Workstation 46. Breathless I did my best to finish strong, standing right at the mouth of his cubicle, feet apart, chest out, eyes down, free hand behind my back and the other holding out the sales order. “Delivery for you, sir.”<br><br>Mikey Nesmith turned. He wasn’t a bad looking guy, kept himself in very good shape, but was far too young for my taste. He didn’t look a day over twenty, and the way that he hit on me with that impish grin on his face proved he was more playful than perverted. I wasn’t going to report him to HR or anything, mostly because everything to the guys in Penny Stocks was a big joke. At least he only hit on me when he was in a good mood, which was normally when he was feeling cocky from making a sale, like now.<br><br>“Thank you.” He snatched the paper from my hand, “and how is the most beautiful mailgirl on the tenth floor?”<br><br>I could already tell he was going to make me play a game. I did not have time. “Busy sir; And as you know I am the only mailgirl on the tenth floor.”<br><br>“That does not mean I don’t appreciate your fine body of work.”<br><br>Oh God, He was going to be insufferable. As I mustered my best fake smile the MMU on my arm started to buzz and the screen blinked red. The countdown clock was at five seconds.<br><br>I frowned to him, trying to look playful and pathetic.<br><br>He smirked. “Quick! Bend over and grab your ankles!”<br><br>“What?”<br><br>He was really animated. “No time to explain! It’s the only way I can hit ‘complete’.”<br><br>I bent at the waist and sighed, grabbing my ankles. I had my eyes closed so no one could see me roll them as I heard his mouse click. The MMU on my arm ‘dinged’ a clear bell tone. No demerit for me on this one. I heard the other boys in Penny Stocks chuckle hardily.<br><br>But I did hear something else, something like the fake sound of a camera shutter that modern smart phones make when they take a picture.<br><br>My eyes opened like a shot but before they could focus something jumped up and bit my ass. I righted myself instantly and hopped backward, looking for the source, a bee or horsefly or something. Instead I heard a twang and a snap. My other ass cheek burned with the same sharp pain.<br><br>I spun and saw the shit-eating grin on Mikey Nesmith’s face and the still-vibrating rubber band in his fingers. I reared back to slap him, my body reacting on instinct, when I felt another biting pain on my right breast.<br><br>“That’s 50 points!” victoriously yelled an Asian kid two cubicles over, “I got titty on that last one. 50 points for me!”<br><br>“Nipples are fifty,” the fat one who sort of looked like Jonah Hill corrected, “the rest of the boob is just 25.”<br><br>Seriously? Now my naked body is target practice?`
+                },
+                {
+                    title: "Chapter 5",
+                    subtitle: "12:15 p.m", 
+                    content: `I was still dumbfounded as Jonah shot a rubber band that glanced off my hip. I could not believe this was happening, not this close to lunch.<br><br>I was snapped out of my stupor as Nesmith’s elastic cracked against my ass and I recoiled.<br><br>“10 more,” Mikey smirked. “I’m at 30.”<br><br>A half dozen more penny stock brokers popped up out of their cubicles and fired their rubbery shots. I tried to cover up, keep the stinging pain on my arms as opposed to my face or chest. One band got me right below the belly button, another off my left thigh. Another stung just below my belt-line.<br><br>“Damn, missed.” I heard one of them curse.<br><br>Suddenly I realized what target must be maximum points.<br><br>I reeled, taking a barrage of bands to my left flank as I moved out of the line of fire. A couple late shooters managed to get me in the booty as I went by but I was not going to yell out their scores. It was time to get gone. I got low and sprinted north.<br><br>After a few dozen steps I did not seem to have much more in me. I’d been running all morning and my legs felt like lead. With half the floor already cleared out and my MMU reading that there were no documents ready to print I felt I could take the long way back to my station. The northwest sector of the trading floor did not get used very often. There were not many people stationed over this way. It was off the main thoroughfare and far away from the offices on the south wall. With the break room being in the northeast corner and the elevators in the middle there was almost no reason for anyone to come over this way. The carpet was a little plusher under the feet as evidence of the lack of floor traffic. It was quiet. I could use a little of that right now.<br><br>I ventured a small indulgence, ducking behind a cubicle wall to rub the soreness out of my legs. My thigh muscles had changed so much since I took the job. I guess I was “skinny-fat” before and did not even know it. All traces of flab in my legs had disappeared, completely replaced with rock hard muscle and tight sinew. My legs felt like iron, but unfortunately more iron from fatigue than eating right and exercising as of right now.<br><br>“She went this way…” I heard a grown-ass man say as he giggled like a child.<br><br>From my ducked position I snaked around the corner and into an empty cubicle, watching his shadow pass with the impression of a rubber band strung between his fingers. A second shadow followed him. I got quiet and checked the time on my MMU. It was 12:05.<br><br>Damn, twenty-five minutes to lunch and I’m being hunted for sport by penny stock brokers. Not the day I expected when I came to work this morning.<br><br>“She couldn’t have gone far,” I heard one of them whisper/giggle to another, “start searching the cubicles and we can run up our score before the others find her.”<br><br>Goddammit. These frat boys are determined. What, do they have money on this of something?<br><br>As a naked mailgirl you get used to putting up with a lot, but this was a little much even for me. I wasn’t going to put up with getting pelted with rubbers no matter how much they paid me.<br><br>I also wasn’t going to wait here and get caught.<br><br>Knowing two or three of them had to be nearby I stayed low and crab-walked away from the main route, looking for a side alley. Unfortunately the only one I found seemed a little too obvious to take. I paused a few seconds and saw a frat boy lean out and check left and right. Lucky for me I was on the right when he looked left. Ducking back I waited for the subtle sound of the leather of his barely broken-in loafers to creek as he searched a far cubicle. Moving on all fours there was little chance of me being heard, no clothes to rustle as I moved, the carpet under my fingers and toes absorbing the remaining sound.<br><br>I crawled like a spider all the way to the windows. There were plenty of cubes to hide in, but if they were actively searching I would be found in a few minutes. Staying out in the open of a dead end there was a high chance I’d be caught in mere seconds. I could keep moving like this from cubicle to cubicle for a little while before they boxed me in.<br><br>That would be a lot of effort for nothing. I had to double back. It was the only way to loose them.<br><br>Looking at the cubicles around me didn’t leave many options. I could not go under, they went basically to the floor. Going over the top wasn’t a very good option either, naked women climbing office furniture tends to draw attention. Going around was about the only option.<br><br>Not liking the option of going back to the side alley I had to check out the end up against the windows. There was a space there, maybe fifteen inches wide, just room enough for the window frames and a little extra space to run cables, just about enough room for me to squeeze through in a pinch, but it would be really tight.<br><br>As I contemplated my options I kept looking to my MMU for an answer. I wish I would get a high priority delivery from Kyle. At least then I could run like hell back to base and dare them to follow. These shenanigans might fly over here out of the way in the northwest corner, but a high-speed rubber band hunt up main street would get a lot of brokers reprimanded.<br><br>Why was I doing this? I didn’t have to do this. They were just rubber bands, not even as painful as bee stings. I didn’t have to run and hide from anyone. It was my job to be seen, except…<br><br>…what? That this is what they wanted me to do?<br><br>I heard a frat boy approach and squeezed myself into the little space between partition and window. I had to suck in my gut and push with my legs. There wasn’t enough space to turn my head, instead I had to look down at my one hand on the floor, or look at the cubicle wall, but definitely not the ten story drop to the polished concrete of Constitution Plaza below. I did my best not to look, not to make a sound. My breasts were squished against the cool glass, I desperately prayed for them not to squeak as I pushed myself completely out of site of the office with my legs and one free hand.<br><br>Confident I was out of sight, I gave it a few minutes before I pressed onward. It was a good hiding spot, a quick glance or casual observer could easily miss this spot. I felt like I was getting rug burn down my back from the imitation felt of the cubicle wall. It was also a little dusty back here and I suppressed the urge to sneeze. My fear of heights was starting to kick in. My nipples were getting hard against the cool glass pane, but they could not jut out like they were supposed to. Instead they kind of got pushed back into my boobs, a new feeling for me entirely.<br><br>After a minute of trying not to look down I couldn’t resist. I saw all the pedestrians going about their business, most never giving a thought of looking up. Everyone was busy. Hartford was a bustling town during business hours. But there was one figure far down below who did seem to notice me. It was a hot dog vendor at his cart, face scrunched and head tilted to the side. He seemed to look all the way up to the tenth floor and saw me smushed up against the glass? He couldn’t of, not in a hundred years. The sun was more or less overhead. There had to be a shadow or something.<br><br>But then I saw the vendor fumbling around in his pocket and I decided I could not risk him pulling out a cell phone. I held my breath and pushed carefully onward, trying to listen for any movement in the cubicles around me and not make any squeaks as my breasts slid along the glass.<br><br>I got my head out the other side and took a look up the alleyway. No hunters. The coast seemed clear so I kept pushing with my legs and squeezed through the gap.<br><br>Just as I freed my torso there was a squeak of flesh against glass. I clenched my teeth, hoping not to get caught. I didn’t see any hunters, instead one cubicle up a woman in an office chair slowly rolled back into the common area and gave me a questioning look. She was about my age, African-American, with a lean figure and very inquisitive eyes.<br><br>“What are you doing?” she asked.<br><br>“Being hunted for sport,” I said, “and you?”<br><br>She held up a plastic spoon and cup. “Eating yogurt.”<br><br>“How is it?” I shrugged.<br><br>“Okay,” she said as she spooned herself a taste. “How’s being hunted?”<br><br>“Okay so far.” This was really embarrassing. “Have they already searched over here?”<br><br>She nodded.<br><br>I looked at my MMU. 12:15. No deliveries. I looked back up at her.<br><br>“Do you mind if I…?” I pointed under the desk inside her cubicle.<br><br>She shrugged, “Help yourself.”<br><br>I crawled past her on my hands and knees, turned around and tried to kneel in the resting position, knees shoulder width apart, back straight, but my head kinked over awkwardly due to the low ceiling. She rolled her chair back into the cube, legs spread slightly so her knees did not collide with my face.<br><br>“Thank you for letting me hide under your desk ma’am.” I said in a low voice. “I just need a little while to rest.”<br><br>She put her yogurt on the desktop, picked up a romance novel and sighed. “It’s not my desk. I just eat my lunch over here because it’s quiet.”<br><br>“Yes ma’am,” I said, “Understood ma’am.”<br><br>I waited in the dark under her desk for what seemed like an age. I got to know a lot about my benefactress just by what I could see. First and foremost her calf muscles were very well developed, her shoes quite sensible but still stylish. I surmised she was an athlete in her younger years and probably still ran, good legs told their own story. She used a coconut scented lotion on her skin. With the way her knees were splayed I could see up her skirt. She was wearing pink panties. She didn’t seem very shy at all, couldn’t be shy to wear such things to work, but she was very assertive in her own quiet way. Her presence made me feel safe under here.<br><br>The romance novel she held in one hand, sometimes on the desk but sometimes in her lap. The cover had the traditional Fabio-style male, in this instance dressed as an Antebellum plantation owner trying to drag off a white lady by the arm. The lady was being held back by what looked to be a black female, probably supposed to be a house servant. At a glance the cover looked innocuous like any other trashy romance novel, lovers being pulled apart; but on closer inspection it seemed the expressions on the women’s faces were that the white lady wanted to stay. The book’s title, Scandal in the South, did not tell me very much either.<br><br>I tried to listen past the walls of the cubicle and hear for my pursuers, who seemed to have either given up at this point or spread out so far I could not track them by ear. Was I actually safe?<br><br>My benefactress pushed herself away from the desk, I could hear her gathering the refuse from her lunch and shoved it back into bag. She sighed a little as she said “It’s been fun having you breathe up my skirts but lunchtime is almost over. I have to get back to the grind.”<br><br>I looked at my MMU. The time read 12:28. Still no deliveries waiting for me.<br><br>She rolled back her chair far enough for me to scoot out. Still kneeling but happy to be out, I cracked my neck. She cringed from the audible pop.<br><br>“Thank you for your help, ma’am.” I said as earnestly as I could. I was very grateful for the place to hide. She did not have to do that. Most people who worked on this floor would not have, that’s for sure.<br><br>“My name is Joycelyn Jones. You could call me Joyce.” She raised an eyebrow at me. I could see from her eyes she was appreciating my nakedness. I didn’t mind. That was part of the job description. If I felt anything it was embarrassed for being so sweaty from running all morning and dirty from crawling around between the cubicle and window. She didn’t seem to mind all that, but I still found it embarrassing. “So what do they call you?”<br><br>I looked down to the temporary tattoo on top of my left breast. “I’m Mailgirl Number Ten during business hours ma’am.”<br><br>Joyce gave me a crooked smile. She ripped a piece of her bookmark off and wrote on it with a pen. “Well Mailgirl Ten my name is Joyce during personal hours, but I like the way you call me “ma’am” and I appreciate someone who can keep a secret, don’t you?” She took the torn piece of bookmark and slid it between the band of my MMU and the skin of my arm. “And here is my number,” she whispered so only I could hear, “If you want to share a few more secrets give me a call.”<br><br>With that she got up, took her things and left.<br><br>After a full minute I raised up to a crouch and rubbed the weariness from my legs. It was only a couple hundred feet to the stairwell, once I was there I was free for at least a half hour, plenty of time for the frat boys to find a new distraction. The only problem was getting there.<br><br>As I was considering my options the MMU on my arm buzzed. The face of it turned a cyan/blue and the message read: “12:30 PM. Enjoy your break. You’ve earned it!”<br><br>Yeah, I’ve earned it.<br><br>No longer under the constraints of the Mailgirl Code I knew exactly what I could do. Staying low I trotted to the end of this side alley and looked out. The dork patrol was still out in force but only three of them were between me and the exit. I scooped up a bunch of misfired rubber bands from the pummeling I got before and bound them round my left hand. Staying low I came to a trot, moving a little faster than a jog I would try to stay under their radar until the last second. I let a smile come to my face.<br><br>Coming up on the first one I leapt in the air. His panicked shot went wide. I strung a band with my right hand and fired down my left forefinger, catching the young broker in the side of the neck.<br><br>As he recoiled I could tell it was a nice, painful hit.<br><br>Continuing my charge to the door I had to juke the next guy. He was back at the windows but taking long ranged shots, trying to lead enough so I would run into his fire. I stopped right before the corridor he was moving up, his continual shots sailing uselessly past. I strung two bands under one fingernail and let both fly as I charged through, hopefully he’ll be to busy dodging to follow up.<br><br>At a dead run now I could move much faster than any rubber band or semi-fit frat boy chasing me down. I almost thought it was smooth sailing for me until Mikey Nesmith stepped in front of the stairway door.<br><br>“Come on over here and take your medicine Mailgirl.” Mikey said through that cocky grin, “I only need seventy-five points to win this game.”<br><br>I came to a stop about ten feet in front of him. “I wasn’t aware I was playing a game, sir.”<br><br>“No more than the fox knows its being hunted, Ten. Besides, I’m not much for playing. But I do like winning.” He looked at the rest of the penny stock guys as they were hurrying up to the northwest corner. “Speaking of winning, I think the easiest way to win this one is if you’re not a moving target,” he smirked and spoke in a clear loud voice, “Mailgirl Ten, present for inspection.”<br><br>Damn. I did what the manual said, feet three feet apart, up on my toes, back arched, chest out, hands behind my head. This was the most humiliating position in my opinion, everything open for everyone to see, even my damn armpits. I could feel the air conditioning flowing down my back, through the crack of my ass and out between the crux of my legs.<br><br>Not to mention the inspection position was rather strenuous. Stand on your toes for a minute. Did it feel good? No? Now try doing it after running around for four hours.<br><br>OK, now try doing it naked with a cocky penny stock broker sizing you up on exactly where he was going to inflict a little pain.<br><br>Did it feel comfortable? Especially with the A.C. blowing down your ass and up your cooch when all you want to do is go to lun-<br><br>Crap. I’d forgotten.<br><br>“So you tell me Ten, should I shoot you three times in the tits for twenty five each? Maybe once in each nipple for a fifty points apiece? Or maybe,” he strung his rubber band between two fingers. “Maybe I should go low and get the full hundred points for the hairless kitty?” He approached and got low to take his shot.<br><br>“How about a shot in the mouth, sir?”<br><br>He looked up at me in confusion. “There are no points for the-” and his speech was interrupted with a howl of pain. I had strung my last few rubber bands on the fingers of my left hand and with a quick motion fired my whole payload into his still talking mouth.<br><br>Mikey fumbled on the floor and spit rubber on the carpet. “Dammit! That hurt!” He dabbed at the blood on his lip as I walked past him to the stairwell door. He shouted after me, “Get back here for inspection Mailgirl!”<br><br>“I don’t have to,” I pointed at my MMU as I opened the door, “I’m on break.”<br><br>He saw the cyan touchscreen and smiled. “Bitch…”<br><br>I let the door close as I hurried up the stairs. That was enough playtime. I needed some rest. And food. And a shower.<br><br>As I got up the third flight I heard the door open down on floor ten. “You are such a bitch Ten, such a beautiful bitch!” He let that echo for a second. “I love it!”`
+                },
+                {
+                    title: "Chapter 6",
+                    subtitle: "12:30 p.m", 
+                    content: `Unlike some other companies that employ mailgirls, Columbia Mutual does not own the entire building. There are other tenants on the lower floors but the sixth through sixteenth were exclusively leased by Columbia Mutual (and the recently acquired National Fidelity), so there was little chance of running into someone who was not our employee in the stairwell. Still this was partially the reason my company kept a strict “One Mailgirl Per Floor” policy. You never knew when some secretary from a law office below would decide to add stair-climbing to her workout routine and discover our use of the still-controversial program.<br><br>That was what insiders call the Mailgirl Conundrum: Columbia Mutual wanted all the benefits of a having a mailgirl program but they did not want the negative press associated with contractual female nudity (even of a voluntary nature). Employing mailgirls in the wake of the ‘#metoo’ movement was a risky venture to say the least. Federally speaking the very concept of mailgirls was on think ice, only existing because there was no bellwether case yet. Last thing an investment firm wanted was protesters in the Plaza and their name in the news for all the wrong reasons. This was Connecticut, not California. There was such a thing as bad press.<br><br>But the potential benefits were simply too enticing. Every part of business where investment firms were weak was exactly what mailgril programs had established a track record of improving. In financial services employee turnover was epidemic and your sales force took clients with them when they left; Mailgirls improved employee retention by 30%, conservatively. Is security a big concern in the digital world? Move to a fragmented digital/analog hybrid and use Mailgirls for the file transfer; With no place to hide papers, write account numbers, or a cell phone to take pictures the naked couriers improved information security exponentially. Efficiency increased across all channels, sick time lowered by half. The mailgirls did most of the work and a mandatory Non-Disclosure Agreement in every employee contract took care of the rest. No one outside Columbia Mutual knew we were using Mailgirls and even former employees were forbidden to speak about it for years after termination, unless they wanted to get hit with severe financial penalties and breech of contract suit.<br><br>Our biggest security risk was running into someone else on the stairwell. Luckily I did not see anyone from other companies on my way to the locker room. I did run into a couple mailgirls returning to their assigned floors, Five and Nine according to the numbers just above their breasts. They were young, with tight athletic bodies, holding hands and smiling as they descended the steps. God, their breasts barely jiggled as they moved. They had so much energy. I was a little jealous of their youth. This job would be so much easier if I was ten years younger too.<br><br>I waved “hello” as we hurried in opposite directions. These girls needed to return to their stations to relieve their coverage. Only half the Mailgirls could be on break at any given time. The other half had to cover two floors while the first half ate lunch, switching at the half past the hour. For this month odd numbers went to lunch first. Next month we would switch. I was of course the only one exempt from this break coverage policy due to my financial licenses and handling of sensitive information. The tenth floor would have to do without a Mailgirl for now. This one needed food, rest and a shower.<br><br>I don’t think I’m better than the other mailgirls or anything like that. We have a little saying, “Every mailgirl takes off her pants one leg at a time.”. If any workforce was ever equal this was it. I hope they didn’t think I was like that.<br><br>I reached the door to the fifteenth floor, checking it was clear through the little window before I opened it. The antechamber was a back hallway that was well lit, adorned with modern art and had carpeting so thick you thought you were wearing socks. (I’ve learned to love plush socks now. They’re my favorite luxury item, feels as good as a massage, and not as fattening as chocolate. Keep that in mind if you get your office mailgirl for Secret Santa this year.)<br><br>I walked down the hall to the first turn even though every part of me wanted to run. Running was forbidden on floors fifteen and sixteen, these floors housed the executive offices with their big picture windows to the outside world and inner office. So much glass you could mistake them for live animal exhibits in a zoo. We were told that running was distracting for the officers of the company and they needed to be focused on their work. Well the joke was on us as generally speaking they invariably stopped what they were doing and stared at the slowly passing Mailgirls as they walked by. It was enough to make me feel like I was the animal on exhibit.<br><br>Among the glass terrarium offices was the executive gym that got converted into the Mailgirls locker room. I know other companies put their locker rooms in dingy basements or just off the main lobby, where any employee or even visitors could see. At Columbia Mutual this was a perk for upper management only. I guess that is good and bad. They tore down the wall to the women’s side of the locker room and replaced it with one-way glass for the illusion of privacy. They could see in but we couldn’t see out.<br><br>On display, like an animal in a zoo. The fabulous life of the modern mailgirl.<br><br>I made sure to cross the common areas at walking speed like I was supposed to, letting those who were several pay grades above me get a good look before opening the door to the locker room. I felt the wet heat of the steam-filled air rise to greet me, almost as if welcoming me home. A mailgirl begins and ends her workday with a shower here, so any feelings of nostalgia or homecoming should be understandable.<br><br>The wet tile felt cool under my feet as I walked to the common area where I could perceive the locker room in its entirety. The toilet stalls and showers on the left, bank of sinks in the middle and lockers on the right. Across from the showers against the mirrored glass were the laundry bins, lunch cart, and maintenance station. Between theses were long benches of the type you have seen in locker rooms the world over. Sitting on the bench, with white bath towels under their rumps was Mailgirl 8, a Hispanic girl with lovely mocha-colored skin who was visibly upset, and Mailgirl 6, the stocky little blond who was closest thing we had to a den mother consoling her. At the lunch cart was Anika, Mailgirl Sixteen, the stunning former Victoria Secret model that made us all look homely, the personal secretary of the CEO. She was eating what looked like a Fiji apple salad and trying to ignore Eight’s sobs with all her might. I didn’t see Mailgirl 12 or 14, but I could hear that the showers were on.<br><br>You’ll have to forgive me for not learning the given names of the other Mailgirls. At first I was too embarrassed to ask anyone else’s name and now using their numbers seems like the professional thing to do. It’s been a little too long to get to know them personally now. I only knew Anika’s name because she was semi-famous before electing this course of work. All the Mailgirls beside Sixteen and myself were either from California or went to colleges on the West Coast, and one way or another went through the DDE Mailgirl training program. Their bond was like that of recruits in boot camp, they had learned to rely on each other. I didn’t share in that experience, learning on the job at Columbia Mutual and earning all the demerits for it. So I was already the outsider anyway. Add in the decade age difference and it created a rather uncomfortable scenario sometimes, I was one of them but not one of them.<br><br>Still, a sobbing Mailgirl was a sad sight to see. “What’s going on, Six? Is she okay?”<br><br>Six flicked the devil’s tongue of yellow hair that fell across her left eye with a deft motion of her neck. “Eight got a bunch of demerits this morning. Twenty two times for the same thing.”<br><br>Eight choked down a sob, “bandejos y puntas…” I managed to make out her cuss under her breath.<br><br>“What violation?”<br><br>“Uniform violation.” Six tried to hug Eight to her breast but the fiery Latina pushed her away.<br><br>Eight glared up at me and angrily gritted her teeth. “The string.” She blurted at me like it meant something, “They get me for the string.”<br><br>“String?” I found myself asking before thinking.<br><br>Six looked left and right before confirming. “It’s her time of the month. When she was kneeling on her mat or standing at attention they could see the string from her tampon.” Six pet Eight’s hair in a consoling manner. “Some jerk kept hammering her for the same thing over and over again.”<br><br>I found this one more than a little disturbing. There was nothing more personal to women then her cycle. Nobody liked it being pointed out in public to begin with, its not something you have any control over. Most of us Mailgirls were on the pill for regulating our cycles just as much as for birth control. It was a way of making sure it only hit on the weekends, but that was a personal choice. If you didn’t believe in the pill, had a religious objection, or sometimes it just came early what could you do?<br><br>“That is really messed up.”<br><br>“Yeah well,” Six looked at me as if she wasn’t sure she should be telling me this, “It was one guy who spotted it, starting telling it to others. Soon the whole floor was issuing her demerits-”<br><br>“-I try to tuck it in but it comes out if I run!” Eight was still furious with embarrassment. “What am I supposed to do? Wear a pad?”<br><br>I felt for her. I really did. That was pretty messed in the head. I’m sure Columbia Mutual didn’t want us free-bleeding all over the building. The situation is ridiculous. What was she supposed to do? Take time off for basic bodily functions? Like she wouldn’t run out of personal days in a few months?<br><br>I shook my head in disgust. “What did the floor supervisor do?”<br><br>Six shrugged. “He kicked it upstairs. Eventually HR might say something but this is why companies that use the Mailgirl Program are supposed to have a Program Director.”<br><br>She was right. This is the exact sort of thing that position was made for. The problem was DDEs Mailgirl Program was more of an employment service than a division of Columbia Mutual. Technically no mailgril could be fired by Columbia Mutual directly, DDE would have to pull the mailgirl from the assignment and do it themselves. The Program Director was supposed to be a liaison between the companies and mediate corporate policies. Columbia Mutual didn’t have one yet as they were still technically in the 90 day trial period; Though it had been almost six months since the first naked mailgirl started working at Columbia Mutual the merger with National Fidelity had caused the contracts with DDE to be rewritten. The whole Mailgirl Program here could be disbanded in a few weeks leaving us all looking for jobs.<br><br>But as of right now, today, it seemed like Mailgrils were here to stay. They would have to get a Program Director eventually.<br><br>“That is so screwed up,” I looked at Six. “What are we supposed to do?” Having graduated the DDE training program she was much more versed in their policies than I was.<br><br>Six laughed. “It would go to the director; either paid time off or an exclusion for the Mailgirl on religious grounds. But the rule as written in the program guide the demerits stand until a decision is made.”<br><br>I nodded, “which could take weeks.”<br><br>“And here we are.” She added without emotion.<br><br>There wasn’t anything else to say. It just sucked for Eight right now. Hopefully this could get settled soon but for right now Eight had to chose to Work Off or Pay Off the demerits. Mailgirls at Columbia Mutual had two options on how to deal with demerits, either “Pay Off” the demerits at five dollars for each each out of her weekly paycheck or Work Off the demerits by putting in overtime. One hour of overtime deducted 10 demerits, so right now the poor girl either lost over $100 out of her next paycheck or had to put in two hours of overtime. And the day was only half over.<br><br>Now you know why I work so hard to get that efficiency bonus. For every sixty seconds of early delivery time I accumulate I get a demerit deducted from my total. On a good day I can bank a few before things get hectic. It’s the only way I don’t end up in the same situation as Mailgirl Number Eight.<br><br>I touched her shoulder as I went by, trying to show a little support as I headed to the maintenance station. I wasn’t going to get any efficiency bonuses as I only had a half hour for lunch and was quickly wasting it.<br><br>The “maintenance station” was every Mailgirl’s friend. It had most of the various and sundry items a mailgirl needed to maintain her uniform. It was the storage area for fresh towels, soap, shampoo, and shaving supplies. It also held a file drawer full of the temporary tattoos we used to keep our numbers painted on. We used those because the font was much more legible than handwriting with a sharpie and did not smear no matter how much you sweat. Sometimes the numbers would dry out and flake off during the week but that was why we had a ready supply of fresh ones. Also at the station was the little bluetooth scale that would take a second to sync up with your MMU.<br><br>I heard a deep guttural moan from behind me, quickly stifled by a giggle. I looked over my shoulder at the shower, the curtain was drawn, two sets of feet amongst the constant spattering of water droplets on the tile, far too close to be casual. Now I knew where Mailgirls 12 and 14 had gotten off to.<br><br>My MMU dinged its readiness with a clear bell chime. I set foot on the scale. In a couple seconds the readout flashed on my MMU, “124.2 lbs, down 1.8 from this morning. 6.1 miles covered this interval. Please drink two 12oz bottles of water before returning to active status. Tray #10 waits for you on the lunch cart. Keep up the good work!”<br><br>Wow, I sweat out over a pound and a half of water this morning. That is pretty impressive. No wonder I didn’t have to pee.<br><br>I got my two bottles of water from the maintenance station and retrieved my lunch from the cart. Anika gave me a look so rather than eat at the cart like a table as she was doing I threw a towel on the bench and sat with my lunch tray in my lap. It wasn’t anything fancy, a plain garden salad with tuna on the side.<br><br>“You are dirty.” Anika said through her thick Russian accent. “You should shower first.”<br><br>I pulled the cellophane off the tray and opened a bottle of water. “I’m running late. Will shower in a minute.”<br><br>Anika shook her head at me and gave a gesture I interpreted as rude. “You American girls have no brains when it comes to maintaining your bodies.” She turned from me and admired her own shape in the mirrored glass. “You think a big boobs and a big ass is everything. You need to be clean, stand with some poise, grace. Make men want to sex you instead of just wanting your sex parts.”<br><br>Ug, I didn’t need a lecture on being a sexy naked lady from her right now. Yes you were a Victoria’s model, everyone already knows that. Yes you have a great body. I’m pretty tall at 5’10 and you make me look short. Your legs go on for miles and your skin is like snow. We all know already. I’m a mailgirl dammit, I have a job to do. Sometimes I have to get dirty. If all I had to do was answer the phones and make sure the CEO had an erection with his morning coffee I might be able to put that kind of bodywork in too. (But rumor had it she did a little bit more than give him an erection…)<br><br>But I didn’t say anything. I was to busy stuffing my face with baby spinach and gulping down water. I was wasting so much time today being introspective. I need to focus on what I was doing and knock out some demerits with my efficiency bonuses. That meant digesting lunch while I showered instead of while I was running around the trading floor.<br><br>I looked to my left and saw Six returning from the shower. She wasn’t wet. “Everything okay?”<br><br>She shook her head. “Eight wants a little time alone to pull herself together. It’s been a rough morning.” I nodded. She looked at me, “I heard you had a rough morning too. Want to talk about it?”<br><br>The sixth floor was the lobby, meeting rooms and mail room. Mailgirl Number Six was the one of us who worked in actually worked in a mail room, delivering mail to the rest of the building. This meant she got limited access to other floors and lots of access to whatever gossip was spreading throughout the building. I guess she had heard about the down-dressing Mr. Schranz had given me in front of everyone.<br><br>“Not much to say really,” I said between gulps. “He was just blowing off steam. I did kind of ignore him but I had other deliveries, you know how it is.”<br><br>“Yeah, but it sounded like he really blew a gasket.”<br><br>“Oh he did.” I smiled. “I actually thought he might have a heart attack.”<br><br>Six crossed her arms. “So why did you do it?”<br><br>I sighed, finishing my meal in record time. “He made me wait while he was talking to somebody else on the phone. I had a couple more deliveries to make and the seconds were ticking away. I either got a demerit for delivering to him late or five or six for everyone else. I made the only call I could.”<br><br>I returned by empty tray to the cart and recycled the water bottle I had finished before opening the second one. Six followed me as I went.<br><br>“Still, getting called out with that kind of attention is very stressful. Are you sure you are okay with it?”<br><br>God, Schranz belittling me in front of all of those people, no one saying a thing to my defense as he laid into me. It was not a memory I wanted to relive anytime soon. Thinking about it now was making my nipples hard again, a little twinge down below too. I started to feel disgusted at myself. Time for a shower.<br><br>She followed me to my locker. “You know it’s not good to carry around that kind of stress, Ten.”<br><br>“It’s okay Six, really.” I took off my MMU to put it on the charger. The little bit of bookmark I had forgotten about fell to the ground. Before I could do anything Six picked it up off the ground and read the piece of cardboard.<br><br>I turned around, blushing a little. She waved it off and handed the bookmark back. “It’s cool. No worries.”<br><br>“No, you don’t understand.” I tried to think of what to say, half turned on from remembering that humiliation and further embarrassed by Six finding that number. “I’m not gay. This woman really saved my skin this morning.”<br><br>“Right,” Six said with a playful smirk. “Do you want to hop in shower and tell me about it?”<br><br>“…” I didn’t know what to say.<br><br>She stepped a little close to me and lowered her voice. “It doesn’t count if its with another Mailgirl. The first thing they teach us in training is that we have to rely on each other. Think of it like a message, you had a really stressful morning and I’m offering you a message. That’s not gay is it? It’s not even really sex.”<br><br>“I…” oh God why was this turning me on so much. I’m not even attracted to her. “…I have a boyfriend.” I grabbed my towel and ran around her to the open shower stall.<br><br>I heard Anika laughing as I pulled the curtain closed. “So the crying girl doesn’t want you and the milf doesn’t want you either.” She laughed, “So Number Six, do you want to eat me right here or are you skipping lunch today?”<br><br>I turned on the water to drown out the sound of Anika laughing evilly. I let the water beat on me as I lathered up, hoping all of today’s crap would simply roll off like dirty suds and spiral down the drain. Normally I could recenter myself pretty easily, I just needed a few minutes to focus, but today it was tough to clear my head. Ever since Mr. Schranz had humiliated me I couldn’t help myself be at least a little turned on. Ug, it was so disgusting. Schranz himself being such and ugly troll and me kneeling down and taking it like some sort of slave, with all those eyes on me, shaming me just for doing my damn job. It was horrible. Horrendous. Made my skin crawl. It disgusted my mind and my soul.<br><br>But despite all that my body was turned on.<br><br>Why? I should feel like throwing up, but instead I was leaning against the shower wall, nipples hardening in the shower spray and a pang of desire between my legs. It was all so humiliating, my body betraying like this. I couldn’t ignore the erotic impulse anymore than I could the sound of Twelve and Fourteen still going at it hot n’ heavy in the shower stall next to mine, or Mailgirl Eight crying in the stall beyond that.<br><br>Behold the glamorous life of the modern mailgirl, contemplating masturbation in the shower during her lunch break.<br><br>Forget modesty. I had to do something. This was going to get painful if I didn’t have some release soon. It was twelve minutes to one o’clock when I hit the shower, it had probably been a minute or two, and I needed to get to my workstation by five of; so I had about five minutes to do what I could. I leaned back, caressed my breast with my left hand and let my right worked its way downward. I tried to visualize anything but Mr. Schranz; Hollywood hunks, cute guys from school, my on boyfriend, but instead all I could think about was Twelve and Fourteen enjoying each other mere inches away. My mind interpreted every sound; every little slap, squish, and squeak that came from that shower stall and visualized in such an erotic display that the sultry brunette and the athletic redhead would probably blush in jealousy of what I thought they were capable of. As I heard their breathing quicken I felt my own pick up as well. My head started to swoon. I touched the wall with my left hand so I would not loose balance, with my right I continued to work myself vigorously. I bit my lip to stifle a moan, arched my back against the tile wall to take some of the weight off my quivering legs. I spaced out, forgot where I was, ad just rode the orgasm that came and went too quickly.<br><br>The water felt cold on my skin now. My hair had accidentally gotten a little wet and I would have to towel dry that as well. I shut the water off and stepped out of the shower, got a fresh towel from the maintenance station and dried myself off next to Mailgirl 8.<br><br>“Are you feeling any better?” I asked her as I toweled off.<br><br>“I am feeling a bit better,” she said. “Are you feeling any better?”<br><br>I blushed a little. I guess I must not have been as quiet as I thought I was. “Can you get my back?” I tried to change the subject.<br><br>This was a thing we just learned to do as Mailgirls, showering and prepping to go back had to be done as efficiently as possible. It was a lot faster for two mailgirls to throughly dry each other’s hard to reach places than spend extra time struggling. None of us could afford to be shy.<br><br>Once we toweled each other off we quickly put on our various skin lotions and creams. All the sweating and the soap from the constant showers stripped the oil from our skins. It have to be replaced. Good skin was a requirement for a mailgirl and the company actually provided us with access to an expert dermatologist.<br><br>Again, Eight helped me get those hard to reach places, taking special care on the back of my legs and bottom. I did the same for her, marveling at the tightness of her lean figure.<br><br>“Thank you,” she said over her shoulder as I finished up.<br><br>“For the lotion? Not a problem.”<br><br>“No,” she said calmly. “You are the only one who gave me a little space because you cared.”<br><br>I think I was just busy but I’ll take the complement anyway. “You’re welcome. Us Mailgirls have to stick together, right?”<br><br>She nodded just as I Twelve and Fourteen bolted out of their shared shower. “Dammit girls, does nobody share the time?” They must have realized they were running late.<br><br>Eight and I scrambled out of their way, deposited our wet towels in the bin and tried to ignore what was going on front and center on the middle bench. Sixteen, Anika, was lying down with her legs spread for the kneeling Mailgirl Six. I tired to rush past. Doing stuff like that out in the open was a little crass for my tastes. This was a locker room, not a porno studio.<br><br>I strapped my MMU on my arm and checked my numbers in the mirror, front, back and sides. I didn’t need a touch up so I headed for the door, “Six minutes to one o’clock ladies.” I gave them fair warning as I was heading back.<br><br>“Take your time.” I heard Anika moan. “ Don’t listen to her. I know the boss. You can’t get in trouble.”<br><br>Somehow I highly doubted that.<br>`
+                },
+                {
+                    title: "Chapter 7",
+                    subtitle: "", 
+                    content: ``
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

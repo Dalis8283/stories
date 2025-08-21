@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>Boots and her Buddies</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        hr {
+            border: none; /* Remove default border */
+            border-top: 2px solid #333; /* Create a solid top border */
+            width: 70%; /* Set width to 70% of the parent container */
+            margin: 20px auto; /* Add vertical margin and center the line */
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "Boots and her Buddies",
+            author: "Tom",
+            chapters: [
+                {
+                    title: "Chapter 1",
+                    subtitle: "The Vision",
+                    content: `Kuma thought he heard the sound of horses’ hooves in the distance and he listened intently to know if it was just his imagination or if he had actually heard something and if he had heard horses were they approaching him? He decided he really had heard hooves beating and the horses were in fact approaching him. He quickly lay prone on the moist ground, concealing himself from anybody who would pass on the bridle path below. Kuma had been searching for mushrooms in a thick grove of tropical foliage growing on the side of a hill. As luck would have it, he had just come upon a good patch and was in the process of busily filling his burlap sack with choice mushrooms when he heard the approaching team and carriage. Kuma had good reason to avoid being seen because he was trespassing on the Van Cleef estate and it was common knowledge among the people who lived in the neighboring villages that trespassing on the property could cause unpleasant consequences. Nevertheless, young boys of Kuma’s age occasionally thought it worth taking the risk in order to poach the estate’s abundant small game or to pilfer the various types of luscious berries (which seemed to grow everywhere). Or, as in Kuma’s case, to hunt for mushrooms, highly prized by his people as an edible delicacy and also valued by local doctors as a potent medicine capable of curing fevers, as well as helping to rejuvenate old men.<br><br>Kuma’s vantage point afforded him an unobstructed view of the bridle path which ran slightly below him about fifteen feet away. It was on this path that the approaching team of horses were travelling. He lay on his stomach perfectly prone, about five feet above the path. His location was part way up a stiff east to west grade which any traffic on the path which was moving in that direction must climb. A curve in the bridle path existed about one hundred feet downgrade from his position and this prevented him from seeing the oncoming traffic below the curve, but he could hear whatever was coming. The team and carriage were on the path just below the curve when the vibrant voice of a woman carried over the sound of the hooves pounding on the dirt path.<br><br>"Yah! Boots, Penney, yah! Move your lazy butts!"<br><br>This, followed by the meaty cracks of a whip contacting taut flesh. He was curious to see the oncoming team, but was totally unprepared for the sight which greeted him as the ensemble rounded the curve and drove into view. Two tall young women wearing black leather boots laced to mid-thigh were trotting ahead of a shiny, black, two-wheeled carriage. He observed that the two almost nude women were harnessed to outwardly curved wooden shafts projecting forward from underneath the carriage. Seated in the carriage were two elegantly dressed young women. They wore silk blouses with short sleeves, suede skirts to well above the knees and soft doeskin riding boots. Silk scarves covered their hair and cream colored, gloves with pearl buttons ran up their arms to above their elbows. One of the women held a pretty pink parasol above her head. Her companion held the reins to the "horses" in her left hand and her right arm expertly wielded a black buggy whip.<br><br>"Look at these lazy ponies, Anse," the woman holding the reins said to her companion. "There is simply no excuse for this."<br><br>"Simply not enough discipline, Gretchen," replied Anse. "When we get home I’ll have them hitched to the hot walker for a few hours to cool them off and this afternoon they’ll pull the log."<br><br>As they drew closer, Kuma saw that the reins were attached to bits in the ponies’ mouths, just as he had seen with real horses in his village. Their flaxen hair was braided into pigtails, which were looped decoratively above their heads. As the carriage passed directly in front of Kuma, the ponies’ muscular legs were pumping up and down in perfect synchronism. They were covered with sweat, their flanks exhibiting numerous welts inflicted by the lash. Miraculously, at the moment the team came opposite Kuma, the pony on his side turned her head in his direction and seemed to gaze directly into his brown eyes. He never forgot the unearthly expression of her face, bitted and crossed with leather straps, and the piteous anguish he saw in her big, blue eyes. She was suffering, no doubt of it. And yet, it seemed to Kuma that somehow she was happy in her awful state. Years later, when he was a mature man, he realized that the expression he saw that day on the face of the beautiful pony girl, bitted and harnessed, pulling a carriage, lashed with the unforgiving whip of a cruel mistress, was one of tortured ecstasy.<br><br>The team was quickly moving past him. Then he saw the ponies’ large buttocks from behind for the first time. He realized that this view was the perspective enjoyed by those fortunate enough to be riding in the carriage. The expansive hips of the ponies slid saucily from side-to-side as their creamy buttock cheeks bounced tick tock, tick tock, up and down, up and down. And then they were out of sight. But as they receded into the distance Kuma could hear Gretchen calling to her ponies and hear the meaty crack of her long whip.`
+                },
+                {
+                    title: "Chapter 2", 
+                    subtitle: "The Business Venture",
+                    content: `The young women passengers riding in the carriage drawn by Boots and Penney were diamond heiress Gretchen Van Cleef and her cousin Anse DeGier. Gretchen was the great, great, grand-daughter of Anthony Marie Van Cleef. The cousins closely resembled each other. Both possessed typically Dutch inherited physical characteristics; blonde hair, blue-eyes and fair skin. Gretchen Van Cleef, the carriage driver, was not as tall as her cousin, Anse DeGier, but equaled her weight due to her full, voluptuous figure. Anse was tall and lean, which seemed to go with her profession. Anse was a pony girl trainer and she spent many hours at the estate’s pony training facility perfecting her charges’ performance. After a vigorous workout between the shafts, the ponies were usually cooled down by walking them in the corral. They were made to walk in a circle so that their muscles would relax gradually, thereby avoiding cramps in their highly developed leg muscles. Anse; occasionally Gretchen, would stand in the center of the circling ponies, flicking a training whip to keep the ponies on pace.<br><br>Unlike her forebear Mynheer Van Cleef, who never visited the vast spice plantation he owned in the Moluccan Islands, Gretchen spent considerable time at the plantation. Her parents wearied of cold, damp European winters, and when Gretchen was twelve years old they relocated to the sunny, warm, East Indies. Gretchen, however, stayed on in Europe to complete her education. She spent her summers with her parents at the estate on Tambura. During these school years she resided in Rotterdam in the home of her aunt and uncle and her cousin, Anse, whom Gretchen adored. Anse was a year older than Gretchen and the impressionable Gretchen strove to emulate her older cousin in all things. They both attended Madame Trudeau’s Academy in Berne, where they received an excellent education suitable for wealthy, aristocratic young ladies. Both girls became accomplished horsewomen while at the academy. Anse was exceptionally adept with horses and she decided that one day she would train her own horses.<br><br>Another student at Madame Trudeau’s was a young lady whose name was Jasmine Hunter. Jasmine lived in America, in South Carolina, where her parents owned a cotton plantation. Gretchen befriended Jasmine and they developed a close, warm relationship that endured the rest of their academy years and beyond. When Gretchen was seventeen, Jasmine invited her to spend the summer vacation with her in South Carolina. Gretchen wrote her parents and they gave their permission for her to spend a month with Jasmine, but then she must come to Tambura for the balance of the summer. The girls were delighted with the prospect of Gretchen’s coming to visit in America. Gretchen liked South Carolina from the start. The large antebellum plantation houses, the rural beauty, the genteel manners, all of it. She loved it. Jasmine’s parents farmed a large plantation with many slaves. The slaves who worked in the "big house," as they referred to it, waited on Gretchen hand and foot, but she was used to that from her summers spent at the Van Cleef estate.<br><br>Jasmine suggested to Gretchen that they take a tour of the surrounding countryside and visit some of the neighboring plantations. They would leave in the morning, enjoy a leisurely, scenic, carriage ride and have lunch at the home of family friends. Awaiting them as the girls stepped out onto the mansion’s veranda, Gretchen expected to see a team of horses hitched to the carriage. But, instead, standing erectly two abreast, stood six magnificent octoroon girls, harnessed to the carriage shafts. They were of equal height and except for thigh-high, laced boots and glistening, black leather straps which criss-crossed their abdomens, they were completely nude. "We call then plantation ponies," Jasmine informed Gretchen. "Some people have their arms removed and capped for smartness sake, but we haven’t done that, as you can see. Very well, Henry. We’ll be on our way." Henry, a mulatto youth brightly dressed in a coachman’s livery and sporting a tall stovepipe hat, was seated high above the team. He snapped a long-handled carriage whip over the heads of the octoroons, signaling them to start. Gretchen was, to put it mildly, intrigued. She saw the girls’ muscles ripple beneath flawless almond skin as their long legs strained to get the massive carriage underway. Henry cracked the whip again and still again until the carriage slowly began to move down the long drive to the main road that would take them on their leisurely tour. When the carriage reached the road the team was brought up to a trot and then proceeded to prance smartly along. Henry’s whip elicited audible grunts from the bitted octoroons, heard by Jasmine and Gretchen, as it moved idly from one bare buttock to another. The two young ladies were seated in the carriage facing forward which afforded them a delightful view of the gorgeous scenery as well as the incredible sight of six lush buttocks swinging back and forth in precision unison, bearing the red welts of Henry’s flexible whip. Gretchen experienced a feeling of pleasurable, unadulterated lust. The idea of owning a stable of such creatures took shape in her mind for the first time during that unforgettable carriage ride.<br><br><hr><br>Anthony Marie Van Cleef carried on his business ventures in a period of history when Holland was a world power, even contending with mighty England for commercial primacy. During his career, Van Cleef had the reputation of being an extremely shrewd entrepreneur. He invested first in the flourishing spice trade centered in the Dutch East Indies and later parlayed his profits made from the spice trade into equally profitable investments in South African gold and diamond mines. DeBeers ranked him second only to themselves in South African assets. But, it is the property in the Moluccan Islands, or Spice Islands, as they are sometimes called, which provide the setting for our story. In his lifetime, Van Cleef never visited the East Indies. Nor, for that matter, had he ever been to South Africa. Instead, he spent his entire life in Amsterdam, the capitol of The Netherlands, which he considered to be the cultural and financial center of Europe and he saw little sense in leaving it for any extended period of time. Among his countrymen he wasn’t alone in holding that opinion. Many Hollanders, who are a proud and patriotic people, shared it. Earlier, Dutch mariner Abel Tasman had explored the western Pacific, thereby laying the foundation for Holland’s claim of hegemony in the area.. The claim was contested by arch- rival England, but the two colonial powers eventually carved up the region to their mutual satisfaction. Holland’s considerably large and modern navy made it possible for aggressive Dutch merchants to trade and establish themselves almost everywhere in the world. Consistent with the policy of his fellow entrepreneurs, Van Cleef hired agents to manage his foreign properties. For the management of his East Indies plantations he selected the Dutch East Indies Company. This proved to be a good choice. The company employed competent managers and, most importantly, maintained excellent relations with both the Dutch governor’s office in Jakarta and the Australian government’s representative there. Australia had more than just a casual interest in the Spice Islands. England purchased significant quantities of spices and coffee beans (and later tea) from the Dutch planters there. Brokers in Sydney were heavily involved in the spice and coffee trade. When the blight destroyed the coffee crop in the late eighteenth century, the planters switched from growing coffee to growing tea; thus England (and America) became a tea- drinking nation.<br><br>Van Cleef had purchased a large coffee plantation on the Moluccan island of Tambura, located north of Australia in the Malay Archipelago, which runs between Celebes and New Guinea. Operating a plantation is labor intensive. Accordingly, the management company dreamt up a novel scheme and approached the Australian consulate with it. What were the possibilities of having Australian convict labor contracted to Tambura to work on the plantation? England was deporting thousands of people convicted of petty offenses in England, Scotland and Ireland to Australian penal institutions. Under the terms of the scheme the convicts would be indentured servants of the company for a period of time to coincide with their prison sentences. A small wage would be remitted to the Australian treasury, presumably to be held in trust for the prisoners until their release from bondage. The company would, of course, feed, clothe and house the servants. It was a win-win situation. The company would get a cheap supply of labor and the Australian government would be relieved of the expense of feeding and clothing the convicts, of paying prison guards and of all the other expenses involved with running prisons. The consulate discussed the offer with Canberra and the government officials there readily agreed to the company’s proposal. An initial shipment of three hundred indentured servants were shipped from Sydney to Tambura. Unmarried men and women were housed in separate barracks; married couples were assigned to small cabins. They were fed in dining halls, given cotton clothing (shoes were deemed unnecessary) and put under the supervision of company overseers who taught them how to carry out the plantation work. The treatment of the indentured servants was consistent with the treatment accorded most menial labor throughout European colonies during that period. The punishment for disobedience was swift and sure, typically a flogging witnessed by the other servants. But, rewards for hard work and good behavior were also forthcoming in the form of banquets and presents on special occasions, such as Anthony Marie’s birthday and Christmas.<br><br>When the period of their servitude was drawing to a close, many of the servants approached their overseers asking to stay on at the plantation. They were told that this was possible, but only if they agreed to become chattels of the company for life. Also, any children born to them would be chattels. Not surprisingly, when they contemplated life lived in the harsh world that awaited them if they left the plantation, many of the servants agreed to the company’s offer of chatteldom. Thus, did slavery come to Tambura. Within five generations the working population of the plantation numbered approximately three thousand slaves. In the year eighteen-fifty-six, when she was twenty-two years old, Gretchen Van Cleef inherited the Van Cleef fortune, including the huge Tambura plantation and its three thousand slaves.`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "The Plans", 
+                    content: `The carriage ride that Gretchen took that day with her friend Jasmine was a seminal event in her life. When Gretchen returned to the academy in September after the summer vacation, she was eager to reunite with her cousin Anse and to inform her of the summer’s events, especially those concerning her trip to Jasmine’s plantation in America. Gretchen regaled Anse with accounts of the charmed life lived by plantation belles in the American south: morning horseback rides; picnic lunches spread out on manicured lawns; late afternoon canoeing on placid forest lakes; parties and balls lasting into the small hours of the morning. Anse could sense Gretchen’s enchantment with the gracious life and manners that prevailed among the plantation owners and their families. She guessed correctly that Gretchen planned to create one day a similar lifestyle at her own estate in the East Indies. Gretchen saved for last her account of the "plantation ponies". Anse was thrilled beyond words.<br><br>"Are you putting me on Gretchen?" She asked incredulously after Gretchen related her story of the erotic carriage ride she had shared with Jasmine that fateful day.<br><br>"No! No! It’s true I swear." Exclaimed Gretchen. "And we had this absolutely fabulous coachman. He was dressed in livery, can you believe it? And he had a long black whip, which he used to whip the ponies’ behinds. But, this is the most fascinating part: Jasmine told me that the ponies are related to her. I swear! She said that three of the ponies in the team which had drawn our carriage that day were her half sisters by blood. She told me that her father and his father before him and his father before him personally sired the children of their most beautiful female slaves. Apparently, this is a common practice on the plantations in America. I asked her if she felt compassion for her sisters, naked, harnessed, pulling her carriage, whipped by a mulatto coachman. She didn’t see anything out of the ordinary about that at all."<br><br>"They are just slaves, Gretchen," she told me. "It’s not as if they were actually members of my family. They are just the offspring of Papa’s brood slaves."<br><br>Anse was fascinated with Gretchen’s account of her vacation experiences, especially the part about the plantation ponies. "Gretchen, wouldn’t it be fantastic if you could have pony girls on your estate?" Gretchen replied that that very idea had occurred to her as soon as she had seen the plantation ponies in South Carolina.<br><br>During their final year at the academy the cousins spent time making plans. Anse was already an accomplished horse trainer and she was convinced that training human ponies would not be too different from training horses. She told Gretchen that training any animal, including the human animal, required patience, determination and consistency. The one being trained had to learn who gave direction and who took direction. Obedience to commands was rewarded and disobedience was punished. But, before any training program could be undertaken, potential ponies were to be selected from a field of candidates. The selection of pony trainee candidates would be a joint effort on the part of Gretchen and Anse. Gretchen would make her initial choices from among the dozens of slave girls on the Van Cleef estate that fell into the optimal age range (eighteen to twenty-five), and who met the height and weight requirements (five feet eight to six feet in height, and one hundred twenty-five to one hundred fifty pounds in weight). Gretchen would order that all slaves who met these basic requirements be brought before her for screening. Once selected by Gretchen as a potential pony girl trainee, they would be further examined by Anse who would determine if the candidate possessed the strength and stamina necessary to perform the tasks required of an actual pony girl.<br><br>After graduation from university, Gretchen settled in at the estate on Tambura. Anse joined her cousin soon thereafter. When Anse arrived, Gretchen was already in the process of screening her slave girls. She issued orders to each of her foremen and women to have all young women between the ages of eighteen and twenty-five whom they supervised report to the main stables. There they were assembled in a harness room, ordered to remove their clothes and to kneel in a straight line to await their mistress. When Gretchen entered the room the girls put their foreheads against the wooden floor, as they had been taught to do from infancy when in the presence of a master or mistress.<br><br>"They smell bad," Gretchen said to no one in particular. "Have them washed and brought back here immediately." Once bathed and smelling much better, the slave girls were returned to the harness room where they stood with their feet wide apart, at attention, in a line, hands behind their heads, fingers interlaced, eyes straight ahead, awaiting their mistress’ inspection. Gretchen wore white riding breeches and gleaming black boots, a black leather quirt dangled from her right wrist. Those girls who were less than five feet eight inches in height Gretchen summarily dismissed. Gretchen would settle only for tall, blonde, physically perfect specimens to be her ponies. As she walked up and down the line of girls, she examined their complexions, felt their limbs for muscle tone, kneaded their breasts for firmness and tugged their nipples for stiffening and erection. The last was to determine the nipple’s suitability for piercing, since her ponies would sport the same bronze nipple rings as she had seen worn by the plantation ponies in America. As she held a nipple in the fingers of her left hand, she stroked the girl’s labia with the leather loop of the riding crop and closely observed her reaction to the stimulation. She wanted sensuous girls, girls who would later be conditioned by Anse to be in a state of sexual arousal when they were performing as pony girls. Some girls climaxed as Gretchen slid the tip of the quirt between their labia lips and contacted the clitoris. She put the quirt loop to the nostrils of each girl and commanded her to sniff it. Then she put the quirt to her lips and ordered her to lick it, all the while studiously watching the girl’s expressions. Each girl’s examination was consummated with a brisk slap on the buttocks with the business part of the whip, this done only partly for Gretchen’s amusement. She carefully observed the muscle play in the legs and buttocks in response to the pain.<br><br>If the candidate passed Gretchen’s inspection in all respects, she qualified for a further examination by Anse. A girl might appear to be physically qualified to be a pony girl, but only a rigorous routine developed by Anse would determine if the girl possessed the necessary physical attributes of an actual pony girl. A pony girl in service on the Van Cleef estate would possess extraordinary physical attributes. She would have the strength to pull a light carriage or sulky carrying two adult persons. Not only would she be able to draw this burden, she would be able to walk, trot, canter and gallop under the load. She would have the stamina to draw the load over a distance of miles, on level ground and up steep grades. As important as the physical condition of the pony girl was, her mental condition was even more important. It was critical, as Anse knew from her experience in training horses, that the "animal" respond correctly to its situation. The girl would be abruptly transformed from a human existence to that of an animal, a human horse. Her nipples and labia lips would be pierced and bronze rings inserted. Her rear teeth would be removed to facilitate the insertion of a metal bit, never to be removed. She would be harnessed to the shafts of the vehicles which she would pull, either alone or in tandem with other ponies. Finally, she would perform her strenuous tasks under the unforgiving lash of her mistress’ whip. It was Anse’s assignment to transform Gretchen’s choices from ordinary slave girls to superb physical specimens deserving of being their mistress’ magnificent pony girls.`
+                },
+                {
+                    title: "Chapter 4",
+                    subtitle: "The Choosing", 
+                    content: `There were many slaves on the Van Cleef estate who met the age, height and weight requirements set forth by Gretchen for her stable of pony girls. The management company had instituted a form of eugenics from the outset to selectively breed the former prisoners, now slaves. Their objective in doing so was to perpetuate a strong, healthy, work force. This was accomplished and it had the side effect of developing a race of tall, blonde men and women. After six generations of the program the slave population of the estate was comprised mostly of women between five- feet- ten inches and six feet in height and men well over six feet tall.<br><br>Anne Cameron was notified by her supervisor that she was ordered to report to the main stables at seven a.m. the following morning. Anne fit the pony girl candidate criteria in all respects. She was just shy of six feet in height, weighed one hundred forty-five pounds and was twenty-two years of age. She was employed as a caretaker for children under five in the estate nursery. Anne had been privy to the rumors which were circulating throughout the estate concerning the activities taking place at the main stables. A corral was being built, new buildings were being erected which, rumor had it, contained many stalls. The harness maker was interviewing young men to see if they were qualified to become apprentices. The head carpenter, who also was the carriage maker, was doing the same. The logical conclusion formed by the people of the estate was that their mistress, Gretchen Van Cleef, intended to raise horses. Her cousin, Anse de Gier, who was a widely respected horse trainer in Europe, would arrive on Tambura in the near future. What Anne Cameron and the other young women ordered to report to the main stable could not figure out was what they had to do with all of this activity. Anne decided to ask her lifelong friend, Jock, what he made out of all this. Jock was a strapping youth, six feet four inches tall, sandy-haired, who possessed a gentle temperament. He was very much in love with Anne, but they had not yet received permission from the estate management to mate, much to their frustration. This unfortunate situation did not, however, prevent them from engaging in sex play, which they did frequently. Anne sent a message to Jock via her coworker, Margaret Abbot, to meet with her that evening after dinner. No need to designate a meeting place, since they both knew their rendezvous well, a dense bower of tropical vegetation on the bank of the wide river which split the estate in half.<br><br>"What do you make of it, Jock? What do you think she wants with all of us girls?"<br><br>"It sure is a pisser, Annie. I can’t figure it out. Maybe her ladyship wants to put you lassies between the shafts of her carriage, eh?"<br><br>"Oh Jock! Don’t be daft. Girls pulling a carriage? We wouldn’t know how."<br><br>"That would be something, though, wouldn’t it, Annie? Do you fancy feeling a whip on that precious ass of yours, eh?"<br><br>Jock was prescient, though not yet himself believing his foreknowledge. The two young people soon gave up speculating about the next day’s happenings and began to explore each other’s bodies. Anne possessed large, conical breasts which Jock was privileged to feast on. Anne placed a nipple between his anxious lips and he began to suck like a babe nursing at its mother’s teat. The nipple quickly stiffened and Anne removed it and replaced it with its twin, then alternated first one teat and then the other. As delightful as this foreplay was, the two lovers were unable to consummate their love with the sex act. Anne wore a metal crotch screen between her thighs, which prevented access to her outer labia, hence no penetration. All single girls and women were fitted for and had such devices installed upon reaching puberty. This practice, put into place by the overseers generations ago, was necessary to maintain the selective breeding program. Anne and Jock had found ways to gratify each other sexually. Anne’s breasts were extremely sensitive as were her inner thighs. Jock ran his tongue over the smooth white skin of the inner thighs as close to Anne’s labial lips as the screen would permit. He discovered that kissing her legs and feet would bring Anne to a frenzy of passion climaxed by a copious orgasm. When he sensed she was approaching climax, he would return to her upper thighs and press his tongue against the screen to savor the ejaculation liquid. To reciprocate, Anne’s long fingers would gently caress Jock’s testicles and then move to his incredibly hard penis, stroking it until Jock reached his orgasm. In this way the two young lovers assuaged their passions. All unwed females were examined monthly by an estate nurse for evidence of sexual intercourse. The chastity screen was removed and the nurse inserted her fingers into the vagina to determine if the maiden head was still intact. If the maiden head was discovered to be ruptured, the female was quarantined until she menstruated. If it turned out that she was pregnant she was forced to divulge the name of the father and a determination was made as to the genetic desirability of the future offspring. If the decision was that the child was genetically desirable, it was permitted to live and to become part of the community. If not, it was disposed of. The mother of such a child was, for the rest of her life, assigned to hard labor as a field hand and not permitted to mate again. The child, if it survived, was raised in a public nursery, the very one in which Anne was employed as a caretaker. The father of the child was also assigned to a life of hard labor; clearing swamp land, dragging ore carts in the mines, much of the time left to the tender mercies of whip-wielding foremen. Such a fate insured that no man other than the actual father would foolishly consent to being named falsely the father of the child. Of course, there was always the possibility that the mother, in order to protect the identity of the real father, would falsely accuse an innocent dupe. It was said, but never verified, that this had happened more than once.<br><br>Anne was a member of the second group of twenty-five slaves to be inspected by Gretchen. She had never seen her mistress up close and, naturally, was quite curious. The estate slaves, of course, had dreamt up many stories relating to their beautiful young mistress and Anne had heard her share of such accounts. It was said that Gretchen had ordered young slave bucks be brought to the mansion, bedded them for the night and then had them killed. It was also said that she had no use for male company, but seduced young virgins in the manner of those women of the Greek island of Lesbos. Neither of the stories was true, but Gretchen did nothing to discourage the circulation of the libels. She thought it better to be perceived by the slaves as a creature of mystery, thus maintaining an absence of any familiarity whatsoever, paying homage to the old adage, "Familiarity breeds contempt." The girls had been bathed, their chastity screens removed and now they waited nervously for their mistress’ appearance. Nude, they knelt in a straight line in a large room of the main stables. Gretchen appeared in the entrance way and an overseer quickly clapped her hands, a signal for the girls to put their foreheads to the floor.<br><br>"My nose tells me that you have had them bathed this time," Anne heard a rich, vibrant voice say to the overseer. "Good. Rise!" This command followed by the smack of a riding crop striking a leather riding boot. The girls scrambled to their feet, at the same time locking their fingers behind their heads. Anne’s eyes were focused straight ahead, so, of course, she wouldn’t see Gretchen’s face until Gretchen actually stood before her, examining her. But, as Gretchen moved down the line slowly approaching Anne, the enticing fragrance of her expensive perfume preceded her. Anne had never in her entire life been exposed to such an intoxicating aroma. The perfume only added to the already compelling mystique Anne’s imagination had concocted of her mistress, Gretchen Van Cleef. What was a mere ten minutes waiting for her mistress to face her seemed like forever to Anne. At last the much anticipated moment arrived. Anne knew better than to make eye contact and this did not present too much of a problem for her, since she was several inches taller than Gretchen. During the inspection when Gretchen was not looking directly into her face, Anne was able to move her eyes and get a good look at her mistress. She saw a beautiful young woman with dark blonde hair, (dishwater blonde, her father called it) striking blue/green eyes accented by dark eye brows, high cheek bones and a small, almost pug nose. She wore fawn riding breeches, which showed her curvaceous hips to advantage, brown, turned down boots and an embroidered long sleeved silk blouse with a blue silk scarf tucked in at the neck She carried a red leather riding whip, looped at the end. Gretchen examined Anne’s body visually and then stepped back to scan her from head to toe. "My God! What a magnificent female," she thought to herself. This one just might be the pony queen of my stable. Anne was nervous and as a result her forehead showed a slight sweat, which didn’t escape the mistress’ attention. Gretchen took Anne’s right nipple between her thumb and forefinger and tugged it gently. Anne involuntarily sucked in her now concave stomach resulting in the rib cage expanding and her large blue-veined breasts being thrust forward. "Oh my!" thought Gretchen, "she’s passionate." Still teasing the stiff nipple, Gretchen probed Anne’s vulva with the looped end of the crop. Anne’s face flushed, her breathing quickened and Gretchen knew that if the sex play continued for even a minute more the slave would climax. She stopped abruptly and swatted Anse’s expansive buttocks smartly with the whip. "You will do, my beauty, you will do very well, indeed," said Gretchen and on sudden impulse she put her arm around the gorgeous slave’s neck, pulled her face down to her waiting mouth and kissed her on the lips. It wasn’t lost on the other slaves that Anne was the only one favored with the mistress’ kiss and the consensus of opinion was that Anne would occupy a special place in the yet unknown scheme of things.`
+                },
+                {
+                    title: "Chapter 5",
+                    subtitle: "The Harnessing", 
+                    content: `After inspecting over one hundred candidates, Gretchen selected fifty slave girls as semi-finalists to have the honor of being pony girls. These fifty would be further winnowed down to twenty-five, which would be the size of her stable. Her cousin, Anse, would make the final cut to twenty-five, subject to Gretchen’s approval.<br><br>Anse was eminently qualified to evaluate the girls physical and mental suitability to be trained as pony girls. She had spent her youth around horseflesh and had aquired a good sense of strength and temperament of these animals. After all, were not slaves but a different species of the same animal genus? Anse’s mother, Rie, was the older sister of Gretchen’s father. Rie became the wife of Wilhelm DeGier, a wealthy shipping tycoon who operated out of Rotterdam, one of Europe’s great seaports. Wilhelm’s sister, Gertrude, married a rich farmer from Friesland, a rural area of northeast Holland, where Anse spent her summer vacations during her days as a student. Anse looked forward eagerly to those summers. She enjoyed the long, warm, summer days from June until mid-September, by which time the nights were turning chilly and the smell of autumn was in the air.<br><br>Her aunt and uncle were childless and for this reason they doted heavily on Anse, as did all of the farm employees. She had the complete run of the large farm, including working with the many animals that populated the farm’s barns, pens and corrals. By her twelfth birthday, Anse was capable of handling a team of gelded Belgian draft horses, which were bred and raised on the farm. These huge equines soon learned that the lithe young girl was a firm driver, who augmented her slim physique with ready application of the horsewhip. Anse, for her part, thrilled to be in control of such large animals. They were hers to dominate, and dominate she did, exacting obedient response to the slightest pull of the reins. When the response to the reins or her verbal commands was less than satisfactory, the Belgians without fail felt the whip laid across their huge hindquarters.<br><br>Anse was also permitted to watch the breeding of the Belgians. When a mare came into heat it was led into a special breeding stall to prevent an unsuitable male from mating with her. A "teasing stud" was put into an adjoining stall and permitted to excite the mare by nipping her flanks and thrusting his muzzle between her hind legs, desperately trying to reach the source of the odor that was driving him to a frenzy. When the mare was deemed by the handlers to be ready for mating, the breeding stud was positioned behind her and brought up on his hind legs exposing his massive genitalia. The mare, now fully cooperative, her long labia slit gaping, backed her haunches into the stud as the handlers grasped his member and quickly inserted it into the slippery vaginal canal. The stud would buck his huge haunches, driving his long, thick, organ deep into the mare’s wet sheath, all the while grunting and snorting until he finally emitted a huge gush of semen into her vaginal canal.<br><br>Anse watched in fascination, never tiring of witnessing the act of copulation engaged in by these massive brutes. She was not invited to participate, only to watch, but she was determined to know how the shaft of the stud felt to her bare hands. She found her opportunity to discover that when she was doing chores in the stable one morning. She was in the stall of one of the geldings and decided to take his halter and pull his head to her crotch to see if he would react to the odor of her vagina. She held his muzzle to her crotch and much to her delight his huge cock slid out of his loins and hung half-way, suspended between his legs. Quickly she removed her work gloves and tentatively grasped the warm, exposed shaft with her bare fingers. The gelding snorted, but did not at once retract his cock back into his body. Anse squeezed firmly and insistently pulled the shaft downward. Her hand was too small to encircle the shaft anywhere but near its head where she encircled her fingers just behind its sensitive tip, squeezing tightly and tugging harder. Then the gelding suddenly retracted his organ and no amount of petting and stroking the opening where it had disappeared could coax it out again.<br><br>But, from then on Anse knew how to arouse the huge horses and it became a regular diversion for her amusement. To her surprise she found that her pussy was wet after the teasing sesssions with the geldings. She practiced this sex play only with geldings, aware that any such traffic with a stallion would be extremely dangerous.<br><br>It was not entirely lost on the hands that the geldings would sometimes unsheath their cocks when Anse was nearby. They mistakenly attrributed it to the horses ability to catch the odor of a woman who was menstrauting. Anse devised another experiment with the Belgians which would later serve her well in training the pony girls. She rubbed the lash of her horse whip against her plump outer labia lips and then put the whip’s lash to the horse’s nostrils. Then she would lightly flick the horse’s hindquarters after, which she would again put the lash to its nostrils. In this way she caused the horse to associate the odor of her sex with the whip, and eventually the sensation of feeling the whip making contact with their flanks was associated by the horse with the fecund aroma of her sexual cavity. Incredibly, she would drive a team of Belgians pulling a heavy load, sweeping her horse whip across their massive buttocks, their huge sexual members swinging between their legs seemingly in cadence with her whip. Later, when Anse trained pony girls, she would extend this unique association method to another level. The pony girls, in response to sexual arousal, would learn to entice their mistress to use her whip.<br><br>Five rows of ten nude slave girls stood in the stable with their hands locked behind their heads awaiting the arrival of their mistress’ cousin, Anse DeGier. They had only a vague idea of what lay in store for them or what role Anse had in their future. The stable superintendent clapped her hands, and the slaves went to their knees. Anse strode into the room and paused to survey the scene that appeared before her. Fifty beautiful girls selected by Gretchen as possible trainees to be pony girls knelt before her. She took a position standing directly in front and facing the five rows of slaves. In her right hand she carried a doubled-up long handled carriage whip which she now shook loose executing an explosive crack of the lash over their heads to get their attention.<br><br>"You have been wondering why you are here," she said. "I am about to tell you why you are here and why I am here. You have been given the opportunity of serving your mistress in a unique way. If you measure up to very strict physical standards you will be trained by me to be your mistress’ pony girls. You will be harnessed to her carriage, either alone or with your mates, and proudly draw her carriage throughout the estate and the entire island of Tambura. I will physically condition you to be capable of carrying out your tasks. The conditioning will not be easy, but when I have finished with you, you will be superb physical specimens. I will not be an easy trainer. You will, no doubt, feel my whip frequently. I will accept nothing less than perfection and absolute obedience."<br><br>Following this brief address, the slaves were taken in groups of five to the stable’s tack room, where harness makers fitted bridles to their heads and female grooms busied themselves weaving the slaves’ hair in long blond pigtails - an adornment ordered by Gretchen. They were then led by the grooms holding reins attached to their bridles to the main area of the stables where they were put into stalls, two to a stall. The grooms called them "girl" and used terms associated only with horses.<br><br>The pony girl candidates were utterly humiliated by all of this horse related treatment, which, of course, was the reaction anticipated and desired by Anse. She had, at last, inaugurated her long thought out program of transforming ordinary slaves into actual, functional, human ponies. She was eager to get them into harness. The strength and stamina of the girls were her primary concerns. She had no doubt that she could shape their temperament over time. She knew that they were no match for her past experience with horses, and her cold, never deviating determination.<br><br>When all fifty girls had finally been bitted and bridled, Anse walked slowly down the long center walkway separating the two rows of stalls. The ponies stood facing out of the stall, watching their haughty trainer as she slowly walked past them. Some couldn’t suppress a shiver, observing the now familiar whip which she was never seen to be without. Anse knew that the exceptionally tall and beautiful platinum blonde slave girl was Gretchen’s favorite, so she made it a point to stop at her stall and to examine her closely. Gretchen had named her "Boots" after learning that as a child, little Anne had had trouble pronouncing her r’s. Instead of saying "birds," for example, she would say "booties". Within her immediate family and among her childhood friends she was called "Boots" and to Gretchen, that seemed a suitable name for her "Pony Queen". Anse seized Boots’ bridle and pulled her closer.<br><br>"Ah so! This is no doubt the beautiful Boots, queen of the stable. We shall get to know each other well, Boots, you can count on it." With that, Anse ran her hands over Boots’ rump and gently patted her. "Yes, Boots, you will come to know me well."`
+                },
+                {
+                    title: "Chapter 6",
+                    subtitle: "The Conversion", 
+                    content: `Gretchen had selected fifty slave girls as pony girl candidates. Now it was her cousin Anse’ responsibility, as trainer, to narrow the choices to the final twenty-five girls who would comprise the pony girl stable. Anse would rely on her past experience in training horses as her guide in training the ponies. Those slaves who were able to meet her rigorous standards without being broken in body or spirit would be the finalists. Anse relied on three governing principles for training horses, which she intended to use to train human females. First: issue simple commands and be consistent. Do not, in any circumstance, give contradictory commands. This caused confusion. Second: show determination. Do not give the pony the perception that your command might be withdrawn or that you would tolerate any delay in the pony responding to the command. Third: deal with disobedience or recalcitrance immediately. Horses, as well as humans, could be stubborn and cunning. Punishment for failure to obey a command must be sure and swift. Those three rules had served Anse well in training horses. She was confident that they would apply equally to training pony girls.<br><br>The girls were now installed in their new stable, which had been built exclusively for them. Two ponies occupied each stall. When their number was finally reduced to twenty-five, each pony would have her own stall. The stalls were roomy and clean. Fresh, sweet-smelling straw had been spread abundantly on the wooden floor. The girls had already been fitted with headstalls; bits would be inserted after the four back teeth had been removed to vacate the area in the rear of the mouth to accommodate placing the bit behind the teeth resting on the gums, thereby insuring proper head control. A large shower room was built adjacent to an adequate "head". A blanket cupboard was well stocked with warm pony blankets, but given the tropical climate of Tambura, the girls would normally be nude twenty-four hours a day. A separate galley, complete with dietitian, was built for the preparation of the pony girls’ nutrition. A special vegetarian diet was formulated by the dietitian which, coupled with their anticipated muscular development, would give the girls the strength required to perform their physically demanding pony girl tasks. The girls would, of course, learn to eat as real ponies did, that is from a feed bag suspended from the headstall. One female groom was assigned to the two ponies in each stall. It was anticipated by Anse early on that the grooms would meet with resistance from the girls in adapting to their new situation, so she equipped them with leather "discipline straps" to encourage compliance on the part of the ponies. The first few days in the stable were filled with the sounds of straps contacting thighs and buttocks, but soon enough the girls began to adapt to their new lifestyle and the straps were used mainly to hurry them through the showers and other routine group activities requiring cooperation on their part.<br><br>Anse wasted no time in launching her training program. Each day the ponies were awakened at dawn and taken for a cross-country run across the estate's hills and dales. Anse was astride a gelded Palomino wielding a long whip over the heads of the girls, occasionally directing its lash to the thigh of a laggard. An hour later the girls would come rushing into the staging area, hot, sweaty and exhausted. The grooms were awaiting them, hoses in hand, to wash down their sweat-covered bodies with cool, refreshing streams of water after which they were fed a hearty breakfast of bran and oats. If a girl should happen to collapse during the run she was eliminated from the program. Boots always did well on the runs, leading the pack, taking long strides, her breathing adjusting to the pace enforced by Anse. Gretchen was usually waiting with the grooms when the girls finished the run. After they had been hosed down she walked among them and soon found Boots. "Hello, Beauty," she said and patted the tall blonde’s rump affectionately with her riding quirt. Boots was forbidden to speak, as were all of the pony girls, or to smile, grin, or to show any other human facial expression. Yet, she was already somewhat attracted to her beautiful mistress and wanted to show her some sign of her feelings, so she placed her forehead against Gretchen’s shoulder and slowly rubbed the elegantly clad shoulder with her cheek. Gretchen was touched by the display of affection on the part of her "pony queen". "Ah Boots, you are a joy," breathed Gretchen. "I’m impatient for the day when you are in harness drawing my sulky and I can caress your sweet behind with my whip." Boots was taken aback. The reality of her situation overwhelmed her feelings of love for her mistress. She was to be her mistress’ horse. Only that. No matter how much her mistress might come to love her, her fate was to be put between the traces and harnessed to her cart, controlled by leather reins pulling on the bit in her mouth, driven by her whip. A tear rolled down Boots’ cheek, but Gretchen, seeing the tear, mistook it for a sign of her slave’s affection. "Yes, sweetheart, I know. You love your mistress. You want to be my pony. Soon you will be, I promise." Boots further reflected on her future. A deep feeling of abject humiliation washed over her. She had been born into slavery. She knew that. Yet, she had rarely been treated like a slave. She had received an elementary education; had worked as a nurse in a school. She anticipated a married life together with her love, Jock. Now, she faced an existence heretofore unimaginable to her. A pony! A horse! An animal! Bitted, harnessed, drawing a carriage, naked for all the world to see!<br><br>The weeding-out process continued apace. Anse subjected the girls to incredibly difficult physical tests. They lifted weights. Their bodies were coated with oil and they were made to wrestle each other, much to the amusement of Gretchen and Anse. But, it all served a purpose. Their strength and temperament were discovered by their relentless trainer, Anse. It seemed to Boots that she was receiving more than her fair share of the trainer’s attention. If she made the slightest error while marching in formation she felt Anse’s whip on her thighs. If she chanced to make eye contact with Anse, the quirt lashed her breasts. This undue attention was largely Boots’ imagination. Actually, Anse was equally attentive to all of the pony candidates. Her busy whips played no favorites. Finally, it was over. Twenty-five physically superb, mentally adaptable pony girls stood before their mistress and trainer, hands behind heads. Their glistening bodies had been bathed, oiled and buffed by the grooms to a high sheen. They wore black patent leather boots laced to mid-thigh with a matching wire-framed leather halter to contain and support their massive breasts yet exposing the nipples. Anse had ordered that a small amount of an aphrodisiac be mixed in with their feed. As a result, they were in a mild state of sexual arousal. Their protruding pink nipples were stiff and erect, seeming to stand at attention for their mistress and her cousin. Gretchen was very pleased. Mere words seemed insufficient to express her pleasure with the result of Anse’s rigorous weeding-out process. She walked slowly down the long line of future ponies, examining each girl from head to toe. Their chastity screens had been removed for the occasion on the orders of Gretchen so that she might caress their genitalia. Already excited by the effects of the aphrodisiac, the girls found it difficult to contain their expressions of pleasure when their mistress’ gloved hand stroked their outer lips. When she reached Boots, Gretchen removed the glove from her right hand and with her bare fingers stroked the blonde pubes of her pony queen. She then slid her index and forefinger into the vagina, which caused Boots to orgasm. Gretchen then withdrew her wet fingers from Boots’ cavity and while gazing into her eyes slowly put her fingers to her mouth and slowly licked them. Boots was astounded. She had never imagined that another woman would have such an effect upon her, much less do the things to her which her mistress had done. Gretchen pulled her kid glove back onto her fingers, all the while gazing into Boots’ lavender eyes. "Avert your eyes, slave, else you will feel my whip." she murmured, audible only to Boots. Then she moved on to the pony on Boots’ right and caressed her pubes with her gloved hand.<br><br>The ponies would now be subjected to having their nipples, ears, navel and labia pierced and ringed. Four molars would be extracted to accommodate a metal bit. Gretchen had lately decided that she would have the ponies branded. She and Anse discussed the design of the brand one evening while enjoying cocktails on the mansion veranda. A "G" inside a circle appealed to Gretchen, and Anse concurred. Anse had still another suggestion for Gretchen to consider. "What would you think of a pretty tattoo as well as the brand?" Gretchen was intrigued. This suggestion opened up the subject of exactly where on the slave’s body should the brand be burned-in, and if tattooed, where on the body should it be? In the end they decided that the right hip was the proper location for the brand since it would show well there above the top of the right boot. The tattoo, a looped whip with a short red grip and a long dark blue lash, would extend across the width of the lower back just meeting the upper curvature of the buttocks. The cousins agreed that the body-piercing be done first, followed by the branding, then the teeth extraction and finally the tattooing. Physical fitness training would proceed concurrently with pony skills training. The girls had the potential to be developed into pony girls, but their latent potentialities must now be transformed into physical strength. Anse knew that one of the prerequisites to being able to draw a heavy load was a strong pair of legs. The girls were all possessed of long, well-shaped legs, but none of them yet possessed the muscular development required of a functional pony girl. Anse had had built a device designed explicitly to develop the girls’ leg muscles. She had searched the estate for a long, straight tree of approximately seventy centimeters diameter. When she found her tree, a Phillipine Mahogany about twenty years old, she ordered it cut down, stripped of its branches and cut to a length of twenty meters. Steel rods were driven into each end of the log. The carpenters assembled planks to serve as a catwalk, then connected the assembly to the metal rods. Wheels were screwed beneath the board assembly to support it as it rolled on the ground just ahead of the log. The carpenters then screwed twelve equally spaced eye bolts into the leading edge of the boards; these to connect to the traces which were attached to the ponies’ ankles. The construction of the log assembly took place about a mile from the stables, adjacent to a smooth, gently rising incline. Anse calculated that twelve of the pony girls, harnessed to the log via the eye bolts, could pull the log and herself (walking the catwalk) up the slope. It only remained now to see if her calculations were correct. Riding her Palomino, Anse drove twelve of her girls to the site where she had the grooms harness them to the log. She stepped onto the catwalk and strode its full length drinking in the delightful scene that filled her eyes. The possessors of twelve magnificent pairs of legs and buttocks waited nervously for their trainer to command them. She did not keep them waiting. Her whip cracked like a pistol shot over their heads and the ponies strained to move the massive log. It was too heavy and wouldn’t budge. Anse now put into motion her long, leather horse whip. Walking methodically up and down the catwalk she lashed the twelve expansive pairs of buttocks mercilessly as the ponies strained to budge the log and catwalk bearing the weight of their trainer. The log assembly began to roll, very slowly, but it did move. "You’ve done it, beauties, it’s moving. Now pull! Pull!" The slave girls had never dreamt that pain could be like this, Anse’whip was unrelenting. As the team progressed up the slope their buttocks came to be at the same elevation as Anse’s eyes. In this arrangement the ponies’ legs presented a more reasonable target than the buttocks. Accordingly, Anse inflicted punishment on their thighs and calves with her supple instrument of pain. All the way up the slope she walked along the catwalk, moving from one pony to another, swinging her whip and calling out encouragement to them. "Yah, Brandy, pull. Clover, pull now. This will help you move." Crack. "Yah, Boots." Crack. "Move that beautiful ass your mistress likes so much." Crack. Crack. It took them twenty minutes to reach the top of the slope. Their bleeding legs ached. Their buttocks were criss-crossed with red stripes left by the lash. At the top of the slope Anse stepped down from the catwalk and walked around the team to stand facing them. "You did well, ponies. Now I can truly call you ponies. You deserve the title of Pony Girl. Your Mistress will be pleased." The sweating, exhausted, bloody ponies stood silently before their cruel tormentor. Then, on her signal, they dropped as one to their knees, placing their foreheads to the ground. Anse surveyed the twelve nude, bleeding, sweaty bodies kneeling before her. She felt the muscles of her vagina stir and could sense its wetness. She shifted the whip to her left hand and found her sex with her right hand. With very little effort she brought herself to climax, just as she had done so many times before in her girlhood, focusing her eyes on the huge, shiny hind quarters of Belgian draft horses who placidly waited to receive her whip.`
+                },
+                {
+                    title: "Chapter 7",
+                    subtitle: " The Conditioning", 
+                    content: `The training of Gretchen’s ponies was about to enter its final phase. The girls’ physical condition exceeded Anse’s expectations. Their long, shapely legs had become defined powerhouses, capped by satin smooth hips. The muscles expanded and contracted rippling beneath the skin when they moved. Gretchen’s logo had been branded on the right hip and stood out stark white against the now deeply tanned skin. Their blonde hair was bleached to near platinum from constant exposure to the tropical sun. Dull bronze nipple rings were matched by ear and navel rings. A separate bronze ring hung from each pierced labia lip. A short bronze connecting chain hung suspended from the labia rings, which served as harness connections. When free of the leather harness straps the labia rings and chain could be heard clinking when their owner walked. The nipple rings were also connected by a chain, but the nipple chain was not as heavy as the labia chain and was made of gold.<br><br>Stamina had been achieved through forced, long, cross-country runs by Anse, astride her Palomino. Incredible leg strength was the result of daily forced sessions spent pulling the log up an incline. Upper body strength was developed by rowing on the estate's river, weight lifting, pull-ups and push-ups. Nor did Anse neglect teaching pony skills to her charges. The primary device used to teach the girls pony fundamentals was designed by the chief carpenter, with input from Anse. She had envisioned a six meter vertical pole rising from the ground rotating on its axis. Extending horizontally from the pole, about five meters above the ground would be four horizontal poles, each six meters in length. Dangling at the end of each pole would be a strap hanging down to an elevation of about three meters above the ground. A pony’s halter would be connected to each hanging strap, thus facilitating the training of four ponies simultaneously. The assembly would be rotated by two sturdy male slaves pushing at opposite ends of a horizontal wooden shaft running perpendicular to and through the vertical pole. With this crude design provided by Anse, the chief carpenter, an ingenious person of considerable mechanical aptitude, constructed a workable training apparatus suited ideally to her needs. The trainer had complete access to each of the four ponies from the front, rear and either side. She also controlled the speed of pole rotation with a flick of her whip directed to the toiling male slaves. All in all, it proved to be an efficient arrangement.<br><br>First, the ponies had to be taught to walk gracefully. Later, they would be trained to trot and then canter. The walking mode was deemed by Gretchen to be the most sensually provocative. Before they could walk sedately, Anse had to correct the posture of most of the girls. She would settle for nothing less than perfection. It had been decided that while in harness the ponies would position their arms behind their backs, one hand firmly grasping the wrist of the other arm. It was, Anse recalled, very similar to what she had done while ice skating long distances on the sluices in Holland. Initially, the ponies’ hands were bound in the correct position, but soon they became accustomed to the placement of their arms behind their backs and the binds were dispensed with. Thus, the ponies were made to stand erect, hands behind their backs, stomachs pulled in, breasts thrust forward.<br><br>The shoe part of their boots had been fashioned to resemble a pony’s hoof and this added to their already considerable height. Anse taught them to exaggerate slightly their natural lateral hip movement. The effect of this seemingly barely noticeable action added length to the pendulum-like cycle of the swaying hips. It had a pronounced erotic effect upon Gretchen. The large buttocks moving before her delighted eyes in a wider than normal arc evoked within her a strong feeling of lust accompanied by an irresistible urge to lash them with her whip. This response, of course, was exactly what Anse had in mind when she taught the ponies to perform this maneuver. After all, Anse reasoned, the whole purpose of having beautiful girls serve as ponies was to stimulate their mistress. "Now," she thought, "it is time to condition these animals to be aroused by the presence of their mistress."<br><br>One evening over dinner Anse broached the subject of sexual attraction to her cousin. "Gretchen, sweet, do you agree that it is time to have the ponies get wet at the mere thought of you and your whip?" she asked. "Yes, dear, that would be nice," replied Gretchen. " Now, how do you propose to make that happen? Not that I doubt for a moment that you will make it happen. I’m just curious how you will cause it to take place." Anse proceeded to tell Gretchen of her summers spent on her aunt and uncle’s farm in Friesland. When she told her of how she conditioned the Belgian draft horses to become aroused; first by sniffing her sex; then by sniffing her whip coated with the scent of her sex and ultimately by feeling her whip alone, Gretchen was fascinated. "I’ll inform the ponies that it is natural for ponies to sniff. It is also natural for ponies to get the scent of their mistress. Once they have your scent we will transfer the scent to your whip. It shouldn’t take too long for the association of your scent with the whip to take place. They are already in a subservient state. The next logical step will be for them to think of ways to entice you to use your whip, since that will bring them sexual gratification." "Anse, my sweet, you are too clever by half," gushed her cousin and she walked around the dining table and bent to kiss Anse's upturned lips.<br><br>Anse's strategy worked without exception. She first informed the girls that ponies sniffed and that they were to behave as ponies. Gretchen then entered each stall and when the pony girl knelt, as was the rule when the mistress was in her presence, Gretchen permitted her to press her nose to her crotch and get her scent. After several sniffing sessions, Gretchen bathed her riding whip in her ever present cunt liquid and put it to the slaves’ nostrils. Their arousal soon became evident and before too long the ponies fell into the habit of moving their hips seductively to coax their mistress to use her whip to slap their buttocks. The apparent perversion fed upon itself. From that time on, when Gretchen appeared, whether in the stable, in the corral or preparing to board one of her numerous carts and sulkies, the ponies raised their noses in the air to get her scent, then presented their buttocks to her, coaxing her to satisfy their aroused passion for her.`
+                },
+                {
+                    title: "Chapter 8",
+                    subtitle: "The Touring Carriage", 
+                    content: `Boots and Penney were cooling down, connected to the "hot walker" in the corral. Earlier that morning she and Penney had been harnessed to the two-seater taking her mistress and her cousin, Anse, on a nice carriage ride along the estate bridle path. It was a beautiful, clear morning, birds were singing, she and Penney in perfect step. The ponies occasionally felt a flick of mistress’ whip on their flanks, a reminder that they were not far out of her thoughts. But, when they began to climb the half way hill the idyllic phase of the buggy ride ceased. Gretchen liked to play a little game pretending that her ponies were not performing as they should and that they needed correcting. It was a fantasy she sometimes engaged in to add spice to the ride. She would verbally berate them, call them "lazy sluts" and commence lashing them smartly with her snake skin buggy whip, one which Boots particularly dreaded. But there you are. This was one of those "pretend" days. Surely, Mistress must have realized that they were climbing a fairly steep hill, Boots reflected, but no matter, the whipping was unrelenting. Boots smiled when she recalled seeing the native boy lying in the bushes, watching them pass. The expression on his face was one of disbelief and awe. The carriage must have been an incredible sight for a callow youth, she reflected. Mistress was in the midst of her affected displeasure with their efforts, lashing their behinds unmercifully, calling them lazy and spoiled. Boots lowered her head as she pumped her mighty legs to increase speed in response to the urging of the whip. When she turned her cocked head to the right, a maneuver she had perfected to help her maintain pace and balance, her keen eyes discovered the all but invisible boy lying prone on the ground, peering at them through the foliage. She made eye contact with the boy’s jet black eyes and was bemused by the expression of amazement spread across his dark, youthful face. She held his eyes for just an instant, but long enough for the beginnings of a smile to form at the corners of her mouth, the bit notwithstanding. Gretchen’s whip suddenly cracked against her right thigh and the sting transformed what had been Boots’ budding smile into an agonized grin. "Some story the native boy has to relate to his chums," she thought. "I wonder if they will believe him or credit it to an overheated fertile imagination." Her groom, Olivia, an attractive young half-breed girl, attended them while they walked. Olivia also supervised the two husky young male slaves who provided the muscle power for the hot walker. Her whip was incentive enough to keep the harnessed males straining to keep the massive vertical pole rotating. Grooms were only authorized to use leather "butt slappers" to compel cooperation on the part of the ponies. They were strictly forbidden to use a whip. Early on in the training phase a groom had struck one of the ponies with a riding whip and had been ordered by Gretchen to take the pony’s place pulling the log, after which she was dismissed. It was an object lesson not soon forgotten by the staff of grooms and hostlers. After they were cooled down, Boots and Penney were led to the stable and given a shower. Then their grooms applied copious quantities of soothing aloe to the welts raised by Gretchen’s cruel whip. In a few days the welts and swelling would disappear and the satin sheen of their legs and hips would once again appear unmarked. Standing tethered in her stall, Boots’ thoughts turned to Jock. She hadn’t seen him for almost a year. He must certainly know that she was now one of Mistress Van Cleef’s pony girls. She wondered what he thought about it. Was he proud of her or was he ashamed that his former love was now a pony, a human animal harnessed to a cart?<br><br>Gretchen decided to show off some of her ponies to the estate population. Twelve of the ponies, including Boots, were harnessed in pairs to the estate touring carriage, a large, four-wheeled, wooden vehicle with ornately carved trim all around. Open to the air, its richly upholstered interior was designed to be admired by people of equal and lesser rank than its passengers. Riding within the carriage, Gretchen and Anse faced each other, sitting sedately on overstuffed, plush blue velvet seats. They smiled and waved to the hundreds of peasants and slaves standing alongside the road, jostling each other for an optimal view of the spectacle unfolding before them. High above, perched atop his carpet-covered bench, sat a liveried black coachman who clutched the team’s leather reins in his left and in his right hand caused a silver "circus" whip with a long braided leather lash to curl and snap harmlessly above the heads of the long-legged prancing ponies. The grooms had outdone themselves decorating the ponies for the event. Each pony wore a gold leather headband from which the tail feather of a bird of paradise projected above her head. Their flaxen pigtails hung down to their shoulder blades and had pretty silk bows pinned to the ends. The grooms had learned of a native woman who was a body painter and had hired her to spend hours decorating the twelve nubile bodies with swirling native symbols done in brilliant colors. In addition, she highlighted their nipples with metallic gold dust particles obtained from the mines on the estate. Their harness was painted silver, as were their head restraint straps. They wore black patent leather boots laced to mid-thigh, which Gretchen favored for special occasions, such as this. The effect on the crowd was electric. The people cheered and couldn’t seem to get close enough to them. Jock was among the hundreds who watched the carriage pass. Since he was exceptionally tall, he didn’t need to stand in front of the crowd to get a good view. Boots and Penney were the first pair, leading the team of twelve ponies. When he saw Boots, tears sprang involuntarily to Jock’s eyes. She was more beautiful than he had ever seen her. He marveled at how her physique had changed. She was as shapely as he remembered, but now muscles appeared beneath her tan satin skin. Every part of her was toned and bespoke of a physical training regimen of which he could only speculate. Even her stomach was muscled, its surface rippling like a washboard. Other than their boots and harness, the ponies were completely nude. Their body hardware, especially, created a sensation with the crowd. People nudged each other and spoke in hoarse whispers, yet pointed excitedly at them, making sure their companions did not fail to see the labia rings and chains. "Willie! Willie! Look! See the rings in their teats!" shouted one woman to her husband. "Aye, Peggy. And did you see the rings in their cunts?" The children were particularly excited by the sight of the twelve beautiful, naked women pulling the carriage. Some children broke from the side of the road and ran up to the team attempting to touch them. A few swipes of the coachman’s whip, though, effectively discouraged the more brazen of them. Jock was torn between two emotions. At once he was tremendously proud to think that he had once been the beloved of one of these magnificent creatures. At the same time he was in danger of being overcome with remorse at the realization that he had lost her forever. From his vantage point on the right side of the road, he was able to see the brand on the right hip of each pony. His gut wrenched when he thought of his sweet, vulnerable Boots being branded with a hot iron. He began to sob, causing people to stare at him uncomprehendingly, as he visualized the white hot branding iron searing her flawless, smooth skin. Boots’ expression was inscrutable. She held her head high, her blue eyes fixed straight ahead. In keeping with Anse’ training, the calves and hooves seemed to extend when her powerful legs lifted, bringing the knees above her waist. She was oblivious to the looping whip arcing and snapping overhead, but Jock experienced a sharp pang of embarrassment seeing her having to endure an effeminate, black lackey dressed in a ridiculous costume, cracking a whip over her head to make her trot. The coachman was just for show, but Jock didn’t know that.<br><br>Then Jock turned his gaze to the occupants of the carriage. He beheld two singularly beautiful young women, both of whom appeared to be about his age, one of whom was presumably his mistress, Gretchen Van Cleef. Both young women gave the unmistakable impression of being somewhat haughty, but that was to be expected of the privileged class. He wondered which one was Miss Van Cleef and which was her cousin, about whom everybody on the estate had heard. Both of the ladies were elegantly dressed and carried dainty parasols to shade their patrician faces from the brutal tropical sun. They chatted gaily as the lumbering carriage rolled along the narrow road. "Anse! Quickly! Look to your left. Do you see him? My God! What a Brute!" Gretchen was referring to Jock, whose blonde head and broad shoulders stood out above the crowd massed along the road. "Yes, I do see him, dear." replied her cousin. "I wonder if his cock is a match for those shoulders." "Darling, you are incorrigible," laughed Gretchen. She signaled to a mounted security guard riding behind the carriage to come forward in order to speak with him. "There is a tall blonde slave wearing denim back aways on the right side of the road. Find out his name for me and who he is." That was all. It would be done as she commanded. The security man would find out everything there was to know about Jock and report to his mistress. Meanwhile, the ponies trotted along ahead of the gilded carriage bearing their beloved mistress and her cousin. Every one of them was immensely proud to have been selected by her to serve as her pony girl.`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

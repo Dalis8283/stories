@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>The Reluctant Exhibitionist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "The Intern",
+            author: "Seahawk",
+            chapters: [
+                {
+                    title: "Author's Note",
+                    subtitle: "",
+                    content: `I haven’t done mucn writing since finishing Confessions of a Mailgirl because I’ve become kind of obsessed with learning to speak Spanish and that’s how I spend a lot of my free time. This is a story I started about six months ago but never finished. I’ve decided to dust it off and work on it some more and I figure if I post what I have so far it would give me the motivation to finish it in the next few weeks. It takes place in the same Mailgirls universe as “Confessions” and takes place after the events of that story.`
+                },
+                {
+                    title: "Chapter 1", 
+                    subtitle: "",
+                    content: `<strong><h2><i>THE INTERN</i></h2></strong><br><br>Amy Connor glanced nervously at the clock on her computer monitor for probably the tenth time in as many minutes before forcing herself to return her attention to the document she was working on. She was proofreading a progress report written by her boss Stan Davies, a production manager for the video game “Gangsta 4” that needed to be sent to some VP in the tower. Everyone called him Stimpy, though, after some cartoon character. He may be a brilliant game developer but he can’t write for shit, the intern thought to herself as she corrected another of the many grammatical errors and typos in the document. Amy’s internship here at DumpsterDawg Enterprises had pretty much consisted of doing all the crap that Stimpy didn’t want to do himself.<br><br>But Amy’s internship was coming to an end and this was her final day at DDE. Stimpy had already promised her a good performance review so she could pretty much just run out the clock if she wanted, but instead felt a growing sense of nervousness and excitement. Knock it off Amy, she said to herself. Don’t be an idiot. You’re not really going to do it.<br><br>Amy read through the document one last time to make sure she hadn’t missed anything. When she was finally satisfied it had been “de-Stimpyfied” and now resembled a coherent business document, she saved it and sent a copy to the printer. In most normal businesses the document would simply be emailed to the VP, but DDE was no normal business. Amy opened the Mailgirls icon on her computer desktop, selected the name of the VP the document was being sent to from a drop down list, and clicked on the Summon Mailgirl command.<br><br>Almost immediately an image of the company ID of the mailgirl being summoned appeared on her screen. This was no normal company ID, though. It contained a photo of a beautiful blonde woman kneeling on the floor, completely nude. The app had alerted the nearest available girl and Mailgirl #3 was now on her way to pick up the document. The numbers 1:15 also appeared on the screen and began ticking down toward zero indicating that “Three” had only a little more than a minute to arrive at Amy’s desk before being given demerits.<br><br>It never ceased to amaze Amy that a gorgeous nude woman could be beckoned to appear at her desk with just a few simple mouse clicks. Amy had known about the Mailgirls program before accepting the internship at DDE, of course, but it had still been a shock the first time she’d encountered a nude mailgirl in what was an otherwise relatively normal corporate environment.<br><br>The Mailgirls phenomenon had begun in Japan and spread throughout Asia and Europe before landing on American shores more than three years ago. DDE had been the North American launch customer for the program and had weathered a firestorm of controversy over it, but it was now an established part of their business model. The program had originally been developed by Hiromoto Industries in Tokyo and DDE was responsible for managing the licensing of the program in North America. DDE was now more than three years into its continually evolving Mailgirls program and its success had not gone unnoticed in the American business community. More and more of the most daring and innovative North American companies were willing to ride out the inevitable period of turbulence after initiating the program in exchange for the productivity increases, improved interdepartmental communications, increased employee morale, and reduction in employee turnover and sick time usage which the program promised over the long term. A few companies tried to implement similar programs without the nudity but the results paled in comparison to what the Mailgirls licensees were achieving.<br><br>Amy glanced again at the clock as it ticked down toward the deadline, then found the mailgirl’s name on the ID in small letters: Stephanie Hastings. Her real name was irrelevant here at DDE, though, since mailgirls were only allowed to be called by their assigned numbers. Amy couldn’t help but wonder what circumstances had led the girl to take such a demeaning job.<br><br>Amy placed the progress report into a large envelope with a Mailgirls logo on it and sealed it. Interns normally didn’t have the authority to summon mailgirls but since Amy handled a lot of Stimpy’s paperwork he had given her his password. The reason Stimpy didn’t have a secretary to do this stuff was because he had talked his last secretary into becoming a mailgirl just days before Amy had started here. Stimpy had temporarily turned over the secretarial duties to Amy and she’d done such a good job that he hadn't bothered to hire another one.<br><br>Several weeks ago Stimpy had called Amy into his office to try to convince her to stay on at DDE as a full time employee. She’d been expecting something like this but had no intention of becoming a secretary. After six years of college where she had earned a Masters degree in accounting she had recently taken and passed her state’s Certified Public Accountant exam. This summer internship at DDE was just something she could put on a resume. Amy’s mother was a CPA and she was planning to follow in her path.<br><br>The meeting with Stimpy hadn't gone at all like Amy had expected, though. While he did make a pitch to try and keep her at DDE he had no interest in making her his permanent full time secretary. No, Stimpy had wanted her to become a mailgirl! The meeting had been both shocking and oddly gratifying. DDE’s mailgirls were all gorgeous and it had been a boost to her ego to know that Stimpy thought she was pretty enough to join them, even though Amy would never dream of actually doing it.<br><br>Amy’s thoughts were interrupted by the sound of movement and as she glanced up she got an eyeful of naked female flesh. Mailgirl Three had arrived with seven seconds to spare wearing nothing but a silver metal collar around her neck with the number “3” emblazoned on the front of it and a smart phone attached to a strap on her upper left arm. The phone was called a Mailgirls Monitoring Unit, or MMU, and was the electronic leash used by the company to control the mailgirl and keep her moving from assignment to assignment. Sensors registered the presence of Mailgirl Three at her assigned pickup location and both Amy’s computer app and Three’s MMU flashed green indicating the mailgirl was on time and no demerits would be issued.<br><br>Three assumed her required standing position: arms behind her back with her right hand clasping her left wrist, legs spread at shoulder length, back arched, breasts thrust enticingly forward, eyes cast submissively downward. Three’s tits, pussy and ass were all on open display as required by the company’s Mailgirl Code.<br><br>Amy couldn’t help but stare at this woman who had suddenly appeared in all her glory in an otherwise mundane business environment looking as out of place as a Renoir in a flea market. Her company ID photo doesn't do her justice, Amy thought to herself. Three’s shoulder length blonde hair framed an intelligent oval face and beautiful brown eyes. Round, firm c-cup sized breasts capped with large pinkish aureoles and hardened nipples hung magnificently over a flat stomach and shaved pussy. Like all mailgirls, Three displayed a perfectly toned body, the result of hours spent each day moving briskly through DDE’s sprawling complex spurred on by the relentless clock and the threat of punishment for failing to meet deadlines. Her breasts rose and fell in rhythm with her acclerated breathing and a light sheen of perspiration covered her skin. The scent of sweat, perfume, and pussy created such an intoxicating musk that Amy suddenly blushed in embarrassment at the realization she was becoming incredibly turned on by the naked woman’s presence.<br><br>“You have a delivery for me, ma’am?” Three asked. Her voice broke the spell Amy had been under. She picked up the envelope and handed it to her. She’s just a mailgirl, Amy reminded herself. We're supposed to stare. She turned back to the monitor and clicked on the Release Mailgirl button. Immediately the delivery address appeared on Amy’s screen along with the deadline. The mailgirl had less than six minutes to deliver the report to the VP’s office on the tenth floor of the tower and the clock was already ticking. Three glanced at the MMU on her arm for her destination and deadline. “Thank you, ma’am,” she said as she turned and began moving briskly toward the exit to the stairwell. Amy watched the movement of her bare ass until she was out of sight.<br><br>It was only after the mailgirl was gone that Amy felt the thumping of her heart in her chest. She touched her hand to her cheek and the warmth confirmed that she was flushed. Her eyes turned to the bottom desk drawer and another surge of nervous excitement pulsed through her body as she thought about what was inside of it. She slid the drawer open and stared at the items she had discovered there this morning. Inside of it were a silver metal mailgirl collar, a key, and an arm strap containing an MMU. Next to them was a handwritten note. Amy picked it up and read it once again. It said only, “You can do whatever you want on your last day of work.”<br>`
+                },
+                {
+                    title: "Chapter 2",
+                    subtitle: "", 
+                    content: `<strong><h2><i>A FAMILY REUNION</i></h2></strong><br><br>“So tell me about these mailgirls I’ve heard so much about,” Aunt Jessie said, a gleam in her eye and a bourbon on the rocks in her left hand. The occasion was Grammie Martha’s 70th birthday party taking place two weeks prior to Amy’s final day as an intern at DDE. Amy’s grandparents lived on a small farm which had once been in a fairly remote rural area but was now in the encroaching path of Wildwood. Wildwood itself had once been a relatively nondescript suburb but was booming these days with high tech money and developers were devouring the land surrounding it. Condos, trendy coffee shops and an upscale supermarket had sprung up down the road where the grange and a few family owned stores and shops had once stood. Amy’s grandparents were already fielding calls about selling their land.<br><br>Jessie had dragged Amy and her cousin Sami away from the others to a corner of the large back yard where the three of them were seated facing each other in lawn chairs. “What’s to tell?” Sami replied to Jessie’s inquiry about mailgirls. “They’re naked corporate slaves who run around delivering shit that could just as easily be emailed.” Sami, short for Samantha, worked as a security guard at DDE and like most of them had a very low opinion of the mailgirls. She was a couple of years older than Amy and had been the one who had talked her into applying for an internship there.<br><br>“I heard that they wear slave collars, is that right?” Jessie asked.<br><br>“Yeah, although the company doesn’t call them that. They’re called ‘identity necklaces’,” Sami said with a snort.<br><br>“What do they look like?”<br><br>“They’re stainless steel collars with the mailgirl’s number stamped on the front. They have a RFID chip and GPS in them to track the girls. An alarm goes off if one of them tries to leave the building without permission.”<br><br>“You’re joking, right?”<br><br>“I shit you not, Jessie. The old collars used to be flexible like metal watch bands and were semi stylish but one of the girls was able to get it off her neck and bolt through a side door in the middle of her shift. The new ones are pretty much impossible to get off without the key or a blowtorch.”<br><br>“So they aren’t allowed to leave the building? Ever?”<br><br>“Not during their shift,” Sami replied. “Not without permission anyway and even then they have to be accompanied by a clothed DDE employee.”<br><br>“So they can walk around on the streets naked?”<br><br>“Within Wildwood city limits, yeah. Some of them live off campus and are allowed to get dressed and go home at night. Others have 24/7 contracts and live in the dorm in the basement. They’re never allowed to wear clothes. Same with the tangos during their training.”<br><br>“Tangos?”<br><br>“That’s what we call trainees. They go through six weeks of training and then get sold to other licensed companies.”<br><br>“They sell the girls?” Jessie asked incredulously.<br><br>“Well, technically they sell their contracts but the girl goes along with it.”<br><br>“And it takes six weeks to teach them how to run around the building naked?”<br><br>“Naw,” Sami replied. “It takes six weeks to make sure their spirit is broken so they’ll be good little submissive slave girls for whoever buys them.”<br><br>Jessie laughed and took a sip of bourbon. “I could see something like this happening in a few of the countries I've travelled in but I never thought I'd see it here.” Jessie was Amy’s mom’s older sister and had a legendary reputation within the family. A wild child who had left home at eighteen to travel around the world with a backpack, she’d shown up at the party today riding the Harley Davidson she’d gotten from her biker husband in their divorce settlement. Jessie’s ex had not been happy about that and Amy was pretty sure that bulge in the side of her aunt’s blouse was a loaded pistol in case the restraining order wasn’t enough to keep him away.<br><br>“So are they used as f*ck toys by the corporate suits?” Jessie asked about the mailgirls at DDE.<br><br>Sami shook her head. “Not that I know of, although I suppose it’s not outside the realm of possibility that it happens on the sly. The company is pretty strict about it and employees have been fired for going too far with them. The whole program is pretty much walking a legal tightrope as it is and they figure if it turned into full on sex slavery the government would shut it down.”<br><br>Amy had listened quietly up to this point but Jessie turned her attention to her now. “So what do you think about mailgirls, Amy?”<br><br>Amy shrugged. “I don't know. It seems pretty damn crazy to me to run around naked in front of everyone like that.”<br><br>Jessie smiled. “Sometimes crazy is good, though. If I was twenty years younger I’d think about doing it.”<br><br>“Why would you ever want to do that job?” Amy asked. “It’s so degrading.”<br><br>Jessie shrugged as she leaned back and lit up a cigarette. “Just one of my many kinks, I guess. Did you know I worked as a stripper for awhile in Barcelona? I never turned tricks on the side like some of the other girls did, but I liked getting naked in front of a crowd. It was a huge f*cking turn on for me.” Jessie had virtually no filter between her brain and her mouth and Amy liked that about her. She was so different from her mom that sometimes it was hard to believe that the two of them were sisters.<br><br>Sami laughed. “I never knew you stripped.”<br><br>“You girls don’t know the half of what I’ve done,” Jessie replied with a cheeky grin. She’d been stunningly beautiful in her younger days, and even now as her brown hair was turning gray she was still an attractive woman. “Haven’t either of you ever thought about becoming a mailgirl?”<br><br>“Naw,” Sami replied. “Even if I wanted to do it my tits are too small and my ass is too big for the job. Besides it wouldn’t look good on my resumé when I apply for a job as a police officer.”<br><br>“So you still want to be a cop, huh? Good for you, I guess.” Jessie turned her attention back to Amy. “What about you, Amy girl? You definitely have the tits and ass for the job. They’d probably hire you in a heartbeat.”<br><br>Amy shifted uncomfortably in her chair. “Well my boss has actually been trying to talk me into becoming a mailgirl. He even said that he could make sure I’d stay at DDE and not be sold to another company, but there’s no way I would ever do it.”<br><br>“No? Why not?”<br><br>“I don't know. It's just…I could never do something like that.”<br><br>“No, of course not. You're going to be an accountant, just like your mother. You're going to marry your high school sweetheart, pop out a couple of kids and live happily ever after just like your mother. Why stray off the straight and narrow to try something adventurous for once in your life?” The condescending tone of her words stung Amy but she retreated into silence rather than responding.<br><br>Jessie took another sip of bourbon before breaking the silence. “I'm sorry, Amy. That came a lot harsher than I intended. Your mother is a good woman. She’s a hell of a lot better person than I am in most ways and you could do a lot worse than follow in her path. It’s that I don't want to see you have regrets down the road like she does.”<br><br>“What are you talking about?” Amy asked.<br><br>Jessie stared up at a nearby tree for a few moments contemplating how to answer. “Your mother loves you and your brother very much and I don't want to imply that she has any regrets about having you or marrying your father. I just think she wishes she had gone out into the world and done some things before settling down and starting a family.”<br><br>“Why do you say that?” Amy asked.<br><br>“Because she’s told me that. More than once actually, usually after she has a few drinks in her. Your mom has been living vicariously through me for years.”<br><br>Amy remained silent, slightly stunned by this revelation. It was certainly true that she was on the same path as her mother. Although she and her boyfriend Jeff had been dating since high school they weren’t actually engaged yet. It was just assumed by everyone, including Amy, that they’d marry after both of them were out of college. And while being an accountant wasn’t the sexiest job in the world, it generally paid well and between the two of them they would have a solid financial future together. Amy had to stifle a laugh. God, I’m so glad I didn’t say the words “solid financial future” out loud, she thought to herself. Jessie would have mocked me relentlessly!<br><br>“I think Amy would like to be a mailgirl more than she lets on,” Sami said. “She’s seen that Mailgirls movie they filmed at DDE like a dozen times.”<br><br>“Five times!” Amy shot back.<br><br>“Okay, only five times,” Sami laughed. “I stand corrected.”<br><br>“I liked the love story in it,” Amy added sheepishly.<br><br>“You mean the love story where the girl decides to sign a new contract and remain a mailgirl instead of leaving so she could be with her boyfriend? Yeah, that was a love story for the ages!”<br><br>Amy decided she was better off keeping her mouth shut. Jessie was far from ready to drop the subject, though. “Have you ever been naked in public before, Amy?” she asked. “I’m not talking about in the girl’s locker room or the doctor’s office or anything like that. I mean out in public where strangers can see you.”<br><br>“No, of course not,” she replied. While that was technically the truth it wasn’t the whole truth and Amy was afraid that Jessie could sense that. There had been more than a few nights when she was in high school that Amy had snuck out of the house late at night, stripped off her clothes, and wandered naked around her parents’ property imagining that people were watching her. And afterwards she would masturbate herself to sleep thinking about it. But at the time this had been a sparsely populated rural area and, as far as she knew, no one had actually ever seen her during one of her late night adventures.<br><br>Jessie continued staring at her intently, then took a final drag on her cigarette and tossed it on the ground, grinding it out under her boot. “Well, that’s a crying shame Amy girl,” she said finally. “I bet you’d get off on it if you ever tried it. You definitely have the body and the fresh-faced corn fed country girl look for it.”<br><br>“Look Jessie, even if I wanted to try it they make you sign a horrible two year contract that is almost impossible get out of if you want to leave. I’m not going to do that on a whim.”<br><br>“I know how she could try it without signing a contract,” Sami said with a sly grin.<br><br>“How?” Jessie asked.<br><br>“I don’t care how,” Amy interjected. “I would never do it.”<br><br>“I want to know,” Jessie laughed. “Just humor us, Amy, although we know that, of course, you would never, ever do it.”<br><br>“I have access to tango collars and MMU’s,” Sami explained. “No one would ever miss a set if I slipped them to her for a few hours, along with a key to the collar. There’s an empty storage room on the third floor of the east wing where she could change into her mailgirl uniform,” she added with a laugh.<br><br>“Oh that’s awesome!” Jessie squealed. “Could she really get away with that?”<br><br>“Sure,” Sami answered. “Why not? There are always tangos coming and going. She’d just be another one. No one would know the difference. She’d just have to make sure she’s totally bare below the neck. If she had any kind of a crop growing between her legs that would be a dead giveaway.”<br><br>“But I work there, Sami,” Amy protested. “People would recognize me!”<br><br>“The complex is f*cking huge and there are thousands of people working there, Amy. They only know you on the top floor of the north wing. Stay away from that area and the chances of anyone recognizing you are practically zip. You could run around in your birthday suit for awhile and no one would think twice about it. Just act like you’re on your way somewhere to pick up some worthless message to deliver to some asshole who doesn’t give a shit about it.”<br><br>“Oh you’ve got to try it, Amy!” Jessie said excitedly. “Even if it’s just for a few minutes. I know you’ll regret it if you don’t. Then when it’s over if you want to get married and be an accountant you can do it knowing you did something crazy and exciting at least once in your life!”<br><br>Amy shook her head. “I’m sorry but I can’t. I just can’t. Not at a place where I work.”<br><br>Sami smiled slyly at Amy. “Then do it on your last day. You can do whatever you want on your last day of work.”`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>
