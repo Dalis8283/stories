@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>Everybody Is Sleeping</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        hr {
+            border: none; /* Remove default border */
+            border-top: 2px solid #333; /* Create a solid top border */
+            width: 70%; /* Set width to 70% of the parent container */
+            margin: auto auto; /* Add vertical margin and center the line */
+        }
+        img {
+            align-self: center;
+            max-width: 90%;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "Everybody Is Sleeping",
+            author: "Jessica Tang Von Harper ",
+            chapters: [
+                {
+                    title: "Page 1",
+                    subtitle: "",
+                    content: `Chloe and Marianne lay on deck chairs next to each other beside Chloe's backyard swimming pool. Chloe wore a green bikini and Marianne wore a black one. They both wore sunglasses.<br><br>"So your parents are back tonight?" Marianne asked.<br><br>"Yes. Along with Tony and his friend."<br><br>"I thought Tony was going to New Zealand."<br><br>"Tomorrow. He and his friend Ben are catching another flight tomorrow morning. But they'll stay the night."<br><br>"Ben?"<br><br>"Yeah. He's from New Zealand. Tony's going to stay with them in New Zealand for a few weeks."<br><br>"Too bad. I probably won't get to see Tony."<br><br>"No, he'll hardly be here at all. He's just passing through. But he'll be back in a few weeks, though."<br><br>A few minutes passed in silence as the girls lounged in the sun.<br><br>"Did we waste this?" Marianne asked.<br><br>"Huh?"<br><br>"Your parents were gone for two weeks. Two weeks, you had the house to yourself. Shouldn't we have done more?"<br><br>"Like what?"<br><br>"I don't know. A big party, maybe?"<br><br>"We had a party two nights ago."<br><br>"A dozen people, and we sat around watching movies. That's not what I call a party. That's a get-together."<br><br>"Okay. So what are you talking about then?"<br><br>"You know...A party! People in every room. Music. Alcohol. Mysterious but handsome strangers giving us meaningful looks from across the room."<br><br>"Mess. Damage. People getting drunk and throwing up everywhere. No, thanks. You can meet your mysterious stranger in someone else's house. I'd rather know everyone who comes in my house."<br><br>"But how do you meet someone new if you already know everyone?"<br><br>"I don't know." Chloe shrugged languidly. "It's too late for that kind of thing anyway. My parent's are back tonight."<br><br>Marianne sighed. She sat up and began to wiggle the straps of her bikini top up toward her shoulders.<br><br>"Whatcha doing?" Chloe asked.<br><br>"Skinny dipping, while I still can." Marianne freed her breasts from the top and pulled the black tangle over her head. "You coming?"<br><br>"Nah. I'm nice and toasty." Chloe turned her head, watching as Marianne peeled the bottom of her suit down her legs. Marianne stood and approached the side of the pool, pausing at the edge of the water.<br><br>Chloe smiled, admiring her friend's slender nude body and long legs. "That jogging is paying off, beautiful..." she called out lazily.<br><br>Marianne didn't turn around, but acknowledged the compliment by giving her rear end a wiggle. She gave a quick hop at the lip of the pool and then jumped forward, disappearing into the water with barely a splash. Chloe closed her eyes, feeling the warm sun beating against her skin.<br><br>Marianne burst to the surface of the water. "It's so cold!" she wailed.<br><br>"Told ya." Chloe giggled. She cracked an eyelid, peeking at Marianne's head bobbing in the water, her long blonde hair floating on the surface of the water behind her like a bridal train. Chloe thought the world looked better through her sunglasses, the greens greener, the blues bluer. She let her eyes close again. She felt like she was drifting away into the air, her body melting into nothingness.<br><br><br><hr><br><br>Chloe didn't hear her parent's car pull into the driveway, but she heard their voices outside, and she could hear the sound of Petey's toenails tapping on the kitchen floor as the elderly dog scampered to the front door. It was shortly after five o'clock in the evening, and Chloe had been watching TV. She turned the TV off and sat, waiting and listening.<br><br>A key turned in the front door lock. The door opened. "Hey, Petey!" Her father's voice greeted the dog, and she could hear the dog's tail slapping against the wall. Her father called, "Chloe? We're home!" She could hear her mother and brother talking to each other as well. Someone spoke in a low baritone, a voice she didn't recognize, and then she heard the sound of her mother's laughter.<br><br>Chloe slid out of her chair and headed to the front hallway, her bare feet padding silently on the carpet. "Ah, there she is!" her father said, smiling broadly when he noticed her walking towards him. Chloe hugged him, looking over his shoulder at the others who were passing through the front door.<br><br>"Hi, mom!" she said, releasing her father to give her mother a welcome-home hug. She grinned at Tony, then snuck a peak at his college friend. So this was Ben? Tony hadn't told her he was so cute! He was tall, probably about four inches taller than she was, with a short mop of thick dark hair and an easy grin on his face. Chloe suddenly wished she had something more flattering on. She'd been lounging around the house in a loose pair of shorts and a tank top.<br><br>"Hey, sis... been a while," Tony said as she hugged him next. "How's everything? You good?"<br><br>"Yeah. Glad you're back, Tony, even if it's just for tonight." Growing up, Tony and she had experienced their fair share of sibling fights, but since Tony had moved out to go to college on the east coast, they seemed to get along a lot better.<br><br>"Hey, this is Ben." Tony waved at the handsome boy behind him. "Ben, meet my sister Chloe."<br><br>Ben grinned. He had gorgeous brown eyes. "Hey, Chloe," he said as he leaned forward to give her a casual one-armed squeeze. "I recognize you, kind of. Tony had a picture of the two of you on his desk... from San Francisco? You're standing in front of a trolley?"<br><br>"Oh, yeah. I know the one."<br><br>"Yeah. You're older now, but I still recognize you. Tony says you just graduated from high school?"<br><br>"Yeah. Just a few weeks ago."<br><br>"Are you following Tony to Penn State?"<br><br>Chloe shook her head. "No. University of Washington."<br><br>"Ah. That's a good school, too." Ben flashed his grin at her, and Chloe felt herself melting inside. She adored his New Zealand accent, which sounded sophisticated but not difficult to understand. Her mind had already started to dictate a future text to Marianne, describing this cute college boy who was going to spend the night at her house.<br><br>"I'm starving!" her father proclaimed. "What do you say we order a bunch of pizzas?" Chloe stepped out of the way, letting herself slip into the background as her mother and father fussed around the house and Tony and Ben carried their suitcases upstairs to Tony's room. She considered going up to her own room to change clothes, but thought it would be embarrassingly obvious if she came downstairs all dressed up for a dinner that consisted of delivery pizza. Tony would see right through her and would definitely tease her.<br><br>Instead, she disappeared into the living room and jumped on her phone. She quickly described the situation to Marianne in a rapid exchange of texts. Marianne, of course, wanted to come over for dinner.<br><br>"No point," Chloe texted back. "Everyone's tired. They'll probably just crash."<br><br>"You just want to keep him for yourself!" Marianne texted back.<br><br>Chloe sent back a quick "LOL". She added, "I'll sneak a pic and send it to you."<br><br>The doorbell rang, and Chloe's father answered. It was the pizza delivery. Her father paid for the three large pizzas and brought them to the dining room table. Tony and Ben descended rapidly down the stairs. "Smells great!" Tony said, eagerly grabbing a slice of pepperoni.<br><br>Chloe emerged from the living room, feeling shy, and quietly sat across from the two boys at the table. She took a slice of veggie lovers. Her father sat at the head of the table, and her mother took the opposite chair.<br><br>It was good to have Tony home, even if it was just one night. The dinner table seemed brighter and more alive with him there. He had always been loud and boisterous, and now it seemed like he had a whole semester of college stories to tell. He and Ben almost seemed like a comedy duo, the way they alternated their narration, and Chloe could barely eat because she was laughing so hard at their adventures.<br><br>They talked with enthusiasm about their upcoming trip to New Zealand. "Ben's place is in a beautiful area," Tony said. "You should see his pictures. It's like he's got a mountain range in his backyard."<br><br>"I told Tony he's welcome to come visit anytime he wants," Ben said. "My family is happy to give him a place to stay." Ben smiled at Chloe. "That goes for you too, Chloe. If you ever want to visit New Zealand, you can come stay with us."<br><br>"I'd love to go to New Zealand some day," Chloe said. She felt like her pulse increased in speed every time Ben smiled at her.<br><br>"You can come with me next time, Chloe," Tony assured her. "I think you'd love it."<br><br>Chloe thought to herself, "Yes, I'm sure I'd love the scenery," as she peeked at Ben's handsome features. As if he could sense her gaze, he looked her way and flashed her that easy grin. She shifted her eyes quickly away.<br><br>"What do you say to watching a movie?" her father asked after the leftover pizza had been put away. "We could see what's available to stream."<br><br>"Sure, sounds great," Ben said.<br><br>"I'm too tired," her mother said. "I might turn in."<br><br>"Mom always likes to go to sleep early," Tony told Ben.<br><br>Her mother nodded. "I'm a morning person. You two shouldn't stay up too late either. Your flight leaves pretty early."<br><br>"We won't," Tony said. "Good night, mom."<br><br>They all said good night, and Chloe's mother went up the stairs while the rest of them went to the living room to sit around the enormous television screen. After browsing the movies, they settled on "Bridge of Spies."<br><br>Her father barely lasted five minutes before he was snoring loudly in his chair. Tony grinned. "Dad? Dad?" Tony poked him in the arm and their dad snapped awake.<br><br>"What... did I fall asleep?"<br><br>"Yeah. You didn't miss much, the movie just started."<br><br>Her father rubbed his eyes. "Maybe I need to go up with your mother."<br><br>"Cool," Tony said. "See you in the morning."<br><br>After their father left, Ben glanced at Chloe. "What about you, Chloe?" he asked. "You tired too?"<br><br>"Me? I'm not tired at all. I slept in until ten this morning."<br><br>The boys chuckled. "We were up at four thirty," Tony said. "And that's after we stayed up until one in the morning packing the place up."<br><br>"Did you sleep at all on the plane?"<br><br>"I tried to," Tony said.<br><br>They continued watching the movie. Chloe kept her eyes on the screen, but she secretly watched Ben out of the corner of her eye. She wished she could chat with him some more, but he seemed to be interested in the movie and she didn't want to distract him.<br><br>After an hour, Tony said, "I have no idea what's going on in this thing. Are you guys following this?"<br><br>"Yes," Chloe said. "I mean, mostly..."<br><br>Tony shook his head. "I'm nodding out, I think. This is too complicated a movie when I'm this tired. We should have found some stupid comedy instead. Or a horror movie. Something where we don't have to think too much."<br><br>"You want to watch something else?" Chloe asked.<br><br>"Ben?" Tony looked at his friend for the answer.<br><br>"Ahh... we should probably just call it a night," Ben said. "Don't you think?"<br><br>"Yeah," Tony said. "We're going to head up."<br><br>"Okay." Chloe nodded.<br><br>"Good night." Ben smiled at her. "If I don't see you tomorrow, Chloe, it was nice to meet you."<br><br>"Oh... I'll wake up tomorrow morning to say goodbye," Chloe said.<br><br>"Okay. Then maybe I'll see you tomorrow morning." Ben nodded at the television. "Enjoy the rest of the movie."<br><br>"Good night," Chloe said. She listened to them stomping up the stairs, then followed the sound of their footsteps passing above her as Tony walked Ben to the guest bedroom. She moved to the couch, settling into the spot where Ben had been sitting, feeling his warmth still on the cushions. After a few minutes, she heard footsteps above her again, Tony's most likely, heading from the guest bedroom to his own.<br><br>Chloe pulled out her phone. She texted to Marianne, "Everyone's sleeping already."<br><br>Marianne texted back almost immediately. "Already?!? It's not even nine!"<br><br>"I told you," Chloe sent. "Nothing happening here."<br><br>"Did you get to talk to him at least?"<br><br>"Yes... he's so funny. I was laughing so hard at dinner."<br><br>"LOL. Send me his pic!"<br><br>Chloe watched Tom Hanks on the screen for a few minutes. She texted, "I didn't get a pic of him. I'll get one in the morning."<br><br>"They're leaving early?" Marianne sent back.<br><br>"I'll wake up to say goodbye," Chloe sent. She gazed at the phone, waiting to see if Marianne would reply, but the phone sat quietly in her hand. She returned her attention to the movie. After a few minutes, the phone buzzed. Marianne's message: "Set an alarm!" Chloe set down the phone without bothering to reply.<br><br>She watched "Bridge of Spies" to the end. Afterwards, she flipped through the channels, watching bits and pieces of things, never staying on a channel for long. The house was very quiet, and it was easy for her to imagine that she was still alone there like she'd been for the previous two weeks.<br><br>Finally, she turned off the television. She spent a few minutes wandering around the downstairs turning off lights. The clock in the kitchen read 11:08. That late already? Chloe decided she would take a quick shower and try to go to bed. She'd been staying up past 2 AM every night while her parents were out of town, but it was a bad habit to be in.<br><br>Chloe walked up the stairs. She could hear the low snore of her father as she passed their bedroom, muted by the closed door. Chloe could see a red glow emanating from her bedroom, generated by the lava lamp she kept on her dresser. It was the only light upstairs, but it was enough to see by.<br><br>Chloe retrieved a towel from the hall closet. The door creaked, and she could hear Petey's dog tags jingle from her parent's bed room, as the dog no doubt lifted his head towards the sound. Chloe closed the door gently. She stepped into her bedroom, finding her dresser by the red glow of the lava lamp, and pulled out a clean pair of panties and a long sleep shirt. Bundling these items along with the towel, she crossed the hall and entered the bathroom. She made sure to close the door before flipping the light switch. The overhead light flickered on and the ventilation fan hummed to life.<br><br>She hung the towel on the shower door and dropped her new clothes on the floor. She reached in past the shower door and turned on the water. It came out cold at first, but soon started to fill the room with steam, despite the efforts of the ventilation fan. Chloe peeled off her tank top and removed her bra. She discarded these clothes on the floor by the door, followed swiftly by her shorts and panties. When she slid open the door to the shower, a cloud of steam enveloped her, warming her. It felt nice.<br><br>She stepped in, leaning into the spray, letting it wet her dark hair. She ran her fingers through the long strands, looking for tangles. After a few minutes of relaxing under the hot water, she put some soap onto a pouf and started to scrub.<br><br>A knock came on the door. Before she could speak, the door opened. She was astonished to see Ben's head poke in.<br><br>"I'm in here!" she protested, although she was stating the obvious.<br><br>"I know. Do you mind if I take a quick leak?" Without waiting for her answer, he stepped in and closed the door behind him.<br><br>Fortunately, the towel hanging on the door blocked her body from his view, but Chloe was still shocked that he would enter so casually. He noticed the look on her face and shrugged. "Sorry... I guess I'm used to being casual about the bathroom. I'm sure Tony told you, our bathroom was co-ed at the red apartments?"<br><br>"Yes..." Tony had told her that, but hadn't provided any details of what that meant. "There's another bathroom downstairs..."<br><br>"Don't worry... I'll be quick." Ben stepped up to the toilet and put up the lid. Chloe's eyes went wide as he nonchalantly undid the front of his pants and fished out his penis. It was thick and long, like a snake with a bulging pink head He didn't seem to care that she could see him. He pointed the thing at the toilet, and after a moment a stream of urine launched out of the tip and splashed into the water.<br><br>Chloe stood under the spray of the shower, her arms crossed over her breasts, staring at Ben's penis through the glass. She couldn't look away, watching in awe as the stream of pee gradually ebbed until a final few drips trickled into the toilet. He bounced it up and down, shaking off the last few drops. She couldn't believe what she was seeing. What would Marianne say when Chloe told her?<br><br>Ben held his penis between his fingers and tucked it back into his pants. He went to the sink and started to wash his hands. "Tony's asleep," he said to her. "I tried to sleep... I think I got an hour and then I woke up. I always have trouble sleeping before a flight."<br><br>"Aren't you going to be tired tomorrow?" Chloe asked. She wasn't sure what to do. Should she wait for him to leave before she continued her shower? She still hadn't washed her hair, and she felt very vulnerable standing under the water naked while he was in the room.<br><br>He chuckled. "Yeah, no doubt. But I can sleep on the plane."<br><br>"I always have trouble sleeping on planes," Chloe said.<br><br>He wiped his hands on the hand towel. "Really? Why?"<br><br>"They're so cramped," she said. "And loud."<br><br>"Loud? Well, you could always put on headphones." Ben leaned against the sink. "It's a pretty long flight to New Zealand. I think I'd go crazy if I didn't sleep through some of it. I'd sleep through all of it if I could. Wouldn't that be nice? Close my eyes, get some rest, and wake up twelve hours later when the plane is landing?"<br><br>"Yeah," she said. "That would be nice. Um... the co-ed bathroom at your apartment..."<br><br>"Oh, yeah." He grinned at her. "Six guys and six girls sharing one small bathroom. Three stalls and two urinals, two showers. We pretty much had to learn to share everything if we were going to survive. Tony told you about it?"<br><br>"No... I mean, not much..."<br><br>"We tried to be proper about it, but that lasted for about half of the first week." He chuckled. "Then we were just too tired and too busy to care. I'd walk in early in the morning and find three or four girls in their panties putting on make-up at the sinks... but what could I do? I couldn't say, 'pardon me, please let me know when you're done', because I had class in half an hour. I'd just squeeze in beside them at the sinks to brush my teeth and do my own thing."<br><br>He seemed content to lean against the sink and chat with her. Chloe started to relax. She was hidden behind the rectangle of towel on the shower door, and Ben wasn't showing a great deal of interest in her nudity anyways. When he talked to her, his eyes stayed on her face, and he hadn't tried to position himself to get a peek around the edge of the towel.<br><br>"You know Joanne, right? Tony told you about her?"<br><br>"Yes. I mean... you told us that story about her, at the dinner table... about the performance art...?"<br><br>"Right, right. Well, a couple months ago, I applied for a spot on this professor's research team. Professor Wick, a very serious older man. He came by to interview me, and we were sitting in the common area of the apartments. Suddenly, halfway through the interview, here comes Joanne, walking to the bathroom, totally naked. I don't know if you've seen her picture... she's got an amazing body, very athletic, kind of like you... and she passes by, with her towel slung over her shoulder, totally unconcerned. I look at Professor Wick, and he just shrugs, and says, 'Penn State'... and he keeps going with the interview like nothing happened." Ben laughed.<br><br>"Did you get onto the research team?"<br><br>"I did. Maybe Joanne's little walk-by had something to do with it. Who knows." Ben smiled, shaking his head. "That's just how college is, though. Everyone questions everything, everyone experiments with acting in different ways. Nothing is out of bounds. You'll see next year. I'm sure University of Washington has the same sort of things happening."<br><br>`
+                },
+                {
+                    title: "Page 2", 
+                    subtitle: "",
+                    content: `"I don't know. I guess I'll see." Chloe decided she didn't need to wash her hair. She could let it go another day. If she was going to have a conversation with Ben, better to do it downstairs in the living room, with her clothes on. The tile walls of the shower made her voice echo, and she had to talk louder to be heard over the sound of the shower. She reached for the tap and turned off the water.<br><br>"Ready for your towel?" Ben asked. Before she could answer, he stepped forward and pulled the towel free of the door. Chloe froze. Now only a thin pane of glass separated her and Ben, and she knew his view of her nude body was only obscured by the steam condensation on the glass. Her arms leapt up to her breasts, crossing over them.<br><br>A moment later, even that thin pane of glass was gone. Ben reached out and slid the glass door to the side. He leaned in, smiling cheerfully at Chloe while she stood in front of him, dripping and naked and gaping at him in shock. He seemed oblivious to her discomfort, and once again, his eyes seemed to remain on her face instead of dipping down towards her body. He offered her the towel and she clutched it with her hand, pulling it against her front. Ben immediately withdrew and returned to his spot, leaning against the sink.<br><br>The whole thing happened so quickly that Chloe struggled to make sense of it. Ben had just looked in at her while she was naked. She should be mortified, maybe even angry. Yet he hadn't leered at her, or even appeared to show any interest in her nudity. He wasn't acting intense or edgy. He had just given her the towel, that was all, and he did it like it was a perfectly normal thing to do.<br><br>Maybe it was. Or, at least, maybe it was to someone used to living in an apartment with a co-ed bathroom and women like this Joanne girl who walked around naked like it was nothing.<br><br>Chloe held the towel against her body like an apron and peeked at Ben through her eyelashes. He slouched against the sink with his hands in his pockets, smiling at her, and he certainly didn't seem very threatening. Maybe that was why she didn't bother to wrap the towel around herself before she stepped out of the shower. She held it against her body with her forearm just over her breasts.<br><br>"What made you decide to go to college so far away from home?" Chloe asked, hoping her tone sounded casual. She purposely let the towel slip a little to the side, exposing her left breast, and her eyes flickered towards Ben to see if he had noticed. He was looking right at her and his manner hadn't changed at all. He didn't pay any special interest to her visible breast.<br><br>Maybe because he was in college. If Chloe had tried the same trick on the high school boys she knew, their eyes would have been fixed on her naked breast as if hypnotized by it. But Ben probably thought it was no big deal to see a bare boob. Joanne apparently walked around naked all the time.<br><br>"I've just always loved the United States..." Ben began, and Chloe felt thrilled that he continued to act like nothing was out of the ordinary. Now that he was speaking, she felt confident enough to look him in the eyes, and nodded politely while she let the towel slide away from the front of her body. She brought it up to her head and started to dry her long hair, acutely aware that she was standing naked in front of him.<br><br>She thought about the text she would write the next day to Marianne. Oh, Tony's cute friend Ben? Yeah, we had a long talk after everyone else went to bed. We even talked while I was in the shower. Yes, I was naked right in front of him but it was no big deal, he was a gentleman...<br><br>"...and the whole world is out there, right?" Ben finished and Chloe had barely heard a word he'd said. Fortunately, he saved her from having to think of a new question by asking one of his own. "Do you travel much?"<br><br>"Um... not as much as I'd like," Chloe said. "As far as other countries... I've been to Mexico and Canada, and we've gone to Europe a couple times... Italy, France..." She glanced in the mirror and was amazed at the image of her naked body standing beside this cute, fully clothed man. Was she really being this daring? She'd had her pubic area recently waxed and she could clearly see the line of her pussy in the mirror. It looked very exposed. "Um... Austria, England... Italy... oh, I already said Italy..."<br><br>If Ben noticed her distraction, he didn't comment on it. "I hope I can get you to New Zealand some day," he said. "Tony and I are going to have a blast over there."<br><br>"Maybe some day." She peeked down at her body, noting a few lingering drops on her skin, but for the most part she was dry. What now? Her eyes dropped to the sleep shirt and panties she'd left by the door. Get dressed in front of him? What would the mythical Joanne have done?<br><br>"Shall we go downstairs?" Ben asked. "I still feel wide awake. Maybe I can brew us some coffee, and we can continue our conversation?"<br><br>"Okay. That sounds good." She glanced again at her clothes on the floor.<br><br>"If you're not dry yet, just wrap the towel around yourself," Ben suggested. "You can get dressed later. Everybody's sleeping anyway."<br><br>"Right. Everybody's sleeping." Chloe knew she was already dry, but she did as he suggested and wrapped the light green towel around herself. It managed to cover her midsection from the top of her breasts down to six inches above her knees, leaving most of her legs bare. Ben opened the bathroom door and Chloe followed him into the hallway. She tiptoed as quietly as she could past her parent's closed door. Although she was technically decent, it would still be a little hard to explain to her mom and dad why she was only wearing a towel.<br><br>Chloe flicked the light switch at the bottom of the stairs to light up the hallway. "Forward, then right," she told Ben. "The kitchen switch is to the left of the door. I'll wait here to turn off the hall light."<br><br>"Right." Ben walked ahead. When the kitchen light went on, Chloe turned off the hall light. She followed Ben into the kitchen.<br><br>"Now, I'll be happy to make the coffee, but I'll need you to tell me where everything is," Ben said.<br><br>Chloe smiled. "Sure. The coffee machine is that silver thing by the microwave. My dad keeps the coffee in the cabinet below it."<br><br>"My, my!" Ben nodded in approval. "Not just a simple coffee pot, but an espresso machine! Would you like me to make you a cappuccino?"<br><br>"Okay... but I don't know how to work it, to be honest."<br><br>"No worries. I've worked as a barista before. This is all very familiar to me." He waved at her. "Have a seat. It'll just be a few minutes."<br><br>Chloe pulled out one of the kitchen chairs and sat down, carefully holding the towel so that it folded underneath her when she sat. Then a reckless impulse seized her, and before she could think about what she was doing, she undid the towel and pulled it open, letting it fall away from her and drape over the chair. Her heart bounced in her chest like a rabbit as she waited for Ben to look her way and notice she was naked again.<br><br>Ben crouched in front of the cabinet, moving items around on the shelf. He pulled out a canister of coffee beans and set it on the counter. Satisfied, he stood and examined the espresso machine, fiddling with the levers and buttons. He looked over his shoulder for a moment, gazing at her, and Chloe held her breath, waiting to hear what he would say. But he just gave her an appreciative smile, then turned back to the machine.<br><br>"Do you drink coffee regularly?" he asked.<br><br>"Not regularly. Every now and then." Chloe glanced down at her body, trying to see herself from his perspective. She felt pleased that he hadn't made a comment about her nudity. So they would continue their conversation, sipping cappuccino at the kitchen table, while she remained naked? The thought of it excited her tremendously. "I never even had a cup before this last year. But there's a coffee shop we sometimes go to, it's open 24 hours, and I started getting coffee there. Also, Starbucks... we go there sometimes..."<br><br>"Yeah? I've really gotten addicted to coffee this last year. Late at night, trying to get a paper done, I can go through five or six cups, easy." Ben pressed a button and the machine started making a loud grinding noise.<br><br>Chloe tensed, listening for sounds from above. Would the noise wake up her family? Ben saw her nervousness and chuckled. He turned off the grinding. "Don't worry," he said. "It's not really that loud. No one's going to wake up."<br><br>"Sorry..."<br><br>"It's all good. Just relax." He pressed a button on the machine, and the sound of water pouring came from somewhere inside it. "Where's your coffee cups?"<br><br>"Up on those shelves over there." Chloe pointed.<br><br>"Do you mind getting us two cups? The bigger, the better."<br><br>"Okay." Chloe stood and walked over to the shelf. She couldn't see Ben but she felt like he watched her as she stretched up and pulled down two large mugs. She carried them over to him.<br><br>"Thanks." He smiled at her. He was doing something with milk. Chloe returned to her seat.<br><br>"How long were you a barista?" she asked.<br><br>"Six months. Just before college." He filled the two mugs and carefully carried them to the table. He put one in front of Chloe and the other on the table across from her.<br><br>"Oh! That's so cute!" Chloe said, seeing the heart he had made in the foam on the top of her drink.<br><br>"A little trick I learned. I can do a few other things, too. Like a cat. But the heart is pretty easy."<br><br>Chloe pressed her hand against the side of the mug. "It's hot..."<br><br>"Give it a minute. It'll cool down."<br><br>As they waited for their drinks to cool, they chatted about college, how Ben's life had changed when he went to Penn State, how her own life would change when she went to Washington. Ben braved his drink first, taking a long sip and grimacing slightly in pain. "Still hot," he said. "But I like it when it's still a little too hot."<br><br>Chloe waited longer for hers. When she finally took a sip, she nodded her head. "It's very good!"<br><br>"Yeah, sometimes I know what I'm doing." Ben grinned.<br><br>Chloe brought her drink up with both hands and sipped it, peeking at Ben through her eyelashes. She could feel her stiff nipples brushing her arms, and idly wondered what it would feel like to press the warm mug against her left breast. She thought about how she could describe this to Marianne, and knew she probably wouldn't. It would just be too hard for Marianne to understand how she'd ended up sitting in her kitchen naked with a boy she'd just met, sipping cappuccino.<br><br>Chloe peeked again at Ben. Maybe she could explain it by showing Marianne his picture. "Look at this face..." she would text. "All he did was smile at me and suddenly I realized I was taking off all my clothes..."<br><br>"What are you smiling about?" Ben asked.<br><br>"Oh..." Chloe sat down her mug. "I was just imagining what my friends are going to say when I tell them you and I drank coffee together and I still hadn't gotten dressed from my shower."<br><br>"Do you tell your friends everything?"<br><br>"Almost everything..." Chloe tapped her dark red fingernails against the coffee mug.<br><br>Ben didn't speak for a moment, gazing at her with a thoughtful smile on his face. Abruptly, he stood. "Man! This cappuccino is making me warm! Is it making you warm?"<br><br>"No..." Chloe giggled. "But you're wearing warmer clothes than I am."<br><br>"Do you mind if I open the front door for a minute? Let in some cool air?" Ben was already walking in that direction.<br><br>"Okay..." The kitchen was adjacent to the foyer so Chloe could still see him as he unlocked the top lock and pulled the front door open. She was at the wrong angle to see outside, or for anyone outside to see her, nevertheless she felt nervous to have the door gaping open like that. Ben leaned against the door jamb, looking outside.<br><br>"I think it's a full moon," he remarked.<br><br>"Really? Yeah, I noticed it was almost full a few days ago."<br><br>"This is nice. There's a cool breeze, it's really refreshing." Ben closed his eyes, as if savoring the feel of the night air for a moment. He opened his eyes and looked at Chloe. "Come on over, take a look at this moon."<br><br>"I can't!"<br><br>"Sure you can. What, are you worried you'll be seen? It's past one on a Wednesday night. Everybody's asleep, I promise you." He waved his hand towards the outside. "Plus, you have that tall hedge."<br><br>"It's not that tall..."<br><br>"Come on.. Just peek out."<br><br>Chloe took another sip of her drink, considering. Then, shrugging her shoulders, she set the mug down and pushed out her chair. She paused for a moment to glance down at the towel on her chair before she left it behind and tiptoed naked towards the front door.<br><br>She hesitated next to the door, looking at Ben nervously. He looked outside, his eyes scanning left to right. "It's fine. No one's out there. I told you, everybody's asleep." He nodded to her in reassurance.<br><br>Chloe timidly stepped out in front of the doorway. The porch light was on, and she knew she was clearly lit. Outside, the moon was a bright circle in a cloudless sky. The street in front of the house looked dark and empty, dimly lit by the street light on the corner. Across the street, the two houses that lay opposite their house showed dark windows. A hedge separated the front yard from the street, but it really wasn't that high, only a little higher than her waist. She could see the street clearly, and that meant anyone out there could see her.<br><br>But Ben was right. It was late, and the world outside seemed silent and empty. Chloe turned sideways to put her back against the opposite door jamb, leaning against it as Ben did. She looked up at the sky and the twinkling stars, feeling the outside air on her skin.<br><br>"It's a nice night," Ben said. "Not like a hot summer night, but not cold either. Comfortable."<br><br>"Yeah."<br><br>"You're not cold?"<br><br>"Mmm. No. I'm fine."<br><br>"Was I right? Beautiful moon, right?"<br><br>"Yeah. It's huge." Chloe looked up at the moon, which bathed the world outside in a dim glow. "It's definitely full."<br><br>Ben didn't speak for a moment. Chloe could hear the chirp of crickets, and far away the sound of a car driving. She thought she would take a quick look then return to the kitchen table, but standing there, she found that she wasn't that worried about being seen. It really did seem silent outside, as if they were the only ones in the neighborhood.<br><br>"Do you want to go for a walk?" Ben asked.<br><br>Chloe felt a panicky rush pass through her body, her thighs tightening involuntarily. She already knew his answer, but she asked the question anyway: "Like this?"<br><br>"Yeah."<br><br>The little rabbit in her heart was bouncing around again. "Everybody's sleeping," she murmured.<br><br>"Right. Everybody's sleeping."<br><br>Chloe looked up at Ben. He stood barely two feet away from her. If he wanted to, he could easily reach out and touch her. He could run his fingers over her breasts, down her body, between her legs. He could feel how turned on she already was.<br><br>"Okay," she said, and felt the panicky rush again. She could barely breath.<br><br>Ben was silent for a moment, gazing at her. "I'll be right back," he said, and walked back towards the kitchen.<br><br>Chloe stood in the middle of the doorway, facing out, her hands at her sides, her legs slightly parted. The breeze from outside traced her skin, and she felt goosebumps on her arms. Her nipples were hard pebbles, but she wasn't sure if that was from the cold or from anticipation.<br><br>Ben returned, holding something black in his hand. Chloe couldn't tell what it was until Ben started to fasten it around her neck. She let out an involuntary moan. Petey's old collar and leash. They had been hanging on a peg in the kitchen. Now Ben was putting the collar around her neck, and he had the end of the leash in his hand.<br><br>So not only would she be walking with Ben naked, but he would also be leading her around on a leash. Chloe felt her body trembling with nervous energy. She couldn't believe how turned on she was.<br><br>"Let's go," he said, and he stepped out the door onto the front porch. Chloe's eyes darted from one side of the empty street to the other. She didn't move until Ben gently tugged on the leash, and then she took a step out the door, another step to stand beside him on the porch. Ben closed the door.<br><br>"It's a beautiful night for a walk," he said.<br><br>"Yes..."<br><br>"Don't be nervous," Ben said. "I'll just walk you down the block and back, okay?"<br><br>"Okay." Her voice came out as a whisper.<br><br>"You look amazing, you know. You're very beautiful."<br><br>"Thanks."<br><br>"Shall we?" Ben started down the front steps. Chloe followed him as they walked down the path to the front gate and stepped out onto the sidewalk.<br><br>They paused, and Chloe looked up and down the street. The house was on a cul-de-sac, with the street light on the corner to their left. At the end of the cul-de-sac to their right, the three houses arranged in a semi-circle were only illuminated by the three lights above their front doors. Parked cars made shadowy shapes on the curb, like dormant shells. Crickets chirped from every direction, and a breeze stirred the upper branches of the trees, but otherwise everything was silent.<br><br>"Which way?" Chloe asked. She crossed one foot in front of the other, pressing her thighs together, feeling how wet she was.<br><br>"This way." Ben tugged on the leash, pulling her towards the street light. Chloe peeked down at her body as she walked, watching her breasts become more illuminated with every step closer to the glowing orange light. She reached up and touched her nipple, wondering if the tip had ever felt so rigid and sensitive before.<br><br>"It's so different around here at night..." she murmured. "So quiet..."<br><br>"Have you ever walked around this late before?"<br><br>"Yeah... I did it just a few days ago actually. Me and my friend Marianne. We smoked some pot watching movies and then we got restless and we walked around the neighborhood. Not that far... just a circle around a few blocks..."<br><br>"Did you see anybody else?"<br><br>"No..."<br><br>"What day was it? The weekend?"<br><br>"Yeah... Sunday night... I guess that's still the weekend?"<br><br>"Did any cars drive by?"<br><br>"Um... I don't remember... I can't remember any..."<br><br>Ben nodded. "I know this kind of neighborhood. Big houses, big yards, all set apart from each other. Everyone works during the day, and this time of night they're all asleep. If you go outside, it's like you have the whole neighborhood to yourself." They reached the corner and paused under the street light.<br><br>Now Chloe had a cross street to look up and down, and she peered out into the darkness, her night vision hindered by the glow of the street light. She couldn't see anyone, but that didn't mean that no one was out there, maybe lurking somewhere in the shadows. Whoever it was, they definitely had a clear view of her, her naked body bathed in the glow of the street light. Did they know her? Did they recognize her?<br><br>Ben started walking down the cross street, tugging on the leash, and Chloe silently followed as he led her further and further away from her home. As they moved away from the street light, Chloe's eyes adjusted to the darkness again, and she could see the sidewalk stretching into the distance, on both sides of the street. Her breath caught in her throat for a moment as she noticed someone tall standing in front of a house two blocks away, looking right at them. But a few steps later, she realized it was just a trick of the light, a mailbox with a small tree behind it. Just her imagination.<br><br>"How far should we walk?" she asked.<br><br>"Just a little further. Are you feeling nervous?"<br><br>"Yes."<br><br>"It's all right. No one's going to... oops!"<br><br>Two blocks away, they could see a change in the light, a beam from the left illuminating the trees. A moment later, they saw the headlights of a car pull up to the intersection.<br><br>`
+                },
+                {
+                    title: "Page 3",
+                    subtitle: "", 
+                    content: `"Better get down," Ben said.<br><br>Chloe, her heart pounding, scrambled towards a parked truck, even as the headlights turned towards them. She crouched down on the grassy rectangle next to the truck, squeezing herself into a tight ball, her arms tightly clasped over her chest. She didn't dare look directly at the car, but she could hear the approaching rumble of its motor, and could see the area around her flooded by its bright headlights. Ben remained on the sidewalk, holding the leash.<br><br>The car passed without slowing. Chloe looked over her shoulder, watching the red taillights drive into the distance, then turn onto a side street. Her body buzzed with adrenalin.<br><br>Ben's voice was calm. "That's the advantage of the leash," he told her. "If someone sees me just standing here alone on the sidewalk in the middle of the night, I look like a suspicious stranger who's up to something. But put a leash in my hand and everyone figures I'm just out walking my dog and I'm waiting for it to pee." He chuckled, looking down at her.<br><br>"That was too close..." Chloe crouched in her hiding place, watching to see if the car would reappear.<br><br>"Nah, we were fine," Ben reassured her. He grinned. "If you need to pee, go ahead. I can wait a little longer.<br><br>Chloe looked up, shocked, wondering if he was serious or joking. She couldn't tell by his face, his eyes watching her patiently, his mouth turned up in that cute little grin he had. She straightened her back, uncrossing her arms from in front of her breasts, instead resting her hands on her knees.<br><br>Slowly she opened her legs wide, knowing that she was giving him a clear view of her pussy. She could see his eyes lower, gazed intently between her legs. A second later, a thin jet of pee arced out of her and splashed into the gutter. The flow didn't last for very long, but Ben watched every drop as she made a tiny puddle that started to trickle towards the truck's front tire.<br><br>After she was done, Chloe brought her legs back together and rose to her feet. Ben had an odd expression on his face when he looked at her, and Chloe suddenly felt certain that he'd only been teasing her when he suggested she pee. He made a joke, and then she shocked him by opening her legs and peeing right there in front of him.<br><br>How could she have done something like that? Chloe tugged at her long hair, feeling flustered, but more than that, feeling extremely turned on. Her pussy ached with need and she desperately wanted to press her hand between her legs, to stroke her clit and try to release some of the tension she felt.<br><br>"Ready?" Ben asked.<br><br>Chloe nodded. He started to walk and Chloe fell into step beside him.<br><br>She said, "You peed in front of me, too."<br><br>"I did?"<br><br>"Earlier. When I was in the shower. You came into the bathroom and peed."<br><br>"Oh. Right. I didn't think you were watching when I did that."<br><br>"I was right there!"<br><br>"Yeah... but I didn't think you would look. I thought you were busy with your shower."<br><br>Chloe remembered the way Ben had pulled out his penis in front of her, the way it had looked in his hand. "When you shared that co-ed bathroom... did you ever have to pee in front of the girls?"<br><br>"All the time. The bathroom had urinals in it. It used to be a men's room." They passed a large ranch-style house with a half-circle driveway. A line of trees separated the front yard from the adjacent house. The ranch-style was as dark and quiet as every other house they'd passed.<br><br>Chloe looked at the dark windows, wondering which of them hid her sleeping neighbors. "Why am I totally naked right now and you still have all your clothes on?" she asked.<br><br>"You were already naked before we left," Ben reminded her.<br><br>"Yeah, but... if everybody's sleeping and no one's going to see..."<br><br>"You know why, Chloe," he interrupted her.<br><br>"I do?"<br><br>"Of course you do." Ben stopped suddenly. He looked furtively up and down the street, then took hold of Chloe's hand. He pulled her over to the line of trees, into the dark shelter under the lower branches. Chloe opened her mouth to ask why they had left the sidewalk, but before she could speak, Ben undid the front of his pants and extracted his erect penis. Chloe stared at the thing as it jutted out towards her, a long branch with the head round and swollen like an apple. She'd thought it was large when she watched him pee, but erect it looked twice as big.<br><br>"I've been hard since before we left the house." Ben took a small step forward, just enough so that the head of his penis nudged the outside of her pussy. Chloe let out a small moan. Her body trembled, feeling his penis head at her opening, knowing that he could easily push into her if he wanted to, knowing she wouldn't resist if he did. He leaned in close to her. "I can't just walk around outside with an erection, right? What would people say if they saw me?"<br><br>He moved his hips slowly forward, and the head of his penis rubbed against her labia, teasing her. Chloe waited to see if he would take the plunge and push into her. Maybe she hoped for it. Instead, he took a step back, breaking the contact between them. He pushed his penis back into his pants, leaving a noticeable bulge.<br><br>"Come on." He tugged on the leash, and Chloe stepped back out onto the sidewalk. They resumed walking in the same direction, passing two more houses and reaching the next corner. Chloe leaned her back against the light pole while Ben stepped out into the street. He moved in a small circle, checking each direction.<br><br>"Hey, red light that way," he observed, pointing at their left turn. Three blocks away, the intersection had two red lights glowing, although no cars were crossing.<br><br>"That's Addison Drive."<br><br>"What's on Addison Drive? More houses?"<br><br>"No. Businesses. Restaurants."<br><br>"They're probably all closed. Let's go take a look." He started walking in that direction, crossing the street.<br><br>"Do you think we should?" Chloe asked as she reluctantly followed him.<br><br>"Sure, why not?"<br><br>"It's a busy street. Cars will drive by."<br><br>Ben stopped in the middle of the street and watched the red light. It didn't change. "It doesn't seem that busy," he observed. "We haven't seen a single car since we've been standing here."<br><br>"It's a busier street than this one."<br><br>Ben chuckled. "Well, it could hardly be less busy. We've only seen a single car since we've been out here." He tugged on the leash. "Come on. It's the middle of the night, everything is closed. We'll walk to the stoplight and take a look. If it seems busy, we'll just turn right around and come back."<br><br>Chloe tugged on her hair nervously, but followed him across the street. She watched the glowing red eyes of the traffic signals as step by step they came closer and closer to Addison Drive. The light never turned green for their direction. It worked off a sensor and if no cars waited for the light, then the light never changed.<br><br>Suddenly, a car whooshed through the intersection, traveling too fast from left to right. Chloe tensed, glancing at Ben, but he didn't show any reaction, and his pace didn't slow. She could hear the sound of the car fading in the distance somewhere off to the right. Ben had pulled ahead and the leash was almost taut between them, so Chloe walked faster to catch up. They walked for another twenty paces and then another car whooshed by, traveling in the same direction as the first. Chloe found herself falling behind again.<br><br>"Two cars," Chloe said as she caught up to Ben again. "I told you it's busier."<br><br>Ben chuckled. "I guess so. But neither of the them turned this way."<br><br>"The next one might..."<br><br>"Maybe. If there even is a next one." Ben didn't seem concerned.<br><br>They were only half a block from Addison Drive when a third car drove by, this time going in the opposite direction. It drove fast through the intersection, close enough that Chloe could see the man's head through the car window. He had his eyes pointed straight ahead and didn't look in their direction. A good thing, because if he'd looked slightly to the left, he would have had a clear view of Chloe standing naked on the sidewalk.<br><br>This time, Chloe slowed so much that the leash pulled tight between her and Ben. He stopped and turned around. "Getting nervous again?"<br><br>"Yeah..."<br><br>"We'll just take a quick look. Then we'll head back. Okay?"<br><br>"Okay."<br><br>"We'll see any car's headlights long before they see us. We'll hear them, too. Plenty of warning."<br><br>"Uh huh."<br><br>"Touch your pussy with your finger."<br><br>Chloe's eyes widened, surprised at the unexpected and frank request. But she obeyed, sliding her hand down her front until her index finger slipped into the slick cleft between her legs.<br><br>"How does it feel?"<br><br>"Wet," she admitted.<br><br>"Like you're turned on?"<br><br>"Yeah..."<br><br>He pulled on the leash. "Let's go, then." He turned away from her, and when he started walking, she followed.<br><br>Addison Drive unfolded in front of them. Chloe could see the glowing Mcdonald's sign on a tall metal pole that marked the fast food restaurant on the opposite side of the street, and at first she thought that the restaurant must still be open, because the sign was on. However, when the restaurant itself came into view, it was clearly closed, the interior dark and the parking lot empty. She supposed they must leave the sign on all night.<br><br>Addison Drive wasn't dense with buildings. Businesses were scattered along either side of the street, separated by empty lots filled with patchy green grass. Chloe looked left and right, but didn't see any businesses that appeared to be open. She saw an auto parts store, a dry cleaners, a dress shop, all of them completely dark.<br><br>She crept up to the corner, feeling very exposed as she stepped out to the edge of the sidewalk and looked up and down the street. She could see a series of green lights stretching into the distance, disappearing over a hill in one direction, around a curve in the other. Four lanes, two going in each direction. The street was empty of cars both ways, at least for the moment.<br><br>"Do you want to see what you look like?" Ben asked. He came up next to her, and she realized he held his phone in his hand. He put his arm around her waist and pulled her close to him, the phone held out in front of him. A light flashed on the phone.<br><br>He turned the phone around and showed her the picture he'd just taken. It showed the two of them next to each other, the street behind them. Her body was visible down to just below her belly button and the flash caused her pale skin to stand out against the dark background, her protruding nipples casting tiny shadows like sundials. The black dog collar stood out on her neck, and the line of the leash could be seen as it crossed over her right arm. The Mcdonalds sign was visible just above her left shoulder.<br><br>"Oh my god..." she breathed, bending over to peer at the picture.<br><br>"Do you like it?"<br><br>"It's crazy... I'm crazy!"<br><br>"It's a great picture," Ben said. He turned off his phone and put it in his back pocket. "No cars so far. I guess this street is pretty quiet, too." He stepped out into the street and looked to the right, then to the left. "Hey, I think that place over there is open." He pointed.<br><br>"What place?" Chloe stepped out into the street and looked in the direction he was looking. "Oh! The Food Mart! It's open twenty-four hours." She could see the small convenience store on the corner of the next block, with its dirty window advertising the lottery jackpots, the glowing red sign reading "24 hrs". She recalled returning from a concert with Marianne, stopping there at three in the morning to get gatorades and potato chips. A stocky Arabic man had taken their money without a word.<br><br>"Let's make a stop. I'll buy you something to drink for the walk back." He started to walk in that direction before she even answered.<br><br>"I can't!" she protested, even as she reluctantly followed him.<br><br>"You can't what?"<br><br>"I can't go in there! Not like this."<br><br>"Why not?"<br><br>"Because I'm naked!"<br><br>He laughed. "Are you? I hadn't noticed." He waved at her dismissively. "I'm sure the guy working the overnight shift is used to weirdos at this time of night. He won't even look twice at us."<br><br>"Oh, yes he will. He'll look twice at me and then he'll look twenty times more."<br><br>"You really don't want to go in there?"<br><br>"I really don't."<br><br>Ben shrugged. "Okay. Why don't you wait outside for me, then? I won't be that long."<br><br>The thought of waiting outside the store naked and alone didn't sound much better to Chloe. But she thought it was better than the alternative. "All right," she said. "But hurry, okay?"<br><br>"Definitely. What do you want to drink?"<br><br>"Um... how about an orange gatorade?"<br><br>"One orange gatorade coming up."<br><br>"Will you...oh my god!" In the distance, headlights appeared over the hill. Chloe froze, looking around for somewhere to hide. Unfortunately, she didn't see any nearby parked cars to take refuge behind.<br><br>"Hide in the doorway there," Ben told her, pointing at the recessed entryway to the dress shop they were passing.<br><br>"It's not deep enough?" Chloe said, even as she hurried towards the doorway.<br><br>"I'll hide you." Ben stepped in front of her, blocking her from the street. As Chloe felt her back press against the glass door of the dress shop, Ben stepped in close to her. His face was right above hers, and she felt his hands on her hips. Without thinking, she leaned into him and pressed a kiss on his lips.<br><br>"Good thinking," he murmured to her, after she broke the kiss. "We'll just look like a pair of lovers stealing kisses in the shadows."<br><br>"Yeah..." Chloe hungrily pressed another kiss on his mouth. She could feel his hand sliding up her side, moving to her front to squeeze her breast. Her body reacted to his touch, pushing against him as if drawn into his gravity. The excitement and desire that had been simmering within her with every minute she'd kept herself exposed to his view suddenly roared to life, and she wanted nothing more than to have him touch every part of her body.<br><br>His hand cupped her pussy just as the car finally drove by. The driver didn't slow, and showed no sign of having seen their erotic tangle in the doorway. Ben's finger pushed inside her, and Chloe moaned. He fingered her for a moment while she pressed helplessly against him. When he stepped away, disengaging himself, Chloe whimpered in frustration.<br><br>"Come on," Ben said, tugging on the leash. "Let's get to the store so we can head back." Chloe felt torn, part of her eager to return home, the other part of her wanting to remain with Ben in the doorway, kissing him and feeling his touch on her skin. She let the leash pull her back onto the sidewalk.<br><br>They could see the parking lot of the Food Mart around the corner of the adjacent building, and it was completely empty. Chloe thought there would be at least one car, for the employee working inside, but maybe he walked to work. "Where should I wait for you?" she asked.<br><br>"I see a good spot," Ben said. He walked towards the entrance of the store.<br><br>"I don't want to go inside," Chloe reminded him.<br><br>"You won't. Here we go. Bend over, please." Ben knelt down about ten feet from the glass door.<br><br>Chloe crouched, confused about where she was supposed to hide. She saw a newspaper machine, a Redbox machine, a green metal rack full of fliers. None of them seemed like very good cover.<br><br>"There we go." Ben stood, nodding his head in satisfaction.<br><br>"What...?" At first, Chloe didn't understand what she was seeing. Ben stood in front of a small metal bike rack, little more than a metal bar that rose out of the concrete in an inverted U shape. It wouldn't provide any cover at all.<br><br>Then she noticed that the leash had been tied to the bike rack.<br><br>"Ben!" she protested, trying to stand, but the leash stopped her short, her head barely three feet above the ground. She went back down to her knees, pulling at the knot, but it held tight. "You can't be serious!"<br><br>"I'll be quick," he said.<br><br>"Ben! Are you really going to leave me out here like this?"<br><br>"You didn't want to go inside, right?" He crouched down next to her. "Don't worry. I'll be right back." He leaned forward and kissed her lips, and despite her distress, Chloe found herself kissing him back.<br><br>Ben broke the kiss. Chloe blinked up at him, sitting on her left hip with her legs to the side. "Ben..."<br><br>"You'll barely even notice I was gone." He leaned forward again and this time he kissed her nipples, first pressing his lips against her left nipple, then her right. Chloe inhaled, astonished at how good it felt. She leaned backwards on her hands, arching her back.<br><br>"Okay..." she was surprised to hear herself say. "Please hurry, all right?"<br><br>"I will." Ben touched her knees. To her astonishment, he gently pulled her legs apart and pressed a kiss against her smooth pussy. Chloe gasped as he kissed her on her most private place while she lay naked in front of the Food Mart. His tongue licked up her slit, stimulating her sensitive clit. Chloe's eyelashes fluttered, and she bit on her lip to keep from crying out.<br><br>Suddenly he was gone. A bell rang from the door, the automatic chime that let the man at the counter know he had a customer, and Chloe glanced over just in time to see it swing shut behind Ben. She sat up, the pleasure from Ben's kisses rapidly fleeing her body. The reality of her situation settled on her; she was tied up naked outside of a public store in the middle of the night. She brought her legs back together, brought her knees up to her chest, wrapped her arms around them. Her eyes searched the dark street for the shine of approaching headlights, or for the shadowy outline of a watching pedestrian.<br><br>Nothing. She turned her head to the side, peering at the knot Ben had used to connect her to the bike rack. She could see the leash winding around the silver metal, tucking back in on itself here and there, making a complex tangle. She plucked at the knot, tugging on it, but she couldn't tell if she was loosening it or making it tighter.<br><br>She glanced back at the street. Was she imagining it, or was the asphalt lighter than before? She stared, willing her vision to be clear. Yes, definitely lighter. And brightening as she watched.<br><br>Headlights. Another approaching car.<br><br>"Oh god," she murmured to herself. "Please don't drive by. Make a turn. Please turn. Please turn."<br><br>She could hear it now, a low approaching rumble, increasing in volume with every second. She could see the diffused light on the street coalescing into distinct beams of light. It would pass in seconds. Maybe it would pass as the previous cars had, with the driver looking forward, not paying attention to anything but the road. Maybe she would blend in with the front of the store, and the driver wouldn't notice her.<br><br>The car obliged her by turning. Unfortunately, it turned into the parking lot of the Food Mart. Chloe caught a glimpse of a large silver sedan before she was blinded by the headlights, bathing her body in white light. The car pulled into a space, and Chloe blinked, trying to get her vision back. She could see the car from the side, an old beat-up car with a faded silver paint job. The door opened, and an elderly man stepped out. He had a mushroom of scraggly gray hair and thick horn-rimmed glasses. His lower jaw jutted out in a way that gave him a permanent frown. He wore a gray jacket that might have been in style thirty years earlier.<br><br>Chloe couldn't do anything but sit and wait for his reaction. She was sure he had seen her already. How could he have missed her, with the headlights right on her?<br><br>The man walked past. He looked down at her and scowled, but didn't say a word. The bell chimed as he opened the door.<br><br>Chloe couldn't believe it. Naked and tied to a metal bar outside in the middle of the night, and the man didn't have anything to say? She'd been dreading his reaction with such anxiety that his lack of reaction almost offended her. Chloe unfolded her legs and looked down at her body. The man had seen her, and it was undoubtedly clear that she was naked, but she'd squeezed herself into such a tight ball that she'd protected most of her front from being viewed.<br><br>`
+                },
+                {
+                    title: "Page 4",
+                    subtitle: "", 
+                    content: `The bell chimed again as the door opened. Chloe looked up, hoping to see Ben, but it was the old man again, now holding a pack of cigarettes. Chloe didn't bother to fold her legs back against her chest, instead she leaned sideways on her hand with her legs to the side, as if she was lounging on a cushion. The man looked down at her again, with an unlit cigarette hanging from his mouth. He slowed, still scowling down at her.<br><br>"You all right?" His voice was low and gravelly.<br><br>"Yes..." Chloe felt very exposed, to be talking to a stranger while having no clothes on. "I'm just waiting for my boyfriend."<br><br>"Your boyfriend? Your boyfriend tied you out here like that?" The man shook his head, clearly disgusted.<br><br>"Yes. I'm fine. He'll be out in a minute." Chloe couldn't help herself; she pretended to stretch her right leg, bending it so that it separated from her left. She let her legs carelessly splay open, knowing she gave the man a clear view of her waxed pussy, while she gazed up at him innocently.<br><br>The man's eyes shifted to look at her pussy, and Chloe felt a flutter of excitement. He shook his head in disapproval and turned away, heading back to his car. Chloe heard him muttering, "... don't know how ta treat their women these days..." He got in his car and slammed the door. The car started up and Chloe watched it pull back onto Addison Drive.<br><br>She started to giggle. She couldn't help herself. The encounter seemed so surreal to her. Had she really just flashed her pussy at an old man while explaining to him that she was just waiting for her boyfriend? And the old man... had he really believed that her boyfriend tied her up naked in front of the store while he went in to buy gatorade? Maybe all that man really cared about was getting his cigarettes. Chloe couldn't stop giggling.<br><br>It was because of her uncontrollable giggling that she didn't hear the other voices approaching. She only realized she wasn't alone when one of the voices, a guy's voice, exclaimed, "Hey! Look at that girl!"<br><br>Her laughter died instantly and she looked to her right to see three dark figures standing nearby. Her heart thundered in her chest as she stared at them.<br><br>A girl's voice: "Oh my god... is that Chloe?"<br><br>They knew her. Chloe could barely breath.<br><br>The three figures stepped closer, and now Chloe could see their faces. Two guys and a girl. Tricia and her boyfriend Marty, they were both in her graduating class. John was in her graduating class, too. All three of them had signed her yearbook. Now they stood in front of her, looking completely shocked.<br><br>"Chloe? Are you okay?" Marty asked. He had dark curly hair and wore black hipster glasses.<br><br>"I'm fine..." Chloe pressed her arm against her breasts. "Sorry... I didn't expect anyone I knew would see me like this..." She almost started to giggle again.<br><br>"Why in the world are you sitting out here naked in the middle of the night?" Tricia asked. She was thin, with auburn hair that she'd been growing out. She had it tied back in a ponytail.<br><br>"Um... it's kind of a game. Sort of a dare game." Chloe looked at John, who was having a hard time keeping his eyes on her face. Her junior year, she'd had a bit of a crush on John. He was tall and lanky, with short blond hair that he spiked up. "I kind of thought... you know, it's so late... that no one would catch me. Ben... that's my friend, he's inside... he dared me to do this..."<br><br>"He dared you to do this?" Marty raised his eyebrows. "Wow, Chloe... you accept some pretty wild dares."<br><br>"Yeah..." Chloe shifted, bringing her legs in closer to her body. "What are you guys doing here so late?"<br><br>Marty and Tricia exchanged a glance. "Honestly, we're all pretty high right now," Marty admitted. "We wanted to take a walk to get some fresh air. The house was starting to feel oppressive."<br><br>"We thought we'd get some ice cream cones," Tricia said.<br><br>Chloe glanced at John, who hadn't said a word yet. His eyes had dropped and he appeared to be thoroughly studying her breasts. Chloe realized she'd let her arm fall away from her chest, leaving her breasts unprotected. She started to raise her arm again but decided it was pointless. If John wanted to look, she would let him look.<br><br>Marty and Tricia had been a couple for most of high school; they were practically inseparable. John was Marty's friend, and always seemed to be hanging out with the couple. For part of senior year, John had dated Lara Shires, and the group had been a foursome. But then John and Lara had broken up, and John returned to his position as permanent third wheel.<br><br>"So how long does your dare last?" Marty asked.<br><br>"Not much longer..." Chloe said, and as if on cue, the bell rang from the door. Ben stepped out holding a brown paper bag.<br><br>"Hi, Chloe. Everything okay?" Ben smiled cheerfully.<br><br>"Yeah..." Chloe said. "Ben, this is Marty and Tricia, and this is John. They went to my high school."<br><br>"Hey, nice to meet you." Ben flashed them his friendly grin. "I guess Chloe told you about this little game we're playing?"<br><br>"Kind of..." Tricia said. "What is it, you keep daring each other to do things?"<br><br>"Yeah. Although I think Chloe's pretty much won the game at this point. I don't know how I can outdo this one." Ben looked at the parking lot. "You guys walk? I didn't see any cars drive up."<br><br>"Yeah, we walked," Marty said.<br><br>"It's a nice night for it," Ben leaned over the bike rack, and Chloe didn't see what he did, but suddenly the leash came loose. "Do you guys mind if we move to the side of the building? A little less conspicuous."<br><br>"Yeah. Right. Sure." Marty watched as Chloe climbed to her feet. Ben led Chloe around the corner of the building, and Marty and the other two followed them.<br><br>Chloe peeked at John as she stood with her back against the side wall of the Food Mart. He openly gawked at her, and Chloe knew that standing up made her body much more visible. Even Tricia seemed to be sneaking looks at her.<br><br>"So does Chloe get to put her clothes on now?" Marty asked. "Did she finish the dare?"<br><br>"No..." Ben said. "Actually, Chloe doesn't have any clothes. She didn't bring any.<br><br>"Because she's a dog," Tricia told Marty. She looked at Chloe. "I mean, you're pretending to be a dog. Right? Isn't that the dare? That you're getting walked around like a dog?"<br><br>Chloe's eyes widened. Before she could think of an answer, Marty said, "Oh, I get it. So that's why she was tied out in front of the store. Because no dogs allowed, right?"<br><br>"Oh my god, that's so kinky!" Tricia giggled. "Is that really why?"<br><br>"Actually, the dare was just to walk around the neighborhood in the nude," Chloe said. "But... I guess we've been pushing it further and further..."<br><br>"That's super hot, Chloe." Tricia sounded impressed. "How far have you walked?"<br><br>"I don't know... five blocks?" Chloe looked at Ben, who nodded.<br><br>"Has anyone seen you... besides us?" Marty asked.<br><br>Chloe smiled. "An old man. He asked me if I was all right."<br><br>Tricia giggled. "Was he surprised? What did you say?"<br><br>"I said I was fine. I acted like it was no big deal. He got kind of mad. He told me boys don't know how to treat girls these days."<br><br>"Oh my god. That's so funny." Tricia pressed her hand against her mouth.<br><br>"You all just graduated, same as Chloe?" Ben asked them.<br><br>"Yeah, we were all in the same grade," Marty said. "Meadowbrook High."<br><br>"Chloe and I were in the same middle school, too," Tricia said. "Right, Chloe? But Marty and John went to a different school."<br><br>"Yeah, we went to Edison," Marty said. "I didn't meet Chloe until Meadowbrook. Mr. Halberg, Geometry. Do you remember, Chloe? I sat right behind you."<br><br>"I remember," Chloe said.<br><br>"How do you know Chloe?" Tricia asked Ben.<br><br>"I'm a friend of her brothers."<br><br>"Oh... Tony? I remember him. He went to Meadowbrook, too."<br><br>"Yes," Chloe said. "Two years ahead of us."<br><br>Tricia grinned. "Does Tony know you're outside naked with one of his friends?"<br><br>Chloe smiled. "Tony doesn't need to know everything about my life."<br><br>"You look really sexy like that," John said. The first words he'd spoken. He sounded earnest. Chloe looked over at him, surprised.<br><br>"Thank you," she said. She cocked her head flirtatiously, fingering the collar around her neck. "Do you mean naked? Or do you mean naked and wearing a leash?"<br><br>"Uhh... I don't know..." His eyes darted over her body. "Both? I mean... just... how you are." He was clearly flustered and both Marty and Tricia started to laugh.<br><br>"You've broken John's brain, Chloe," Tricia said. "You need to be more careful... you know, he's smoked quite a bit tonight." She eyed Chloe coyly. "He's right, though. You're looking pretty hot right now."<br><br>"She looks amazing," Ben said. "I think Chloe has the most perfect breasts I've ever seen." He turned towards Chloe. Unexpectedly, he reached out for her, his fingers curving over her breasts, palming them and squeezing them gently. "They feel incredible... so soft."<br><br>Chloe felt her back arch as her body responded to Ben's touch, her shoulders pressing against the brick wall behind her. She could feel her hard nipples rolling against Ben's palms. Her eyes flickered towards Tricia and the others, who watched with interest as Ben fondled her. She hoped it wasn't too obvious how turned on she was and how easily the slightest touch made her body react.<br><br>"Can I feel?" John asked, sounding like an eager boy waiting to pet a new puppy. Chloe stared at him, struggling to process his request. Ben stroked her nipple between his thumb and index finger, sending a jolt of pleasure through her, and Chloe closed her eyes for a moment. When she opened her eyes, John still looked at her eagerly, and she found herself nodding to him. Ben stepped away and John stepped forward, and now it was John's hands squeezing her breasts and playing with her nipples.<br><br>"Jesus, Chloe... you're so fucking hot!" John said enthusiastically as he pressed his hands against her chest. "Your tits feel incredible!"<br><br>Chloe didn't trust herself to speak, lost in the overstimulation of her body. She stood with her palms pressed against the wall, shoulders back, patiently letting John take his time massaging her breasts. She lifted her head, gazing at the moon while John ducked his head to suck on her nipple. Marty, Tricia and Ben started to talk about New Zealand, which made the setting seem even more surreal.<br><br>Lights flashed on the wall across the street as a car pulled into the Food Mart's parking lot. Nobody else seemed concerned so Chloe wasn't either. The corner of the building blocked them from being seen from the parking lot, and the area where they stood wasn't well lit. After a few minutes, the car drove away. By then, Marty was taking his turn squeezing her breasts.<br><br>It surprised her a little that Marty would take a turn, since he and Tricia had been a couple for so long and she was standing right there. But Tricia didn't seem to mind, and in fact, after only a few minutes Marty stepped aside and Tricia took his place in front of Chloe. The auburn-haired girl grinned widely as she reached for Chloe's breasts with her small hands.<br><br>Although Tricia was the fourth person to have her hands on Chloe's breasts, the fact that she was a girl took Chloe to a new level of excitement. She had enough experience with guys that she took it as a given that they were interested in her breasts, and given the opportunity would happily feel her up. But to stand naked and allow a girl to play with her body seemed like a very submissive act. Chloe was acutely aware of the contrast between herself and Tricia: both female, but one clothed, the other completely naked; one touching, the other being touched.<br><br>John and Marty hadn't dared to touch her between her legs, but Tricia gleefully reached down and cupped Chloe's pussy. Chloe had no doubt that Tricia could feel the evidence of Chloe's arousal against her palm. "I guess it's not so tough a dare to do after all, huh, Chloe?" Tricia murmured as her fingers explored between Chloe's wet labia. Chloe inhaled sharply, rising up on her toes as Tricia fingered her. It made her even crazier to know that John, Marty and Ben were watching.<br><br>Tricia leaned forward, touching her forehead to Chloe's. She giggled and Chloe couldn't help but giggle as well. She could smell the pot on the slim girl's breath, and thought for a moment that they might kiss. But Tricia just swayed against her, as if they were slow dancing.<br><br>"Did you bring any with you?" Chloe murmured. "Maybe I could have a hit?"<br><br>"No." Tricia giggled again. "It's all at Marty's house. You two want to come over?"<br><br>"And I'll be naked, right?"<br><br>"Of course!"<br><br>Chloe grinned. "Better not. Actually, I better get home before I get caught. I mean, caught for real."<br><br>"Yeah. You're probably right." Tricia pulled away, turning toward John and Marty. "Let's walk back," she told them. "We'll let these two finish having their fun."<br><br>Marty and John both gave Chloe lingering glances, and she guessed they'd hoped for another turn fondling her, maybe a chance to put a finger in her pussy the way Tricia had. But both of them reluctantly nodded. Chloe made it up to both of them by hugging them goodbye, and she could feel their hands gleefully sliding over her bare flesh as she embraced them.<br><br>"Good night!" Ben called back to the three as he and Chloe walked back into the neighborhood. Chloe could hear the three voices laughing in the distance long after they were out of sight, and she wondered if they talked about her, and what they said.<br><br>"Do you think they'll tell anyone?" she asked.<br><br>"Those three? No way."<br><br>"Really? You think they'll keep it to themselves?"<br><br>"Absolutely."<br><br>Chloe tugged on her hair. "How can you be sure?<br><br>"They went along with it pretty quickly, right? It's the way people are. The ones who can't handle what they see, they're the ones who blab about it to everyone they know. But those three, they barely blinked an eye. I think they like the idea that their lives are so interesting that they have friends who play games where the woman is outside naked with a collar around her neck. If they brag about it, like a bunch of little kids who just saw their first R movie, it makes their lives seem less interesting. People like them, they like to think this kind of thing happens to them all the time. Like it's not even worth talking about. So they don't."<br><br>"How do you know? You just met them..." Chloe still felt reassured by his words.<br><br>"College is full of people like them." He grinned. "I'm sure they've had a threesome once or twice. Maybe they're on their way home to make a Tricia sandwich."<br><br>Chloe laughed. "Oh my god!"<br><br>"You don't think so?"<br><br>"No! Marty and Tricia have been together since forever."<br><br>"And you don't think she sometimes has a little John for dessert?"<br><br>"No!"<br><br>"I bet she does."<br><br>Chloe just laughed. She was glad that they were headed back to her house. Even though she still had a few blocks to go, the other houses were quiet, the streets were empty and she felt a reckless comfort with her nudity. She had been caught now by four people, and nothing bad had happened. Maybe it really was true. Anyone who would care was fast asleep, and anyone who was awake didn't care.<br><br>Ben stopped in front of a white house with a flawlessly landscaped front yard. A gradual slope of green grass led up towards a craftsman style house surrounded by flourishing flower beds. "This seems like a good place," he said.<br><br>"A good place for what?"<br><br>His only answer was to step in close to her, wrapping her in his arms. He leaned in close to kiss her, and she accepted his kiss eagerly. His hands slid down her back to squeeze her bare ass.<br><br>He reached down and scooped her up, lifting her in his arms. Still kissing her, he carried her onto the lawn, and lowered her to the grass. Chloe lay naked, looking up at the night sky and the bright moon overhead. She stretched her arms out to the side, enjoying the tickle of the short grass against her bare skin.<br><br>Ben knelt in front of her and caught her ankles. He lifted them in the air as he walked on his knees towards her. Chloe let her legs part like scissor blades. He slid his hands down the bottom of her legs to her upper thighs as he leaned against her, and Chloe felt her body rolling up towards her upper back, her hips rising off the ground. She hadn't seen Ben free his erection from his pants, but suddenly it was there, pressing between her legs.<br><br>Chloe whimpered in anticipation, her body yearning for him to finally enter her. She wanted to seize him and roll him over onto his back, straddle him and sink down onto his throbbing erection. But she forced herself to endure this final torment, these last few seconds of delay, lying naked where any of her neighbors could see her, waiting eagerly to be fucked.<br><br>She closed her eyes as the head of his penis pressed against her pussy. He leaned forward slowly and she gasped, the steady pressure parting her labia and allowing him to enter. Bit by bit, his thick penis filled her, until finally he was all the way in. He slid out a few inches and pushed in again.<br><br>He leaned over her breasts, kissing and sucking on her nipples as his shaft moved inside her. He found a rhythm, and she matched it, pushing up against him, meeting his thrusts. Her long legs splayed to the side as she writhed in the grass, possessed by a feverish desire to have him as deep inside her as he could go.<br><br>He continued his slow rhythm, taking his time, and Chloe felt a ball of pleasure forming between her legs, growing larger with every thrust. Everything felt so right. The grass underneath her. The night air surrounding her. The glow of the nearby streetlight which seemed to grant her bare skin an aura. Ben's weight on top of her, his shadow crossing over her, the feel of his penis inside her. His touch made her delirious, and she wanted to clinch her body around his and rub every inch of her skin against his clothes.<br><br>A car drove past. It didn't slow, didn't notice them making love on that square of green lawn. It just kept driving. Even if the car had slowed down to watch them, Chloe wouldn't have been able to stop. She was past the point of having any control over herself.<br><br>The orgasm burst inside her, flooding through her like a thunderstorm, and Chloe threw her head back, lost in it. Her body trembled underneath Ben's. Every touch was electric, every movement was ecstasy. At that moment, it was all worth it, the whole night, because it had led to this indescribable feeling.<br><br>She hovered in a fugue state, dimly aware that Ben was erupting inside her, spraying her insides with his cum. She hugged her body against his, feeling the pulse of him deep in her pelvis, feeling it slow and finally stop. Her cheek pressed against his; hers smooth and soft, his rough with emerging stubble.<br><br>His weight lifted from her as he got to his knees. She watched him tuck his penis back into his pants. He stood, and she felt the tug of the leash as he held it in his hand. Had he put the leash down when he fucked her? Or had he been holding it the whole time? She hadn't noticed.<br><br>"Are you ready?" he asked.<br><br>"No," she said, looking up at him, her legs carelessly open. "I still need to get dressed."<br><br>He chuckled and tugged at the leash. "No clothes yet. Come on, let's get you home."<br><br>***<br><br>As they neared Chloe's house, she could see the light still on in the kitchen window, although the shades were drawn. Along the side of the house, she could see the small, high window above the kitchen sink, which didn't have a shade. She peered closer. From her angle, she could see the top of someone's head.<br><br>"Someone's awake," she said.<br><br>"What?"<br><br>"Someone's awake. Someone's standing at the kitchen sink. I think it's Tony."<br><br>Ben followed her pointed finger. "I think you're right. It's Tony." He saw her look of distress, and squeezed her shoulder. "Don't worry. I'm sure he has no idea we're out here. He probably thinks you're asleep in your bed."<br><br>`
+                },
+                {
+                    title: "Page 5",
+                    subtitle: "", 
+                    content: `"Why is he awake? Shouldn't he be exhausted?" Chloe stood on her toes, trying to get a better look through the window.<br><br>"It'll be fine. I'll go in and get him back upstairs to bed. You wait out here and I'll come to get you when it's safe." He laughed when he saw the look Chloe was giving him. "Don't worry. I won't forget you. Just find a good place to hide out for a few minutes."<br><br>"You're not going to tie me to the mailbox, right?" Chloe meant it as a joke, but she eyed him nervously<br><br>"Do you want me to?" Ben asked. He smiled at her stunned expression and shook his head. "No, I don't think I need to worry about you running off." He handed her the end of the leash. "Be right back."<br><br>Chloe watched him walk to the front door. She quickly surveyed the front yard, and decided to crouch in a space between the hedge and a large pot containing a boxwood shrub. The hedge would hide her from the street, and the boxwood would hide her if Tony happened to look outside. She settled into her niche and waited.<br><br>The crickets chirping around her silenced when she sat down, but after a minute or two they began to chirp again. Chloe peeked at the kitchen window, trying to see if she could get a hint of what was taking place inside, but she couldn't see a thing. She sighed and leaned against the pot, wondering how long she would be stuck outside.<br><br>In the distance, she could hear a car driving, and tried to imagine which streets it was taking. She could tell it was turning a corner, but couldn't tell where, and soon the sound faded into the distance. A moment later, she heard another car, driving too fast, but this one was easy; it was definitely driving south on Addison Drive. It eventually drove too far south to hear.<br><br>She heard another noise in the distance, a low rhythmic tapping. What could it be? She perked up, trying to tune her ears to decipher the strange sound. The wind making a branch knock against something? No, because the tapping was getting louder.<br><br>All of a sudden, she knew what was making the tapping. Shoes. Footsteps. And they kept getting louder. Someone was walking her way.<br><br>Chloe squeezed her legs against her body. Someone was walking down her block? Who could it be? She wriggled her body further into the niche. The hedge should completely hide her from the view of anyone on the sidewalk or in the street. The only way anyone could see her is if they leaned over the hedge and looked down.<br><br>And why would they do that?<br><br>The steps came louder and louder, and she could see a flash of movement pass the bottom of the hedge as someone walked by. Black pants, black shoes. Male shoes.<br><br>Chloe didn't want to move, didn't even want to breath. She tried to remain as quiet as she could. The footsteps had passed her hiding place, on their way to passing her house entirely. Whoever it was hadn't noticed her at all.<br><br>Chloe shifted, getting up on her knees. Slowly, she stretched up until she could peek over the edge of the hedge. She could see the back of the figure, walking up the street to the end of the cul-de-sac. Tall, lanky, blonde spiky hair. It was John.<br><br>Chloe sank back down into her hiding place. John? Why was he here? Had he split off from Marty and Tricia? Was he looking for her and Ben?<br><br>Maybe he was hoping to get another glimpse of her nudity. Maybe another chance to feel it, too.<br><br>She didn't think he knew where she lived. He'd never been to her house, as far as she could remember. And he'd just walked right by it. Maybe he was wandering the streets randomly, hoping he'd find her and Ben somewhere. Now he was headed towards a dead end, which meant in a couple of minutes he was going to pass by again going the other direction.<br><br>Chloe imagined standing and waiting for him to reappear. Or maybe walking out the front gate on her hands and knees, waiting for him on the sidewalk. She would tell him she was still pretending to be a dog. He'd smile. He'd ask her if she knew any tricks. He would command her to shake hands, and she would obediently take his hand. He'd ask her to roll over, and she'd get down and roll across the yard. He'd ask her to speak, and she would yip at him. He'd ask her to beg, and she would get down on her knees and beg him for a treat.<br><br>And then maybe he'd give her that treat. She'd wait eagerly on her hands and knees and he would kneel down behind her and slide that treat right into her. He'd fuck her like a dog, right there on the sidewalk, holding her leash in his hand...<br><br>She realized she could hear the sound of the footsteps again, heading in her direction, and Chloe shook herself out of her fantasy. She ducked her head and leaned towards the hedge, careful to avoid making the branches rustle. Through a small hole in the hedge, she could see the sidewalk. The footsteps passed by her hiding place, and she could see John's dark pants pass by the hole. He kept going, walking towards the corner. Where would he go? Would he continue his search through the neighborhood? Or would some clue lead him back to her house? She didn't want to stretch up and peek over the hedge until she'd given him a good amount of time to be on his way.<br><br>The front door opened and Ben poked his head out. "Chloe!" he called in a low whisper.<br><br>Chloe flinched. She carefully eased out of her hiding place and slowly rose until her eyes lifted over the top of the hedge. She could see the empty corner and was happy to see John was gone. She scurried over to the front door.<br><br>"I told Tony I couldn't sleep, so I went out in front to look up at the moon," Ben said. "I think he believed me. He was pretty out of it. I walked with him upstairs, and he got into bed and went to sleep right away."<br><br>"John was here!" Chloe said as she hurried into the kitchen<br><br>"What?" Ben closed the front door and locked it.<br><br>"I saw John! He walked by the house, twice."<br><br>"Did he see you?" Ben started to undo the collar around her neck.<br><br>"No... I was hiding."<br><br>Ben chuckled. "Out looking for you, I'm sure. Probably hoped you'd be up for going a little farther."<br><br>"He didn't see me at all."<br><br>"Well, if he doesn't know where you live, he's going to have a pretty hard time finding you now." Ben ducked down and retrieved something from a drawer. It was her towel, the one she'd been wearing when she came downstairs. "You can wrap this around yourself if you want."<br><br>Chloe took the towel, wondering when Ben had stowed it in that drawer. She glanced at the table and noticed the coffee cups had been cleaned up as well. After a moment of hesitation, she wrapped the towel around herself. They walked around the downstairs turning off lights, finally flicking the hall light off before they walked upstairs.<br><br>Chloe walked with Ben through the upstairs until they paused next to the upstairs bathroom. "I think I need to take another shower," she told him.<br><br>"That's probably a good idea," Ben said.<br><br>Chloe leaned forward and kissed him gently on the lips. "Good night... sleep tight... sorry I kept you up so late." She smiled up at him before stepping into the bathroom.<br><br>Ben stepped in right behind her and closed the bathroom door. Chloe wasn't sure why until he started to undress and she saw that he had another erection. At that moment, she knew she wasn't going to bed anytime soon.<br><br><br><hr><br><br>Chloe woke up in her bed the next morning. She checked her clock. It was 10:56 AM. Ben was long gone, on a flight to New Zealand with her brother. Chloe looked at her window, blinking at the bright sunlight.<br><br>She picked up her phone from the bedside table. An alert on the screen indicated that she had messages. She unlocked the phone and checked her account.<br><br>She had four messages from Marianne, all asking her to text back when she finally woke up. The other message was from a number that she didn't recognize. Chloe opened it.<br><br>Her own image appeared on the screen. It was the photo Ben took of her from the night before. She was looking right at the camera, and Ben was next to her, smiling, with his head at an angle leaning against the top of her head. Her naked body was clearly visible, as was the black collar around her neck. And of course, the Mcdonalds sign glowing just above her left shoulder, in case there was any doubt that she was outside.<br><br>Below the picture, Ben had left a message. "Thanks for the adventure. It was incredible. Here's a reminder. xoxo Ben."<br><br>Chloe gazed at the picture for a few minutes. Then she closed the picture and went back to the message list. She selected the new phone number and added it to her contact list. Under first name, she put "Ben". She wasn't sure what his last name was.<br><br>Chloe walked downstairs wearing a t-shirt and sweatpants. Her father sat at the kitchen table, drinking a cup of coffee. "Good morning, sleepyhead," he said to her. "You must have been tired."<br><br>"Yeah..." Chloe walked to the cabinet and pulled out a box of granola. She poured it into a bowl.<br><br>"Your brother's gone already. They got up early this morning."<br><br>"Oh, yeah," she said. "I guess I missed them. Did they get off okay?"<br><br>"Yeah. Your mother drove them."<br><br>Chloe sat down at the table with her cereal. "Did they seem tired?"<br><br>"They both seemed pretty out of it, yeah. Ben said he had trouble sleeping last night. But he seemed like he was in a pretty good mood. He said he'd just catch up on his sleep on the plane."<br><br>Chloe looked to her left, at Petey's old collar and leash, hanging on a peg. "I always have trouble sleeping on planes," she said.<br><br>"You do?"<br><br>"Yeah. They're not quiet enough." Chloe leaned over her bowl and ate a spoonful of granola.<br><br><br><hr><br><br>After she had cleared her empty dish to the sink, Chloe went to the living room. Before she could turn on the TV, her phone buzzed. She checked it and saw a new message from Marianne.<br><br>"U still asleep?"<br><br>Chloe sent, "Awake now."<br><br>Marianne sent back, "Finally!" Then: "Ur brother and his cute friend left?"<br><br>Chloe typed, "Yes. They're on their way to NZ." She turned on the TV and started to flip through the channels.<br><br>Her phone buzzed. Marianne sent, "Did u get his pic, I hope?"<br><br>Chloe hesitated. She leaned over her phone and navigated to the list of messages, looking for the one that now had Ben's name on it. She selected his name and instantly that picture appeared on her screen again. Ben leaning over her while she gazed insolently at the camera, naked except for the black collar around her neck, Addison Drive clearly visible behind her. She made the image bigger and moved the window so only Ben's face was visible on the screen.<br><br>Is that how he had looked? Yes. That cute grin. She would never forget that grin.<br><br>Chloe reduced the image so that she could see herself again. It seemed like a dream now. Had she really walked around the neighborhood like that? Had she really been that bold?<br><br>Chloe went to her messages and found Marianne. She read Marianne's last message again. "Did you get his pic?"<br><br>She pressed respond. No message, only that picture of herself and Ben. She pressed send.<br><br>Two minutes passed before her phone buzzed with a new message. Then another message, and another, and another. Finally, her phone started to ring, with Marianne's name on the caller id.<br><br>Chloe didn't answer. She giggled to herself as she continued to flip through channels on the TV.<br><br>THE END<br><br>`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

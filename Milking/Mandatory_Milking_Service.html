@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>The Reluctant Exhibitionist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "Mandatory Milking Service",
+            author: "troubleinterrortown",
+            chapters: [
+                {
+                    title: "Part 1",
+                    subtitle: "Warning: NSFW themes of milking and bondage ahead.",
+                    content: `Brittany crashed her friend’s car and got busted for DUI after attending her first ever party, but instead of jail, she was sentenced to 6 months of milk production. Being naive, she assumed that she would have to milk cows as a sort of community service.<br><br>The young woman was taken to the innocent looking farm, but as she was led into the hangar, she realized the real nature of her punishment. Rows of women lined the walls, bound in strict poses and rendered immobile. Strange machines were hooked up to their helplessly hanging pairs of breasts, humming and sucking the milk out of them.<br><br>"NO! Please, don’t do this to me!" screamed Brittany, anxiously darting towards the exit. Guards rushed to hold her.<br><br>"Please calm down or we'll have to sedate you," said a woman in a white medical coat sitting behind the receptionist's desk near the entrance.<br><br>She walked up to Brittany and smiled. “It's not as bad as it seems. Do you see anyone complaining?”<br><br>Brittany looked at the milking rows again. How could any of these women complain when their mouths were occupied with some sort of strange devices? Each device was connected to a wide tube that curved and went to the ceiling.<br><br>"I-Is it even legal?"<br><br>“Of course it is! Now, please, undress yourself. Guys, it’s good. You’re Brittany, right?”<br><br>Guards silently released the girl, taking stand by the entrance door.<br><br>“And you… expect me to follow your orders?” asked Brittany.<br><br>“Yes, or, as I said earlier, we will just put you to sleep and do it anyway. And we will punish you for disobedience. Better if you’d come voluntarily.”<br><br>Brittany wasn’t sure what could be worse than being held still and forcibly milked, but decided not to find out. She walked to the table and with some hesitation had removed all her clothes. She was a curvy 20 years old girl of medium height, with long straight blonde hair, dark green eyes and a little fat on her adorable face.<br><br>“My name is Giorgia Esther, by the way,” said woman in the medical coat while she took the time to measure Brittany’s body proportions. She gave a thorough squeeze to each of her soft large breasts. “Pretty nice, breast pumps will sit just right!”<br><br>Brittany blushed. Esther smiled again. She was quite attractive too: taller than Brittany, about thirty, black hair in a simple braid and friendly brown eyes.<br><br>“I know, it may sound strange but I think you will like it. Now, please, follow me.”<br><br>Brittany went barefoot after Esther, covering her private area and breasts with her hands. She couldn't help but stare at the women, and still not believed her eyes. Prisoners of the farm had thick blindfolds on and did not pay any attention to Brittany or Giorgia, merely letting out occasional moans and sighs. They were kept in cubicles separated from each other by thin white walls and were forced into different strict poses using metal or leather restraints. Brittany didn’t want to imagine what exactly was prepared for her.<br><br>Eventually Esther stopped near something that looked like a low and wide massage table, only it had a wide horizontal opening near the middle.<br><br>"Hop on it and get on your belly. Extend your legs, keep the arms at your sides.”<br><br>Brittany did as she was told and her breasts sank into the opening, now hanging loosely under the table. The entire table surface was covered with some sort of unknown soft material that felt really nice to the touch and quickly adapted itself to the curves of Brittany's body. There also was horizontal neck cutout that looked like a lower part of guillotine and what seemed to be a chin holder in front of it.<br><br>“Okay, now I will put the restraints on you. They are necessary for you to not accidentally interfere with your milking sessions.”<br><br>Brittany couldn’t believe what was happening to her, but what realistically she could do about it? The girl lied still as Esther tightened the straps around Brittany's hands and legs ensuring that they were firmly secured to the table. Then her waist was also strapped to it with multiple belts, so the girl couldn’t roll over onto her back. The restraints were made of sturdy fabric, they didn’t chafe the skin, but their hold was solid.<br><br>“How are you doing?” Esther asked with concern.<br><br>“I don’t know,” Brittany responded in all honesty.<br><br>“Now test the limits. Try to break free with all your strength.”<br><br>Brittany attempted to stand up, but couldn't do so — the only parts of her body she retained control of were her neck, feet, and the palms of her hands.<br><br>“See? You tried to move, but your breasts remained down there, only bounced a little. It will not be a problem for us. Now, a few adjustments…”<br><br>Brittany suddenly heard the table whirring and changing it’s shape — it was her pelvis being slightly lowered to provide an adequate angle for her unwanted bodily fluids, should she dispose of them.<br><br>“If you grow tired of your current set, just remember that each month we evaluate everyone’s yield and behavior to introduce into a new setup that might be better for them. We like to shake things up here.”<br><br>Esther walked into Brittany’s field of view.<br><br>“Now I will secure your neck. Don’t worry, it will provide the room for you to breathe freely.”<br><br>After doing so, Esther grabbed the mouth device.<br><br>“Open,” ordered Esther and placed it right between Brittany’s jaws, securing it with straps that pressed into her head.<br><br>“Iff foo fhrge!” mumbled Brittany.<br><br>“Bite on it,” advised Esther, “It’s flexible and will let your mouth relax a bit. But it will slowly expand to it’s original diameter every time it has to feed you.”<br><br>Brittany heard Esther’s steps around the table and then her voice came from another side.<br><br>“When that thing on your face will begin to vibrate, prepare to gulp down the food. You won’t need to chew it. The chin holder will gently guide your head into a feeding position and, when done, allow your neck to relax. Thoughtful, isn't it?”<br><br>Another few steps. Esther called for a tube and it came down from the ceiling. Connecting tube to the mouth device took only few seconds.<br><br>“Now I will put a blindfold over your eyes. You don’t want to be distracted with visual stimuli. It aids concentration and helps you to fall asleep.”<br><br>Saying so, Esther plunged Brittany in total darkness.<br><br>“We won't leave you bored and alone,” continued Esther’s voice. “You will often have some sensual entertainment. I will arrange it in a moment.”<br><br>“Sensual… what?” thought Brittany as she heard some noises right behind her. Soon something rubbery pressed itself over girl’s anus and vagina.<br><br>"It's a completely automatic process," Esther said smiling, judging by her voice. “Don’t hesitate to pee or poop at anytime. It will flush after you, then wash you clean and sometimes swap itself with a vibrator. That’s the entertainment!”<br><br>Brittany blushed again. Being forced into such vulnerable position with no escape got her very aroused and warmed up. She didn’t had the time for boyfriends, her intimate experience was limited to rarely rubbing herself down there. She felt embarrassed, even more than when she was arrested. Brittany always was a good girl, who liked books, romantic movies, and cute animals. She didn’t even wanted to drive drunk, but her best friend felt really sick after the party and when she lost consciousness, Brittany rushed her into the hospital, forgetting about the moderate dose of alcohol that still remained in her blood. Thankfully, both girls were unharmed in the crash, only Brittany left the scene in the back of a police car, while her friend — in an ambulance.<br><br>“Now I will suppress the outside noise,” she heard Esther say. “You will not be able to hear me anymore… so if you have anything to say…”<br><br>Brittany couldn’t think of anything and shook her head and mumbled “Nfff”. Esther put a small flexible headphone in each of girl’s ears.<br><br>Now all that remained was the breast pumps. Esther wasn’t considering herself lesbian but she always was thrilled to perform this procedure. Maybe it was the fact that convicts were completely at her mercy, or maybe she secretly wanted to take their place. Esther tried applying regular breast pumps over her own pair, but it just wasn’t the same.<br><br>Brittany's large breasts hung expectantly under the table. Esther sat down in front of them and lubed their tender nipples. She felt Brittany flinch as she installed the first pump.<br><br>“You’ll get used to them, sweetheart,” woman thought to herself and attached the remaining one. Brittany clenched her hands into fists but then slowly relaxed. Esther stepped to the control unit and put a feeding followed by milking session in a queue for Brittany or #0469-BR as she was catalogued in the system. Half an hour later Esther went back to check on the new girl and found her softly mewling while the machine extracted her milk with a low hum.`
+                },
+                {
+                    title: "Chapter 2", 
+                    subtitle: "Warning: NSFW themes of milking and bondage.",
+                    content: `“Giorgia Esther, you are found guilty on two cases of fraud and hereby sentenced to 1 year of mandatory milking.”<br><br>Former farm receptionist bit her lip. The prosecution’s case didn’t make any sense, someone somewhere must have made a mistake or set her up. If she had at least a half-competent lawyer, she’d walk free. But possibility of being subjected to the whole milking process herself overwhelmed the woman and she, pretty much on a spur-of-the-moment, pleaded guilty.<br><br>Although, frankly, she didn’t expect to be locked up for a year. It was a bit much. Will she endure? There’s no appeals while you’re being tied to a frame and milked for all you got. Esther thought of her fiancé who she loved and really wanted to marry. Will he wait for her or find another woman who is not convicted to such a degrading sentence?<br><br>Police van delivered Esther to the farm. Officers handed her over to the staff and drove away. She didn’t recognize the men that walked her into the hangar — must be the new hires.<br><br>Esther saw the first milked women in the row and closed her eyes in anticipation. Soon she will take her place among them! Her panties were already wet. How does going through the session feel? Don’t your limbs grow numb? Will she be able to sleep in such unusual position? All of this Esther was about to find out on her own.<br><br>She also knew something the other girls didn’t — the farm staff occasionally sold tickets for the tours into the place. It would always be crowded, but the convicts couldn't see or hear the visitors, and if someone managed to pinch one of the girls, they were left thinking that it was the staff. Esther imagined people staring at her naked and stretched out body, all the while her breasts will be subjected to milking process. The thought put her on the edge.<br><br>Guards released their hold on Esther near the table that she used to occupy. Now the place was taken by the young looking girl with elegant pink bob haircut. She looked up at the woman before her.<br><br>“You’re Giorgia Esther? It says that you used to work here.”<br><br>“Yes. I did.” former employee replied slowly. Her mind was already halfway among the prisoners. She mindlessly unbuttoned her pants.<br><br>“Then you know the drill. Undress yourself. I mean, keep undressing.”<br><br>“I'm not going to cause trouble,” said Esther as she was getting rid of her shirt.<br><br>“Mhm. I hope so, or my bonus will not come through.”<br><br>Esther dropped her underwear in the pile of clothing. She looked down, evaluating her own slim body and her round B-cup breasts with dark nipples. Soon they will be put to use.<br><br>“I am ready.”<br><br>“Okay. Now I need to measure you.”<br><br>“No need. I already put my numbers in the system. Find #0999-GI.”<br><br>The girl behind the table gave Esther a questioning look.<br><br>“Thought it would be funny to know which positions would be a good fit,” rationalized Esther.<br><br>“You’re into it,” said the new girl, smirking behind the computer screen.<br><br>“You work here and never even wondered?”<br><br>“Pfft. No way. My nipples are too sensitive. I am only here because it’s good money.”<br><br>“What’s your name?” Esther wanted to change the subject.<br><br>“I am Dasha. Okay, it’s showing me some sets I could’ve put you in, but maybe you already picked your favorite?”<br><br>Esther raised her brows.<br><br>“You letting me choose my own milking position?”<br><br>“I mean, you know this place way better than I do.”<br><br>Esther stepped behind the table to look at the monitor.<br><br>“Can I?”<br><br>“Sure, go ahead.”<br><br>“Thanks. Let me see… hmm… yea… no… maybe this one… nah…”<br><br>Then Esther remembered that before she got arrested, she helped to engineer a new design. It was borderline torturing and would probably end up being used only as a temporary punishment for the convicts who caused a scene at the reception. Esther didn’t perform the long-term testing, but the built prototype was set up in a smaller building that held more extreme devices. They didn’t bother to even name this thing because it could as well keep collecting dust there before being approved.<br><br>“Choose the 0000-prototype,” said Esther. “It should be in the “Experiments” sub-list.”<br><br>“Don’t tell me that it’s just a door that you will walk into and teleport to Hawaii.”<br><br>“Oh no,” Esther smiled. “You caught me.”<br><br>****<br><br>Dasha looked up with suspicion as both women stood in an empty room.<br><br>“Wow. I mean, wow. And here I thought that you would cut yourself some slack. How am I going to get you there?”<br><br>“It can be lowered. There’s a control panel on the wall.”<br><br>Esther walked to the panel and pressed the button that said “DOWN”.<br><br>Slowly, what looked like a solid metal square descended from the ceiling on four thick chains. Cuffs were installed on the front and back sides of the square.<br><br>“Are you sure? This looks crazy,” Dasha said with worry.<br><br>“After this, next setups will feel like a breeze,” said Esther with a smile. “But if you could do me a favor, please don’t send it too high there with me, I am afraid of heights.”<br><br>“Sure thing.”<br><br>The square was hanging like a meter off the ground. Woman readily got down on her stomach, and Dasha lowered the square further. Esther slid her wrists and ankles into the cuffs. One after one, Dasha locked them shut.<br><br>“I am gonna send you up a little, so I could do the rest,” said Dasha, approaching the control panel.<br><br>“It’s fine!”<br><br>With a chain rattle, the square lifted back up. It swayed, now holding Esther captive as her limbs were bound in rigid position. Her back arched considerably.<br><br>“There should be a metal bar somewhere!” Esther yelled. “You need to mount it under my stomach so my body can have some support!”<br><br>Dasha found it lying in the corner. Installing it was easy, and Esther made herself more or less comfortable.<br><br>“Oh yeah, you are not getting a vibrator here,” Dasha warned. “It said so in the description.”<br><br>“I know. It’s okay,” Esther gave Dasha encouraging look. She held her mouth open, expecting the feeding device. Dasha swiftly had it inserted and secured.<br><br>As a next step Esther was blindfolded. Her eyes stared into the pitch black darkness. Then she felt something filling her ears and the outer world went silent.<br><br>Esther’s breath deepened. She didn’t notice the rubber sleeve that wrapped around her genitals, she was nervously anticipating the breast pumps.<br><br>Finally, her nipples were lubricated and something latched first onto the left one, shortly followed by the right.<br><br>“Oghff!”<br><br>It was not the pain but rather the surprise of the sensation. Esther felt extremely exposed — and liked it.<br><br>“Oh shit, I almost forgot! The description also said that we should connect a shocking device to your… armpits? For discipline. Esther? Yeah, right, you can’t hear me. I guess you want the full package, so here you go.”<br><br>Esther felt something being attached under her arms but being gagged and blind she couldn’t protest. The woman hung on the square, waiting.<br><br>The pumps suddenly kicked in at maximum speed. That wasn’t a standard procedure, but pumps showed no sign of letting up, forcing Esther to twitch in her shackles out of reflex. It was futile, and as she grew tired, she stopped squirming and hung like a sack, while her breasts underwent the session.<br><br>Lastly, the painful suction came to a halt and the woman hoped to get some rest-<br><br>ZAP!<br><br>Esther jerked as wave of shock went through her entire body, leaving her sleepless and disturbed. While she was gone, some engineer must have messed with the pump settings and added electrostimulation to the prototype in order to further discourage the prisoners from misbehaving. Esther grew fearful of what a month of such treatment would do to her psyche…<br><br>****<br><br>30 days later, farm personnel released Esther. Woman could barely stand, so they had to carry her. Upon examining, the local doctor found that she has developed hypertension — random muscles in her body would contract on their own at irregular intervals. Normal positions had health monitors installed into them, showing everything about the milked girl from the pulse to hormone levels, but the prototype didn’t had this feature, so no one really bothered to do anything while she hung there.<br><br>Fortunately, aside from the muscle spasms, Esther seemed to be in satisfactory condition, though also frightened and disoriented. Truth be told, she wished she could erase this agonizing month from her memory and go home. Doctor prescribed her muscle relaxant injections and a mild sedative. Since she still had 11 months of milking ahead of her, he advised to at least put her into some of the tamer restraints, so Esther was placed on the same table that young Brittany once had to endure. The square that had Esther tortured was dismantled and electric stimulation was forbidden as a disciplinary measure. At least for such long times.<br><br>“Aw… Urrr… Ow… Mrrr…” she moaned and purred, as pumps slowly and steadily worked her nipples. Without the sudden jolts of electricity and in a more comfortable pose, Esther finally got what she always wanted.`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "Warning: NSFW themes of milking and bondage.", 
+                    content: `It didn’t take long for Dasha to end up in custody. She was in the wrong place at the wrong time — arrested at the protest that somehow interfered with “a transfer of military equipment for training exercises”, which triggered some kind of federal law. Dasha got the feeling that the authorities were determined to not let her off the hook.<br><br>The judge apparently found it very funny to send young women to be milked in the place where they used to work, and sentenced the girl to 4 months of farm service but then had bumped it to 5 because after the verdict was announced, Dasha called him a "vile sexist piece of shit."<br><br>Neither pleading nor tears would get through the cops who were escorting her to the farm, and then in a fit of despair Dasha tried to jump out of the van. She got caught and was brought back with her hands cuffed very tight behind her back.<br><br>“Fucking pigs!” she screamed. “How do you even sleep at night?!”<br><br>When the farm security approached Dasha, she cussed at them too.<br><br>“No! Get off me! Don’t touch me! I don’t have any milk!”<br><br>Still, two men easily subdued the skinny girl and dragged her inside the hangar. The farm’s HR caught on to a strange coincidence of women who worked for them ending up to be milked instead, and this time hired a male receptionist. Guy’s name was Frank, he was 29, had a thick beard and a trucker cap that he wore all the time to hide his bald spots.<br><br>To say the least, Dasha wasn’t happy to meet him. The two had a history: Frank developed a crush for her and they even went on a few dates, but eventually she grew bored of the guy, because he always took her to the same fast food joint and didn’t have much to talk about. She ghosted Frank and they didn’t even had sex.<br><br>Frank, too, was very surprised to see his ex-girlfriend — he still hoped to reignite their relationship. Then he suddenly realized that he will see her naked. "Damn, she looks pissed. I'll have to restrain her and plug all that shit for milking onto her too...”<br><br>“Hi, Dasha. How have you been?”<br><br>“Shut the fuck up. What are you doing here?”<br><br>“I just got this job…”<br><br>“Oh, you got the job?” said Dasha, mocking him. “Guess what, I was working here before you. Watch out, or you will be swiped off the street, get some bullshit charge and end up milked!”<br><br>Frank chuckled.<br><br>“Well, we have to do it. I guess you know what I mean. Undress, please.”<br><br>She folded her arms across her chest.<br><br>“Make me, fucker.”<br><br>Frank really didn’t want to hurt Dasha, but with that attitude he might not have a choice.<br><br>“I promise to keep it professional. No unnecessary touches.”<br><br>“Go to hell.”<br><br>Frank sighed.<br><br>“New plan: you let me sedate you and, uh… you wake up already set up. How does that sound?”<br><br>At first she didn't bother to answer, but she knew that escape was not an option.<br><br>“Ugh! You better hurry before I fucking kill you!”<br><br>Sedative it is, then. Frank took a box from the table drawer, unpacked the syringe and approached his crush.<br><br>“It’s gonna be alright.”<br><br>She wanted to punch him in his dumb sorry face, but the guards still stood by the exit, and the punishment for starting a mess at the reception was well known to her. She looked away and in the front of the milking row spotted Esther, still serving her sentence. She was standing with her arms and legs spread wide and chained to the wall while the pumps extracted the milk from her. Esther's loud moans of pleasure could be heard even from here.<br><br>"What a pervy bitch!” Dasha thought to herself. “Girls like me get shipped to this fucking place with no choice, and she comes in like “I am ready! Milk me!” Disgusting! Why do they want all that breast milk anyway? What it’s good for? Are there really that many mothers who couldn’t produce their own so they turn for the substitute?”<br><br>Frank finally mustered enough confidence to grab her arm and roll up the sleeve. There was no point to resist, so Dasha still looked away, letting him inject the sedative.<br><br>“I am really sorry, honey,” said Frank.<br><br>She wanted to hiss “I never even liked you!” but fainted and fell into Frank’s hands.<br><br>***<br><br>When Dasha regained her senses, the first thing she felt is how far her small boobs were pulled, with nipples even more so. It hurt.<br><br>“Damn pumps!” she tried to lean forward to ease their pull, but something held her neck.<br><br>Indeed, the breast pumps were put in place, but the milking had not yet been launched. With the blindfold on, Dasha had to discover her restraints through tactile sensations alone. She became aware that she was brought down to her knees, and felt tight leather cuffs around her ankles that pinned her feet to the floor. She couldn't bring her knees together because of the spreader bar. Her arms, bent at the elbows, were positioned under her chest in fabric sleeves that made her think of a straightjacket. Dasha recognized this setup as she had to place a few prisoners this way — the straightjacket also had a big cutout for the breasts, from the neck almost to the midriff. Finally, she once again rubbed her neck into the rigid collar that kept her sitting and wouldn’t let her either stand up or lie down. Overall, it was not the most restrictive position, but not the easiest one either.<br><br>With a sigh, Dasha realized that struggle would be useless as the bondage was too complex to get rid of.<br><br>The device that was fixed against her mouth and also served as a gag, started vibrating — it was feeding time. First, she felt a light dribble of mouth wash coming in. The pressure was very gentle in order not to choke her. Then, a chunk of jelly-like substance dropped, and since she couldn’t really close her mouth shut, she had no other choice but to swallow it.<br><br>Dasha knew that this food was filled with vitamins, hormones and god knew what else, but workers weren’t allowed to eat it. Now that she had it, she was surprised how flavorsome and sweet it was.<br><br>“They want us to become addicted to it,” she figured.<br><br>It didn’t took too long for her to feel a strong initial pull on both her nipples. Her first cycle was about to start.<br><br>“This can’t be happening...”<br><br>Tears rolled down her cheeks and she tried to scream, but could hear only her own muffled whimpers, they sounded very faint and as if from afar. She knew perfectly well that no one on the farm will rush to rescue her. She will be milked now.<br><br>Pumps proceeded to operate in stimulation mode which was a short, fast sucking pattern. It was less painful, almost tolerable. Few minutes after, Dasha could tell that suction strength increased along with speed and she could feel the tingle of her first milk ever leaking out and being sucked by the breast pumps.<br><br>First session has ended, leaving her well-drained. She hated how pleasant this feeling was, she didn’t want to like it. Another piece of jelly went down the tube and then her throat. Then she got served some water. Having worked on the farm before, she guessed that in about two-to-four hours the milking would resume.<br><br>Several days in, Dasha wouldn’t know what changed in her head, but she wasn’t so angry anymore. Was it that she had been repeatedly pleasured with the vibrator? At first she tried to resist penetration, but quickly gave that up. Orgasms did a good job distracting her and she always yearned for more. Meanwhile, the milking machine had already calculated optimal parameters for Dasha’s body to get into a steady rhythm of producing. Truth be told, the girl missed her ordinary life, but pumping was now first priority on her mind. The suction no longer hurt her nipples and pumps became her friends: they removed the milk from her engorged breasts, which made them feel so much softer and lighter. It was elevating.<br><br>"Ahhhh... so that's why they all like it..." Dasha thought to herself as another session left her trembling and anticipating the next one.<br><br>***<br><br>Frank checked on Dasha every day, but she looked no different from the other women imprisoned at the farm — she made the same moaning sounds as most of them, and she didn’t seem to fight her restraints at all, if only tug a little now and then. Her health monitors showed nothing out of the ordinary. Frank badly wanted to touch and cuddle her, but held back; she looked so helpless that it didn’t feel right.<br><br>One evening, Frank was at his table, thinking of how he would win his ex-girlfriend’s heart again when she will be released. Then he got a sound alert: time has come for #0803-DA’s change of setup. Dasha’s number.<br><br>He could’ve let other workers do her, but decided to come himself. He pressed the button on the keyboard — it sent a sound message in her small headphones, signaling about the change, — and went to her position. He was a bit uneasy: how will she react now? Does she still hate his guts?<br><br>Dasha was a little bit alerted; the message must have reached her ears. First, Frank removed the feeding tube and device, then blindfold, headphones, and looked into her eyes. She appeared to be in a state of haze.<br><br>“Hey, Dasha. It’s me, Frank. You doing okay?”<br><br>“Has… it been… one month… already?”<br><br>“Yeah. Four more to go.”<br><br>He freed her body from restraints.<br><br>“Think you can stand?”<br><br>Frank helped her up and letting her lean on him, led the naked girl away. He noticed that her breasts looked bigger than he remembered.<br><br>Holding his crush made him feel brave. He would do anything for her.<br><br>“Dasha, listen to me. I can get you out of here. We’ll think of something. Just say the word.”<br><br>“But… My boobs… so full… empty me…”<br><br>Frank figured his plan was too hasty.<br><br>“That must be hormones in you speaking, but you’re right. You could end up in even bigger trouble. Better if you stay here.”<br><br>“Mhm.”<br><br>He had never seen her so docile and calm. He stopped and tried to look her in the eyes again.<br><br>“Wait, they didn’t fry your brains, did they? Can you think about anything else than your tits for a moment? Like… remember our first date?”<br><br>She pondered the question for a while.<br><br>“Yeah… it was hella boring… and your trucker cap looked stupid… I wanted to laugh, but didn’t want… to upset you…”<br><br>“Thank god, you’re still there. Okay, let’s go.”<br><br>He led her through the rows of moaning, motionless women to a new set. She was expected to sit, slightly leaning forward and pressing her stomach against a wide, soft block of memory foam. Her arms would be spread wide and cuffed to the metal bar in front of her. A collar was attached to the same bar with a short chain. Finally, knee rests were provided to support her weight, which also made her legs spread apart because they would be strapped to them.<br><br>This set gave Dasha some freedom of movement, as the wrist cuffs were not welded on, but hanging on a single link of chain; she also could rest her chin on the soft piece that was installed on top of spreader bar for this purpose, the collar’s chain allowed it. With how submissive she had become though, she probably would sit still whenever the pumps start the suction. And if she suddenly lost her temper, they could always use tougher bonds — something Frank didn't want to think about.<br><br>Without any instructions, Dasha assumed the appropriate pose, willingly extending her arms and placing her wrists on the ends of the spreader bar.<br><br>All he had to do is to secure the restraints.<br><br>“Get the pumps,” she gasped.<br><br>“Alright, alright. I guess I’ll do your mouth and ears last.”<br><br>Dasha exhaled with a smile when her nipples were sealed inside the breast pumps.<br><br>Now Frank stood there, in a bit of confusion. He wanted to chat with her for a while, but the words were stuck in his throat. He sighed and grabbed the gagging device.<br><br>“Please, open your mouth.”<br><br>“Thank you, Frank,” said Dasha quietly before complying.`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').innerHTML = `by <a href="https://www.deviantart.com/troubleinterrortown" target="_blank" style="font-family: inherit; font-style: italic; color: inherit;">${storyData.author}</a>`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

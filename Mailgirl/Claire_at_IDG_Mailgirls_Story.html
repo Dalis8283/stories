@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>Claire at IDG: Mailgirls Story </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        hr {
+            border: none; /* Remove default border */
+            border-top: 2px solid #333; /* Create a solid top border */
+            width: 70%; /* Set width to 70% of the parent container */
+            margin: auto auto; /* Add vertical margin and center the line */
+        }
+        img {
+            align-self: center;
+            max-width: 90%;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "Claire at IDG: Mailgirls Story ",
+            author: "TwstdSail",
+            chapters: [
+                {
+                    title: "Chapter 1",
+                    subtitle: "",
+                    content: `How did it all start? Well…<br><br>I got a call to go to HR one Thursday about two months ago. I didn't really know why, I mean, I wasn't taking a big vacation and I wasn't planning on quitting. I like it here at Immersive. I've been doing well, moving up the ranks. I think if they were going to fire me I would have heard something, or felt something. You know what I mean?<br><br>There is this term here, to be 'put out to pasture.' That's when work starts to move around you instead of through you. You're working on some account and then when the next round of data comes through they give it to the guy at the next desk, even though you've done the last three. At first you don't even think about it. Then maybe you think there is more work coming and they are sharing the load. After a few days, maybe you think that you're going to get something more interesting, because they guy next to you who got your usual assignment is a level below you, and that's all right then.<br><br>It’s probably just day or two later that you realize that you haven't gotten much new work lately, and that another round of data came, and you didn't get any of that one either. And now you're worried. You start to realize that they've stopped giving you things to do.<br><br>It turns out that they are letting you clear your desk for some reason. It's either time to retire, find a new job, or wait for the pink slip. At the very least this is conversation time with your higher ups. That's 'out to pasture' and I've seen it, well, we've all seen it. Sure I guess if you're ready to retire then maybe their telling you it's time to retire or maybe they're making you an emeritus or something.<br><br>But that didn't happen to me. I got the same work, in fact a bit more. I was pretty busy. The last promotion I got, my boss took me to lunch to tell me and 'celebrate'. Yay!! She took me to Panera Bakery. Panera? Oh well, whatever, it's a promotion! I was a Data Analyst, now I'm a Data Manager. Data Analysts call themselves Data Monkeys, three of them now work for me, so obviously now I'm a Zookeeper! Of course, there was other stuff going on, but still that sort of meant that I really didn't know what was up when I got the call to go to HR. Well, maybe I did, but it never crossed my mind that day. <br><br>Sure, sure. I'll get on with it. I thought you wanted the whole story. Sure.<br><br>I'd been really busy lately. My boyfriend and I had gotten pretty serious in the last few months, and I'd been trying really hard to learn some new professional skills. Right, classes and such. I'm taking this one class in small group leadership, I'm aiming to be on the team at work that does focus groups. I guess I just haven't had any time to take care of myself, and that's why I got called to HR as it turns out. And that's why I'm talking to you.<br><br>Right, my boyfriend. I'm the first girl at IDG that you've met who has had a boyfriend? Who have you been talking to? Oh! Of course. <br><br>Actually yes, 29 is kind of young for a PhD in my field. Truth be told I really wanted to do Semiotics but I didn't want to be a professor and that's what most of the programs prepare you for. Semiotics? It's the study of signs and symbols. Kind of the bastard child of Anthropology and Linguistics. The idea is that you can essentially read a culture by looking at the signposts, figuratively speaking, that they leave. I know, it's kind of esoteric.<br><br>Oh sure, I'm 5'7", I weigh a hefty 128, down 10 in two months, I wear glasses or contacts, my eyes are brown, sorry, not blue. My boyfriends name is Sam, and my dog's name is Clarabelle because I let my then 9 year old niece name her, which absolutely proves I'm not that smart. I call her Belle anyway. <br><br>Oh, no, Sam doesn't work here. He works in Finance downtown.<br><br>I live near the GW campus, about 20 minutes from IDG, and I either ride my bike or run to work when the weather’s good. Umm what else do you want me to say? Oh, well that's a weird question. Yeah, I usually wear underwear, kind of.  I mean, oh.. no.. not at the moment I'm not, but umm.. <br><br>Really, I have to answer these questions? <br><br>She said I had to? <br><br>Oh. Ok.. I guess. <br><br>Well.. I used to, every other week sort of.. but now I guess I wax.<br><br>Yes, that's why I'm talking to you. <br><br>Yes, that's why I ended up in HR. <br><br>No Sam doesn't know. <br><br>F**k no I'm not going to tell him! Not unless she leaves me no choice.<br><br>Right, so essentially Sam and I had a date planned for Monday Night, and not just a date, but I was feeling frisky, you know? So I had picked out this super cute red dress with just the right amount of twirl in the skirt. I was pretty psyched. So in the morning I realize I'm a bit rough, and think that rather than a shave I should get waxed... sure probably because of the MailGirls… no, I guess absolutely because of the MailGirls. They look smooth and it's what everyone at IDG sees... and ... well... it occurs to me that I could do it at work. I don't know why I thought of that, I just did. I mean the MailGirls do it all the time. Every Monday they get waxed, and it seems pretty fast. I knew it was free, and that is my favorite price.<br><br>Yeah, I was very wrong, it was not free.<br><br>Anyway, this is all backstory in a way. You really want to hear this nonsense?<br><br>Sure, if you say so, apparently you are in charge right now.<br><br>Ok. So I know where the MailGirls go on Monday mornings. I usually get in super early, I think it's a hangover from having rowed in college, up early and go workout, so that's what I had been doing. I had seen them coming off the bus and going up there. Next to the gym is a space that they rezoned for the MailGirl thing. It probably used to be a big utility closet or something. Though it has a window, and a sink, but who knows? Anyway now it has a window, a sink, a row of pink chairs with Disney princesses on them, and a couple of those padded tables, at least is does early on Monday mornings, I have no idea what it looks like when it's not being used for the MailGirls. I figured out a while ago that this was where the MailGirls go to get waxed. To be fair, I didn't figure it out, it's pretty common knowledge. So I thought I could just show up there, walk in and say hello. But no one answers when I did that, in fact no one said a word.<br><br>No! No it wasn't empty! There were three girls there. I guess they were Ten, Eleven and Twelve, at least they probably were at that time. You know the company keeps changing numbers. I'm not really sure how they renumber them. It has something to do with rewards I guess, but I don't really understand. The truth is that it doesn't really matter if you aren't a MailGirl. I'm sure there are some who know the MailGirls but to me they are all pretty interchangeable. I know some of the guys have "favorites" but as a woman, yeah a straight woman I suppose, they all kind of looked alike. I never really noticed them or thought about them except when I need something done fast or privately. You put in an order, a girl shows up, your delivery is made. Half the time I never even look up from my computer. I do, more now…. but really I never thought about it before.<br><br>I think it's a combination of things. First of all, until recently, the idea of a naked woman standing there waiting for a delivery from my hand was, well, awkward as hell. I'm a feminist! How do I hand off work to a naked girl… woman… and have her run it down four flights of stairs? Secondly, and this is a known total contradiction to the first point, they are… well.. they look good naked! I mean, it's not that I notice, but you know, girls notice these things. It's that stupid instinctual competition thing. And while she can't see me, I can see her. I know her abs are flatter than mine. So there is that. They are submissive naked women which I find disgusting, and I'm afraid they get more dates than me which pisses me off. At least I never knew any of them before they became MailGirls. I have no idea how I would handle that. How do you go from a friend to a superior? It's just awkward as hell.<br><br>Right right, back to why we are talking and why you are here, and yes, why I'm not wearing panties.<br><br>Anyway, if you do this every week you have the routine down. I noticed that right away<br><br>Why? Well, just because the one on the table, the one I figured was Ten, she moved with the waxer like they were thinking the same thoughts. So it was pretty fast. <br><br><br><br>Oh maybe. I don't know that much about waxing. Do you have less hair over time? That makes sense. There was a girl in grad school who was big on waxing because she only had to do it once a month. But then she was blonde and barely had any arm hair or anything. Hmm, I have no idea why I remember that. No we did not have a 'thing.' Still doing it every week seems like a lot. It's ripping the roots out right? Nothing grows back that fast I don't think. On the other hand, it's not like anyone wants to see a bunch of stubble... and MailGirls can't exactly cover that up, so why not have them in there once a week? I mean MailGirls don't complain do they? I'm not sure they are even allowed to complain.<br><br>So I stand there, admittedly a bit agape, as she just pulls this girls ass apart and waxes the bare skin. No really! There was nothing there. The girl didn't even flinch. It's like four strips, four rips, and she's off the table sliding her phone into the armband thingy and then she’s out the door. The waxer doesn't even look at the girls just says "up" and the next one was up on her back on that table, legs apart, staring at the ceiling. <br><br>That's why I think they were Ten, Eleven, and Twelve. There was an order to it. Everyone but me understood what was going to happen way before it actually happened. It was very much automatic. I know that sounds a bit absurd but it was, well, it was almost robotic. I know some guys really like the MailGirl program. They find it sexy. And let's be honest that makes sense. Who wouldn't find these gorgeous naked women sexy? Especially when they work so hard to please everyone.<br><br>They look perfect, smile, say "yes Ma'am" to me, even thought I think every one of them outranked me before they became MailGirls. They are this weird combination of incredibly sexual submissive women, perfectly chaste dolls, and FedEx, like some kind of super creepy Stepford wives in a way. But at that moment, in that room, it was pretty much exactly the opposite. These girls weren't sexual at all, they are just sitting there looking at the ground, hardly even moving… they seemed barely human… they were just… well…things I guess. <br><br>Sorry. Back to what happened? The girl on the table gets waxed. Fast! "Paint dab rip. Paint dab rip." I was scared to death about this but from the look on her face, I mean on Eleven's face, she was just plain bored. She flips herself over and the woman who was waxing her patted her ass. Eleven, on her knees, reached around and pulled her cheeks apart and put her head down. Yeah that was it, ass up, head down, face in the little face hole in the mattress. <br><br>Actually all I could think about was how Eleven looked and how I must look when Sam and I are... well... let's say I've seen my bed from the exact same vantage point Eleven was seeing that table and Sam has seen me from the vantage point I was currently enjoying of this girl. And again, I am straight, but hmmmm... I did look. So it was just four big "Dab Press Rip Pats" and the girl was up and off the table. She glanced at me as she  grabbed her phone band, shook her head sadly, and ran out the door.  A single word and the next girl, Twelve, was up on it, staring at the ceiling. Same thing, like a ballet. The whole time I had heard 3 words spoken. Wow.<br><br>`
+                },
+                {
+                    title: "Chapter 2", 
+                    subtitle: "",
+                    content: `Ok I know that earlier I said I never really looked at the MailGirls. They just didn't enter my consciousness. But after watching Eleven on that table, I was..., I don't know, I had a little crush? I did start to notice her. I mean we are talking a few days later... not like I followed her around that day... obviously... given what happened. Maybe it was the shock, or the completely passive intimacy of seeing a woman that way. A woman I didn't even know! But I did have a little crush. Over the next week when I used the MailGirls I was hoping it would be her. And I’m obviously not going to lie, I was using them a lot more than I had been, hoping to get her. The first time she ran a message for me she looked surprised to see me. Maybe while they look alike, we don’t, and she remembered me from this very moment, maybe not. The second time I was a bit tongue tied. She had a little smirk I think. She knew what I was thinking! I almost gave her a Strike I was so embarrassed at being found out!<br><br>Once Eleven was past me, Twelve was up on the table. She was down and out the door before I really even came back to myself, and then, suddenly the waxer turned and looked at me. She looked me right in the eye and just said “yes?"<br><br>I was in a teeny tiny panic but I just said "I have to get waxed..."  I fumbled and stumbled mentally for an explanation. She must have felt my fear at that moment, I guess I faltered again and I tried to reset us. I reached out my hand and said "Hi I'm Claire.." she didn't answer at all so I said "I didn't get your name?" and she gave me an awfully evil smile and didn't say a word. She simply raised an eyebrow and looked me up and down. I realized I was still dressed and started to strip. <br><br>How the hell is it embarrassing to strip in front of a waxer? She just pulled the hair off some others girls very very private parts, and she's about to do the same to me. So why I am blushing and twiddling my thumbs over lowering a pair of red satin panties? But there I was and that's exactly what I was doing. <br><br>And then... after I had taken off my oh so perfect and oh so pretty skirt and blouse and folded them and placed them on a princess chair (Anastasia if you really want to know), and taken off those panties and the matching bra; After my tennis shoes had my socks rolled up and put into them; after she made me stand there naked and rehang my jacket on a hanger instead of folding it into the pile... then... then with just a single word the woman ordered me up on the table. She didn't bother to look me over or give me a smile. She just shook her head and said "up." <br><br>She looked at me lying there on that table…<br><br>Oh the shoes? Like a lot of women here, we all wear heels around the office. I suppose it's that competition with the MailGirls I was talking about that makes us do that. Shorter skirts and higher heels seems to have become the fashion here, not to mention a bit more cleavage. But no one wants to wear heels around in the parking lot and they do kind of suck to drive with, so most of us wear tennis shoes or some kind of flats and change into the heels at our desks. Huh, I guess it's not just us. Maybe it's the heels that makes it so, well, so obviously different? They are barefoot, we are in heels. It's like an extra poke at them? I don't know.<br><br>Anyway she looked at me lying there on the table. She didn't say anything just grabbed me by the ankles and pushed my feet up which spread my knees apart. I lay there with my knees, my thighs, and my pussy wide open. I looked like a frog on it's back in a high school biology class, and my prospects were about the same; vivisection. Her hands were cold but the table, it felt warm. I imagined it was from the other girls. From Eleven. Christ I really don't know her name, but I know what every nook and cranny between her legs looks like. I could draw you a map. God there is something wrong with me.<br><br>Right, right. Going forward. She took the pot of wax and set it down on my stomach. She put her hands on my thighs, forced them open a bit more, more than necessary if you ask me, and started examining me. She spread my legs and pinched my thighs. She patted my mound and tugged at the short cut hair she found there. She examined me, poking, pulling, spreading, and touching. She pushed my legs wide apart and started unfolding my lips, examining each one, making decisions ... “If you must speak, you may call me Miss DeVoss. What's your number? Where's your ID?" I realized for the first time that she might think I'm a MailGirl so i said that I didn't have a number and added the simple word “yet." Why did I do that?<br><br>She came back at me. “How could I not have a number? Since when were there new girls? Why wasn't she told?”<br><br>As I lay there on the table and she pushed her face closer to my splayed legs, examining me, doing her inspection, she tugged at a bit of the stubble in my crotch. "You shaved?" She demanded, “when?"<br><br><br><br>"Ummm.. five days ago... I think.." I said, counting backwards to last Wednesday.<br><br>She gave a hard pull on the short hairs she had in her fingers. "You will always address me as Ma'am. You had better learn that now, it's going to make the next two years a whole lot easier for you. And don't fumble and mumble. Make it simple." She pulled again and I winced.<br><br>I mean, she asked me.. “"When did you shave Thirteen?" No wait.. that’s not right. Actually, if I’m honest, ‘asked’ is completely the wrong word. She didn't ask me to do anything the whole time I was there, she told me what to do or she just did it. Like with my thighs. She didn’t ask me to spread them. She didn’t ask if she could inspect me. She didn’t ask, she told or did. I’m not even sure I know why I let her. I mean, I'm not a MailGirl. Lord knows Sam will tell you I'm no ones submissive.<br><br>"When did you shave Thirteen?”<br><br>I had that feeling of spinning in my brain. Things were going on around me and I wasn’t completely putting it all together. ‘Thirteen’? Why did she say that? It took a moment, and then I realized why she said that. The bigger question is why did I do it? It was the moment I guess. Maybe it was the moment. Maybe it was being naked and having her hand where it was. Either way she pulled again hard on the little hairs there and I eeped, after a third tug I fairly shouted "Wednesday Ma'am! I shaved Wednesday Morning!”<br><br>"Well you're never doing it again." She told me. I couldn't tell if this was just a statement of fact or an order. Obviously if she thinks I'm a new MailGirl, a new girl named Thirteen, then I won't shave again. I'll be here every week, like any other MailGirl. But I think she knew what I was doing. She repeated the order to never do it again, but this time more sharply and all I could do was give her a weak 'yes Ma'am." In the end I don't think she was fooled at all because the next thing she said was "you never know who might be checking up on you." She giggled to herself. "Well," she said, "you're either MailGirl Zero or Thirteen. And with these soft thighs there is no way you'll be anything but the slowest girl in the company." Then she started to paint me. <br><br>I felt the sticky syrup as she coated me with it. I assumed it would start at my bikini line, but she started near my belly button! She said I had a "pleasure trail" and that it had to go. Then she suddenly stopped and she picked up my arm. "Actually you're a bit hairy everywhere." Now that's just not true. I'm just not blonde so you can see fine hairs.<br><br>She mused to herself, and a little to me that "maybe we can get permission to wax your whole body from the neck down next week." My head spun a little. Who did she think she was going to get permission from? I wasn't planning on coming back, and I sure as hell am not giving her permission to wax my whole body! I confess though that at the thought of doing this again, this embarrassing, soul and body exposing thing, doing it again, I shuddered. She probably thought it was fear of a whole body waxing. I blush to admit that it was the first tingle of being turned on.<br><br>I felt her pat down the strip. She pushed hard down, then ran the back of her hand down the cloth pushing and smoothing a long strip that ran from just below my belly to where my bikini would sit if I was allowed clothes at this moment. That's actually what I thought. 'If I was allowed clothes.' Of course I'm allowed clothes. I can stand up and walk out of here anytime I want. It's just absurd to think otherwise. I'm not a MailGirl. No one has a contract on me. No one can tell me to stay naked, to run for them, to bend over, what to eat or to have a woman rip my hair off. Well, no one but me. So what made me think that? What made me wonder if I was allowed?<br><br>The paint. The pat. Then I could feel her lift a little corner. There was a tug as she did, but it didn't hurt. Just like lifting the corner of a piece of tape on a package. No stress. Just find the corner. Get it started. When I was watching the other girls, I had missed the corner. I knew what was next. The tug. The pulling. The hairs ripped off of me.<br><br>The syrupy, waxy paint I had seen on the other girls. The pat and smoothing I had watched intently. But I had missed seeing the corner peeled up, still I knew what was next. The tug. The pulling. The hairs ripped off of me. The whole ouchie part. So she ripped it off. Up, off. I didn't cry out, I didn't ask her to stop, but I did wince and I did squirm. Apparently enough to earn a stinging smack to the inside of my thigh. "Stay still. I have no desire to follow you all over the table." <br><br>She started in earnest. Dabbing the syrup, patting it down, ripping it off. In just a few moments my mons felt like it was on fire. After she was done on top, she gave my newly bared spot a good swat. “Spread” was the only word she said.<br><br>She went to work between my legs. She started in the obvious places, well, where you might think she would start, the fold of my thighs. She poked and prodded and spread her damn syrup everywhere. She put the strips of cloth over it and made a big deal of yanking hard. At one point I was sure she had ripped me open and I would find blood on the table, but no, she was actually pulling exactly the right amount to make it hurt but to leave no real trace of her cruelty. I could tell once or twice she was redoing some spot that she had already done, but by this point I had my eyes screwed shut and was holding the side of the table for dear life. I heard her chuckle to her self as she poured some of the syrup between my lips and patted in the cloth. I knew where it started, just above the split. I knew where it went, over my most sensitive spots, and I knew she was doing it because it amused her to see me hurt. And when she yanked, she did it slowly. Firmly, but so very very slowly. She was enjoying my fear. She was enjoying making me squirm. And when she was done, she said, almost sincerely, “that one goes slowly sometimes when girls are moist from enjoying themselves on my table.”<br><br><br><br>Ten minutes later I was laying there on the table. Between my legs was red, sore and now bare. If I had gone to a spa I would have been done. but she was taking her time. Was she being professional or was she enjoying herself? Let me tell you that I do not know and could not tell the difference because honestly I hurt. It felt hot and tender. I have been humiliated, spread and probed and examined and had every hair pulled out by the roots. This woman now knows me better than Sam and probably better than my OB-GYN. I felt her slip two fingers under my ass and lift up. I looked at her and she gave a slightly exasperated look. "Roll over girl. That's the sign for you to roll over. On your hands and knees with your head down. Not too hard for a girl like you to figure out? It seems like a position you probably know pretty well.”<br><br>So that was it. That was how she asked the girls to lift their asses to the air. To be honest, asked would be the entirely wrong word. She didn't ask me to do anything the whole time I was there, she bent me into position or told me what to do. I'm not even sure I know why I did it. I mean, I'm not a MailGirl. Lord knows Sam will tell you I'm no ones submissive.  I had just come in for waxing, not to be humiliated, but here they definitely seem to go hand in hand.<br><br>"It seems like a position you probably know pretty well," she had said. And what did I say? <br><br>"Yes ma'am..." I had replied. "I mean no ma'am? Yes ma'am? I'm sorry... I don't know… " At that point I started to cry. It hurts having your hair ripped out. So there I am; I'm in a lot of pain, and I don't know what I'm doing, I'm embarrassed that this woman has spread me widely and had her hand and her face up and down my most private parts, she has treated me with contempt and like I was nothing but a MailGirl, and then she told me I wasn't even likely to be good at that! I was being confused now by the simplest of orders and worst of all I could feel that I was a little more than a little wet between my legs, what the hell was that about? So I did it. I did the whole thing. I said "yes ma'am" as quickly and sharply as I could. I found myself terrified and turned on now by this charade. Then I rolled over and assumed the very position I had watched Eleven in only a few moments ago. I put my head down on the table and spread my knees as widely as possible. I got myself into the same position I find myself in so often when Sam is ...ing me. She grabbed my hand and put it on my ass cheek, then my other hand. She didn't ask, or signal, just moved me like a doll. My whole weight was now supported by my head, neck and core. She waited a moment and I knew what she wanted. It's mortifying. <br><br>It was a churn of emotions and even though I knew that if I really were at some fancy ass spa I would probably have found myself in the same positing, this was different.  It was the lack of talking. It was the intentionality of the humiliation that did it. She was trying to make me feel like an animal, like a sheep being sheared, and it worked. Maybe I should have said "fleeced" since that may, in hindsight, be closer to the the truth. <br><br>So I did it. I held my ass checks open while she fleeced me. Dab Press Rip Pat. Off they came. She did it and it hurt like fire. Then she started again. My arms got tired. My knees were straining. <br><br>Dab Press Rip Pat. <br><br>Dab Press Rip Pat.<br><br>She did the whole area. She pushed that damn syrupy wax between my cheeks and then pressed the cloth onto it. She pressed it over every inch of me. I could feel my skin get hot, then cool as she ripped the hairs out by the root. Each inch of flesh between my legs and cheeks was waxed and ripped until there were no hairs left. She gave me that fake sympathetic grin again and said "first time is always the hardest. It gets easier every week. In a few months you won't even flinch." I let go of my asscheeks and when they came together the sensation was different, cleaner maybe, maybe they were just a micron closer together. <br><br>She pushed my neck down again suddenly and sharply. "Did I tell you to let go?" <br><br>What could I say? I stuttered out a "no ma'am," and I pulled them apart again. She picked up her wax and started over, doing the entirety of my cleave again. I didn't think it would matter really, but this time she let the wax set up more, she got the last few fine hairs, ones so small you would never see them, but they still hurt. And on top of what I had just been through, my ass stung.<br><br>I later learned, mostly from other girls, that having that part of you waxed doesn't hurt much. Mostly she was twisting the wax strips to further punish me. It was just stupid and mean of her. I hadn't done anything and lets face it, I was scared. But I think that's what she wanted. She wanted me scared and embarrassed. She wanted me to feel like I was nothing, just another naked MailGirl, another paycheck for her, another object she had to work on. And she succeeded.`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "", 
+                    content: `She left me there. Face down, ass up, knees spread, ass cheeks pulled apart. She left me there for a long time. I swear I might even have heard her phone's camera go a few times. She made a show of inspecting me again, "making sure she did a good job." She ran her fingers over parts of me that no one else touches. She commented again on my thighs but said she was sure they will firm up soon, and that I would even lose that little belly, the one Sam said was 'so cute,' once they had me on the Fat Girl diet. And then she just let me up.<br><br>I fairly flew to my feet. I reached down now that I was free of her and rubbed a bit at my thigh and mons. Not just where she had slapped me, but where she had pulled the last few hairs from. She laughed again and told me I'd get used to it, adding "soon enough you'll be just like all the other MailGirls." I don't know why that comment was so loaded for me, but it was. I had had enough of her. She had poked me, tugged at me, pulled me apart and humiliated me as best she could. For a long time that morning she had won. But that was it, for some reason that was just the tiny push that dropped me over the edge. I turned and faced her. <br><br>I know that when she looked at me didn't see a naked woman, what she saw was nothing but a naked MailGirl. And as I looked at her I saw every tormentor and bully I had ever endured. Every girl who had teased me for being too smart or a teacher's pet during my Thirteen years at St. Hilda's Girls School, every sorority sister who laughed my freshmen year at College when I rushed and said I wasn't worthy of their friendship. Every single one of them stood in front of me in the body of this one woman. I started to shake with anger… "I Am Not…" was all I got out.<br><br>She spun me around and slapped my ass hard, I mean really shockingly hard. "Oh Thirteen, I know what you are and what you aren't. Well, let me tell you something… you are a whole lot closer to being a MailGirl than you realize. So you just listen to Miss DeVoss… you will be here every Monday for your waxing. And you will never again wear underwear in this office, I'm warning you I might check at any time! You will call me Ma'am or Miss DeVoss, just like those other MailGirls do for every other woman in the office. Got it?" and with that she slapped my ass again. "Do you understand me Thirteen?" And I was so scared, but I still had a little fight in my, I started to say no, absolutely not, when she showed me her phone. She didn't show me any pictures on it, just the phone. "Just say," and she smiled her evil awful smile, "yes Ma'am, and you can be on your way to your office."<br><br>I hung my head. I hung my head and a tear fell because just like with every bully at St. Hilda's I had ended up eating dirt, or getting a red-belly, or doing their homework. And just like every Sorority Sister who laughed, I ended up being the one going home, utterly alone, and in tears, and not invited to their parties. I was beaten again and again. No matter how many promotions I seem to get, or how many friends I seem to make, I'm always the one saying "yes Ma'am" and shuttling back to my desk, tail between my now very bare legs. So I said it. "yes Ma'am."<br><br>"Every Monday, here at 6:30."<br><br>"Yes Ma'am."<br><br>"No underwear again, ever."<br><br>"Yes Ma'am." <br><br>"Good girl. Get back to your office Thirteen, you never know when I'll need my personal MailGirl."<br><br>I picked up my shoes and pulled out the socks. I sat and pulled them on, my bare ass, with just two handprints on it now, sitting on the cool pink plastic chair. I stood up and took my dress off the hanger. I wasn't at all shocked that my panties and bra were already missing. I pulled it over my head and picked up my bag. As I started to go to the door she called out to me, "and Thirteen, you better run to your desk. MailGirls aren't allowed to walk." At that moment my phone buzzed and a I could see it was a message from Emily DeVoss.. actually not a message, just a photo.<br><br>So, that's the back story. I guess you know the rest. Five and a half weeks later I was standing in front of Miss Williams, the head of HR, looking at a very short contract with my name on it. <br><br>Oh, you want to hear about that too? I suppose I should have guessed. <br><br>Well as I said, after I left the waxing room that day, she just toyed with me, not quite a MailGirl but she was having fun at my expense. At first I thought she would have me running messages up and down for her. But pretty soon it became apparent that she didn't have any messages for anyone. So sometimes she would text me and tell me to be somewhere. All it ever said was "five minutes to get to.." and a place. I would have to drop what I was doing and run there. I even made up a person who wanted to see me and swore about him being pushy but not someone I could refuse; Mr. Weinheart. My phone showed his name, and I would just run!<br><br>If I didn't look winded when I got there she would laugh and either say "next time I'll have to send you further" or "Well, maybe you'll be a real MailGirl after all…" Then she would inspect me. Usually she had me lift my skirt or dress. Sometimes she had me take everything off. Once she caught me wearing pants.. I meant… well… not caught me because it wasn't like it wasn't allowed, but … she texted me, and I ran, and I was wearing pants. Well she put an end to that, I was told that I wasn't to wear pants at all anymore to the office. So I didn't, this wasn't worth the fight. She already had me being waxed against my will, running against my will, doing everything for her. Anyway, I doubt anyone noticed. As I said, all the women at IDG have been dressing better.. well sexier.. since the MailGirl invasion. But pants were kind of my secret fight against what was happening. First of all, I didn't need attention from men at the office. I have Sam. Secondly, well, it's not me. I was always a nerd, not a prom queen. I like wearing pants, and I liked not being sexy all the time. I guess, at least for now, those days are well and truly over.<br><br>And every Monday morning I was there at 6:30am. She made sure I was there and gone before any other girl came in. She made it clear that I was the first one, and that she could and would wax me. Every time she did it she made a point of tweaking, pinching, or probing me. She made humiliating comments about me and my body as often as she could. She called me fat, she called me pasty. She once said "It's amazing to me, so many men enjoy a firecrotch, and here we are pulling all your little red hairs out. Seems a waste to me, but it's clearly what a MailGirl does, isn't it Thirteen?" and I would have to respond Yes Ma'am. And of course she has taken more pictures. Pictures of my tits, and my ass. Pictures of me when she sees what she calls 'excess moisture,' a term purely designed to shame me further. It feels like there must be thousands by now. And then, just to humiliate me a tiny bit more, she sends them to me at random moments throughout the week.<br><br>She never used my name again. Not a single time. Actually I'm not sure she has ever used it at all! I've been Thirteen to her, even though I was never actually a MailGirl. I know a day is coming when she takes it another step, I just don't know what that step will be. Will she wax my whole body? Will she "probe" me or "inspect" me so much that I lose control? Once when I was being inspected, I admit it, I got wet. Really wet. If she had gone on I don't know what would have happened. Would I have had an orgasm? I have no idea. <br><br>`
+                },
+                {
+                    title: "Chapter 4",
+                    subtitle: "", 
+                    content: `God what if she does make me run a message? The receiver would absolutely know something was up. I was starting to realize just how owned I was. I couldn't see a way out, regardless of what I did. I could do everything she wanted, and all it might ever do was feed her desire. She might make me do more and more. She could just keep threatening me with the pictures, with the knowledge of what she had over me. So I let her wax me. I stripped for her in hallways, in bathrooms, or on the roof. I bent over and knelt in front of her as though I was a MailGirl, her own personal MailGirl. I was completely owned, and I knew it.<br><br>And I was wrong. I wasn't nearly finished being owned.<br><br>And then… as I said… five and a half weeks later, on a Thursday at 10:30am, I was standing in front of Miss Williams in the HR office and she was looking at me as though I were a cross between the lowest thing on earth and her very favorite lunch. And the other thing staring at me was the worlds shortest and most evil contract, with my name on it.<br><br>I stood there in front of her desk. She looked up at me for a long time, her eyes up and down my body it was a bit disconcerting.  I wasn't dressed that sexily. A blue summer dress and strappy sandals. Of course I had on nothing underneath, but then I hadn't in a over a month. Frankly, I was surprised anyone would look at me this way. I wish Sam would look at me like that. She looked... well... hungry. And so she did, she looked me up and down and licked her lips. If it had been anyone else I would've thought to myself that I had a case for sexual-harassment. But, I mean, how do you bring a sexual harassment suit against the HR department? More to the point how do you bring a sexual harassment suit against the woman who manages the HR department? Especially here at IDG where naked women are on the menu every day and she hadn't even said a word to me.<br><br>"You wanted to see me?" I asked her. As I said earlier I had no idea why I was there. I hadn't done anything and in fact I had just been promoted. In my naïveté I guess I thought that this was about the promotion. That maybe I had to sign new paperwork or something, but now, seeing the paperwork she had for me to sign, I was nothing but scared to death.<br><br>Finally after what seemed like a half an hour, but really was probably a minute and a half, she just looked into my eyes and told me to lift my dress. She said it clearly and coolly. "Lift your dress up to your waist," was all she said. I have to admit I was completely shaken, Miss DeVoss had certainly taken control of me. I had shown myself to her all over the office, in break rooms, in bath rooms, once even on the roof. I had been peered at, laughed at, and made to do things I would never have dreamed of doing, and still in this moment it felt completely new, as though I had never been treated that way. The coldness of it. The way she disregarded anything about me as a person or any feelings I might have. My mind was screaming at me that things had gone crazy wrong, and I should quit and run away, but I stood there and shook my head and whispered 'no.' Then I squared my shoulders, looked her in the eyes and I said 'no!'<br><br>She just said it again. Just as dispassionately, just as coldly, but she upped the cost "take off your dress."<br><br>But this time I had a little more courage. I told that I was absolutely not going to take off my clothes, why would she even ask me to do that?<br><br>"Do you think," she asked me, "that you will be the first naked girl I've had in my office?"<br><br>I stuttered then. I knew that the MailGirls program was basically hers so no of course I didn't think I was going to be the first naked girl she had in her office. But I'm not a MailGirl! I'm not going to be a MailGirl!<br><br>"Do you think," she asked me with that cold cold look in her eyes, "do you think that I haven't had any number of girls standing right where you're standing? Right in front of my desk thinking that there's no way they'll be a MailGirl? And yet" she paused, probably just to drag this out, but she paused and the effect was palpable, "yet there they kneel today out there on a pad waiting for an order, waiting for someone to think that they're worth bringing to the office, and running their naked asses across our office. It's almost as though they belong there isn't it? As though they were made to be MailGirls? So yes of course I've had naked girls in this office. And I've had MailGirls in this office. So why shouldn't you be the very next one?"<br><br>So I told her I had no intention of being a MailGirl. There was no way I was signing a contract to be a MailGirl I just got a promotion I reminded her I do a damn good job, I work hard, and I'm the best at what I do. I think I'm going to the best in the whole office. <br><br>I told her I'm a zookeeper not one of the data monkeys anymore, that I'm valuable to IDG. And that I'm not going to be a MailGirl.<br><br>She smiled at me. She gave me this evil evil smile. "Do you believe that's how it works? Do you think every girl kneeling there up on the floors came in here and begged me to make her into a MailGirl? Of course they didn't. Do you suppose they were all on the edge of losing their jobs? That's absurd. Some of the brightest young women we have ever had at this company are, even as we speak, running naked through a hallway with their tits bouncing and their bottoms swaying and their cheeks pink from exertion. Should they be sitting behind a desk earning us money? Of course. Are they far more valuable working than running? Oh no. Naked girls have brought us huge clients and saved us hundreds of thousands of dollars in other ways. Don't think you're too good or too valuable to be another naked girl with her nose against a wall. They become MailGirls for a lot of reasons. Some of them have bills to pay, some of them get off on it, and some of them did things that put them in a position where they needed to be a MailGirl to avoid something worse, why, just like you for instance."<br><br>I don't have bills to pay I told her, I haven't done anything that would make me into a MailGirl. And that I absolutely had no intention of becoming one.<br><br>"Oh Claire, or should I say Thirteen? You really don't want to talk about being MailGirl, do you?" She smiled, trying to be sweet and caring, but only coming off as cunning.<br><br>"No, of course I don't!" I was adamant. I have no intention of being a MailGirl. But I was also scared. Was it just logic that dictated that I would be Thirteen or did she know that Miss DeVoss was calling me Thirteen all the time?<br><br>"Ahhh Claire, I know so much more than you think. For instance I know you came in to work early every one of these past few Monday mornings, I know what you did when you came to work early five weeks ago. Don't I?" And that cruel little twist in her lip showed... like she knew exactly who was about to be devoured. "You went into the MailGirls room and got your little pussy and your ass waxed, for free I might add. You stole that from that company. I know you're Miss DeVosses' personal pet. She runs you, she makes you stand there naked for her. She plays with your hairless slit and she makes you very scared that she will notice that you like it." She paused, letting it sink in that she really did know everything I had done. "But I know more than that. I know that you stood with your mouth open and watched 10, 11 and Twelve get waxed. I even know that you took a special interest in 11. Apparently you like the way she looked with her ass up in the air. From what I understand when it was your turn, Thirteen, you might've even been a little bit more, let's say moist, than you want to admit." <br><br>Yeah let me just tell you this isn't true. I mean, yes, I was a bit well, more moist that might have been normal, as she said. But that's because I was nervous! It had nothing to do with what I was watching. It had nothing to do with the view I had. It had nothing to do with 11s bottom up in the air or her legs spread apart! I have a boyfriend! I am not gay! I don't know why I have to say this over and over and over again!!! So yes, I was a bit wet. But I was nervous.<br><br>"I even know," she had continued, "that you're not wearing any panties. You haven't worn any in 28 days, have you? You haven't worn pants in 16 days. You probably think no one notices. Let me tell you then my girl, I noticed." At this point she got up from behind her desk. She stood there, short and round, and made herself look more powerful. "I know you went into the MailGirls room in a red dress wearing matching underwear, but you didn't walk out with them, did you? No, of course not. You lost the right to wear them that day." She looked me up and down again.  "In fact, I have them." And with that she pulled out that pair of red panties I had worn on a Monday a little over a month ago and laid them out on her desk in front of me.<br><br>"So you've been stealing from the company. You've been running around and flashing your quim at a staff member for over a month, and you've been taking off your clothes in the office, on our time. Yes my dear.. the break room has a video camera. So.. while I have no idea how it will work during your review when I tell your managers that you're stealing company resources and running around without underwear around, I'm going to guess not as well as you might hope. How many of the managers do you think will look at you the same way once they you know that?"<br><br>So you guessed it. I stuttered. Again. I really didn't know what to say. I mean I haven't really stolen anything from the company. All I've done was had someone wax me, someone who was there anyway. How much could that really be worth? Was it enough that I should feel guilty about it? Was it enough they should fire me? But there she was looking at me like that's exactly what she had planned.<br><br>Now," she said in a very soft voice, "now take off your dress." Again, she rested. The shame poured in. I may not be a MailGirl, but I wasn't any better than any of them in her mind. I wasn't any more valuable, any more important, face it, I wasn't even human, just like they aren't human to her. "Let me just tell you," she continued, "that ever since this whole MailGirls thing started I've developed less and less patience for girls like you. Girls who were too selfish to realize when they have a good job or girls who are too greedy to realize what they are signing or girls who don't think anything at all. So I've got less patience for you, not more, so you know what? If you don't want to make things worse, very much worse, you will take off your dress.<br><br>So there I stood, in a puddle of blue, my shoes buried under the dress that lay on the floor after I shrugged it off. And she let me stand there.<br><br>What do you imagine a woman thinks about when she's standing naked at her office in front of another woman? Well, lots of things it turns out. Many of them pretty self pitying, but also a number of really female only thoughts. 'Is she laughing at my butt? Do I look fat?' And in this case I was really wondering if I was every going to put a dress on again in this office. Would she make me sign a MailGirl contract? Would she just fire me and make me walk to my car naked? And why the hell was my pussy getting damp again? That's what you think about. Well that's what I thought about.<br><br>Then Miss Williams cocked her head to the side, licked her lips, and commented on my tummy. She told me that I really wasn't in the kind of shape she liked for a MailGirl and that from now on she would see to my diet, apparently I was going to eat from a MailGirl tray. She would have the cafeteria one in an empty slot on the MailGirl cart.. "unless I wanted my name on it?" And that since she would so kindly be helping me, I would be in better shape in no time.<br><br>You know exactly what it means when someone says they're going to help you. Especially if that help is unsolicited. This help definitely was unsolicited. No? You don't know? It means they're going to screw you. Possibly actually, definitely metaphorically. <br><br>And so she devised a plan. I was going to start eating lunch is off nail girl trails. I was going to start working out twice a week with the MailGirls. No, she told me, I would be allowed to wear clothes but I had to listen to the MailGirl trainers and do what they said. She reminded me that if I didn't do as they said there "would be consequences." Over my head the whole damn time was going to be the idea that I could become a MailGirl at any minute. If I didn't please her or do what she wanted I would be a MailGirl. <br><br>At that point she gave me a pen and pointed me towards two documents on the table. One was succinct to the point of being non-responsive. "I Claire Murphy acknowledge that I have been caught stealing from IDG. I resign, effective immediately, and forego any rights to compensation, unemployment, health care, and accrued vacation and sick time. I understand that I will not be receiving any letter of support for further jobs from IDG." Following that was a line for my name and the date… todays date. The second document was the MailGirl contract. All 4 pages of it. In it I was promised a great deal of money, but would be on duty and naked in front of friends and colleagues. I would sign away my right to be seen as a human being for two years, and I would give the company essentially complete control over my body. And I'm savvy enough to know that no MailGirl ever gets the money, our out after just two years. In addition I could read well enough to know that the company would make my life hell if I signed that document.<br><br>`
+                },
+                {
+                    title: "Chapter 5",
+                    subtitle: "", 
+                    content: `I looked up at her. Ready to ask her again if she really wanted me out of the company. I was a good worker God Damn IT! I made this company money! I had defenses.. I could..<br><br>"Sign both." She said. I didn't understand at first, then I saw that there was an envelope on the table with my supervisors name on it. I didn't understand. "You are going to sign both, and some day, when I want to, I will pick one, and you will deal with it. Or," she paused, "Or, if you do exactly what I demand of you, maybe I'll never pick either one. And you can go on and have a fabulous career here. Albeit one without panties and occasionally having to do a few small tasks for me." She thought further, as I was still working this out in my mind. "I suppose if you really want to, you can choose one now, and I'll have to deal with that, won't I? You can quit, or you can stay naked.. or.. as I said.. you can sign both, and go back upstairs and get to work as a 'zookeeper.' Entirely up to you."<br><br>Screw her. It's not up to me at all is it? Sure I could choose to quit and go be a waitress somewhere that won't want to check my references. Or I can just leave the damn dress on the floor. Not much of a choice. I signed them both.<br><br>She put them into the envelope, sealed it with her signature and then taped over the signature and wrote a note on the front. Then she handed it back to me and said "Look, it's Thirteen's first delivery. Run. You only have five minutes. And stay out of my elevators on this one." I did what any reasonable sane young woman would do, I threw my dress on, slid into my shoes and ran that package upstairs as fast as I could. On the way I did read the note. "Do not open without prior approval of Wallace, HR" and the date. ..., I was handing in my own entrapment documents and there was nothing I could.<br><br>So that's how Miss Wallace came to own me, on top of Miss DeVoss. Yes, I say own. Well because I haven't any say in it really do I? Unless I want to lose everything I have ever valued?<br><br>Is that worse than having someone threatening to put your naked pictures up on the web?  I suppose only in the sense that either way your pictures and up on the web. I mean every MailGirl at our company has a SubReddit devoted to them. Sure the company says they will fire you if they catch you with a camera, but they won't. I mean who is more valuable a MailGirl or an actual executive?<br><br>That's kind of funny actually isn't it. Executives are really kind a dime a dozen. MailGirls are special in a weird way, think about it. You have to find a girl who's willing to run around naked. We have to find a girl who is interesting enough to make into a MailGirl. She has to be pretty, she has to be smart supposedly, and she has to be willing to make herself the lowest person. Seriously the lowest person not just in the company but everywhere. I don't know how many of them do it for the money or how many of them here for the sexual thrill for how many of them are just masochists but there's got to be something special about those girls.<br><br>Well that's interesting, it almost sounds like I admire them.<br><br>Ahhh so what's worse? Having that bitch of a waxer email pictures of my naked ass... and everything else.. to my family and friends, or being turned into a MailGirl? I guess none of that's good.<br><br>Anyway for about a month I did as she said. I went to the gym four days a week got yelled at by the trainers, I ate off the stupid MailGirl tray. Thank God she didn't ask me to sit in one of those damn princess seats. Still it all had to make people wonder what the hell was going on. Made me wonder.<br><br>Actually in truth there were a few things that gave me real pause.<br><br>Like what? Well, just things, you know? Umm ok, once I heard a couple of co-workers talking about how there was a person who got herself waxed before the MailGirls came in on Monday mornings. That had to be me. They were asking questions about who it was and why she was doing it. And at least one of them wondered if it was a benefit any of them could use. Seriously I wanted to say no! I wanted to tell them that this was definitely not a trade they wanted to make. I know this is going to make me sound awful but I also thought that I could actually feel my dress rubbing against my bare and pantieless mons. It's not something you would think of, even if you were me, normally. It was just that they were talking about me. About how it was that I came to be naked in front of Miss DeVoss every week. Suddenly I was terribly aware of my lack of undergarments and I could feel my nipples crinkle. God what is wrong with me?<br><br>What else? Well, uhh I told you that I was eating off a tray right? Well, it's not like no one ever noticed. In fact one of the MailGirls got mad at me about it. I heard her saying to another one that I had no right to eat 'their' food, since I wasn't a MailGirl and that they thought it was rude of me. Then they laughed and mentioned that a real MailGirl would have a better ass than I have.<br><br>Another? Fine.. there are two more things. I had been exercising with the MailGirls for a while. Basically I was doing the whole MailGirl workout and.. no, well.. I mean you would be surprised by how many of the IDG women are doing that workout. Not as seriously, or as often as the MailGirls, right right, or me, so… not as often as we do, but they are doing it. It's getting popular. How could it not? You can see that they are getting fitter. It's not like they hide their bodies under sack cloth you know. So sure, more and more women are doing the work out. Most of us.. IDG staff.. most wear like leggings and loose tops or something. But some wear more and some wear less. There is even this one woman, young but a bit heavy, and she works as hard as I do! She wears a lot of cover up clothes, I think she is embarrassed, but I can tell she's getting into shape.<br><br>Ok, after the work out, I went to take a shower. I stripped off, yup, shockingly bare..<br><br>Anyway, not the point of the story... I guess it was about 5 weeks ago.. right before.. well.. anyway.. I guess about 5 weeks ago. I had done the workout and went to get a shower. I know that I said that the other IDG staff members wear leggings and such, but I don't. I wear really small yoga shorts and a sports bra. No, not by choice, at least not by MY choice. I wouldn't buy them in that color either.<br><br>The MailGirl I called Eleven, remember her? Well, God how do I say it? Things kind of took a weird twist. She was actually Two a few weeks later. During that time I needed a package run. I guess for a while I thought that the higher on the list you were the better routes you got, but this one was going to be a long run. She had to go from my floor, all the way up to ten, then way back down to two, and then she would be coming back to my general area, so I guess that's not true. Any girl can get a long run, or in this case a particularly complicated one, and I knew, maybe she did, I don't know, that there wouldn't be a lot time to rest between trips. It was going to be around for signatures on a document everyone had already seen. The problem was that it was 3:35 and the document had to be officially signed off on by all the managers by 4:00, so she was in for a trip. I felt bad about it when she came in.<br><br>She had come in looking, to my crushing eyes, absolutely amazing. She was glistening with sweat, but I think I saw diamonds. Her pony tail was pulled back, and she had left a single tease of hair loose from it, so it basically played with her right cheek. She looked at me, which I know she isn't allowed to do, but she did, and I was taken completely aback by how bright her eyes were. This crazy dark green/brown combination. Her cheeks were pink with her last run, and I confess to thinking about her other cheeks.<br><br>Anyway, Two, formerly Eleven, definitely the girl I have a little thing for, she ran into my office and things were a bit off. I didn't notice it right away, but she wasn't going a lot of the things that I expect a MailGirl to do. There was no protocol, no niceties, she didn't try to be exaggerated kind of polite that they so often do. She didn't look at the ground and she wasn't embarrassed, she just stood there and looked at me. She stood there and looked me right in the eye and after a moment she said "What are you trying to do? Are you making fun of us? Do you secretly want to be a Mail girl?" She paused and took a deep breath and I could tell there was a lot of anger behind it. "They make us run all day. Isn't it enough that they take everything else away?"<br><br>I suppose I hadn't really thought about it. Maybe the food was their one perk, the one thing that they got the made them feel a little bit valued? Or maybe it was the opposite, it was something that made them feel like pets, and there I was mimicking the thing they hated the most. Either way there I was horning in on it. It was something that was supposed to be just for them and I was taking part of it away from them. Even though it wasn't by choice I could see how awful that must make me look. I must've looked to her like a very greedy person who would literally take the food out of her mouth, or an exceptionally cruel one to tease them when they were most vulnerable.<br><br>Of course I'm not and of course I wouldn't but is that really the point? Or is it just enough that I was getting one of their trays? For her that was enough. For her that marked me somehow as an enemy, which of course I wasn't. But did it matter? If you don't know or care that I was being made to do that just as much as she was being made to run? In retrospect I might be more of a victim. She signed a contract I never did. Well yes I know that I did… But it wasn't by choice. And I'm certainly not getting the benefits out of it that she is.<br><br>True, to be fair, I have no idea if she had a choice or if she's getting any benefits out of it. In fact my entire experience with the program suggests to me that she's not going to end up with anything, and that she is being used every bit as much as I am. I certainly hope that's not true but I am damn near positive it is.<br><br>At first I tried to convince her that in fact I wasn't stealing from them or taking something from them or making fun of them. But let's be honest, I wasn't being at all honest. There was nothing I could do. She clearly wasn't going to believe what I was saying, and saying it again slower and louder wasn't going to make a difference. Eventually I guess she just gave up. At first she tried a different route. She told me that she knew I had been watching her, she asked me if I had a crush on her. She even said that she wondered if I had a crush on her because after all I was kind of cute. Was she flattered? Of course. But I also saw that for what it was. It wasn't an invitation and it wasn't a for date. It was her trying to take a swipe, and I guess that's all right, I mean, I kind of deserve it.<br><br>Maybe I should've owned up to it. Who knows what would've happened if I had said yes I think you're attractive. Would you like to go on a date? But then I already have a relationship then I'll sometimes I remember that Sam is still the best thing that's happened to me. Of course, given the baseline of my life, he would have to be. And I am keenly aware of how tenuous it is, he could be gone tomorrow let alone in a couple of months.<br><br>So she just gave up. She just gave up asking. I asked her and very soft voice "do you really think someone would do this out of spite? Do you really think I would do these things if I had a choice?" <br><br>I could actually see something in her eyes change. She considered it for a moment, her phone was buzzing with her lateness, demerits no doubt racking up, and she just said it in this totally dead voice… "do you have a package for me Ma'am?" I handed it to her she tapped her phone turned and ran out my door.<br><br>So yes. I guess that someone did notice. I am mortified that it was her. Yeah I suppose I hadn't thought about that. Maybe it wasn't her that noticed the tray thing. Maybe someone noticed that I had a crush on her and so they sent her to me to make the observation, or the threat depending on your point of view. That's worse. <br><br>Sorry that was a longer divergence than you needed. I guess, in sum, I would say that the MailGirls know something is up. I think they aren't going to say anything, because, why would they? And who would care? But yeah, they know.<br><br>So what happened next? Well...<br><br>After about the first month she decided I looked better. Oh I did mention that every day I would go into her office to be inspected. She made me stand there naked with my nose against the wall of her office behind her desk. Sometime she left me there for half an hour, 45 minutes, then she had me bend over and would go through my body like she was looking for drugs or something. Sometimes as soon as she walked in the door she would just tell me to get dressed and get the hell out of her office. I never knew. In a weird way I came to be disappointed when she didn't look. She had been subtle rewarding me. Saying nicer things about my body and I desperately needed something positive, so I clung to it. When she wouldn't even look at me, I don't know, I felt like I had failed somehow.<br>`
+                },
+                {
+                    title: "Chapter 6",
+                    subtitle: "", 
+                    content: `About a month later she tells me she 'thinks I'm ready.' Want to couple more scary words to go with "I'm going to help you"? Try "I think you're ready," when you know the person saying them is only planning to humiliate you more.<br><br>The next day I got a text from "Mr. Weinheart". It was the waxer telling me I had to go to the roof so off I went. I hadn't heard from her in weeks, well, really I hadn't heard from her since the meeting at HR. But here I was on my way to the roof. When I got there she stripped me naked as always. To be honest she didn't strip me, she made me strip myself. It's really a whole lot more humiliating to make me take off my dress take off my shoes and hand them to her, it really is. Once she had them she she took out a MailGirl sticker with the number 13 on it and she plastered it to my thigh. Then she handed me a package and told me to run it downstairs.<br><br>First I hadn't heard from her in a month and all the sudden she actually wants me to deliver a package like a MailGirl? No… no ducking way! She threatened me again telling me that she was going to post the pictures. I don't know why but I guess I really had been through enough. I told her to go ahead and post them, I was done. They want me to be a MailGirl, I guess they can pay me. She didn't say anything for a while just looked at me.<br><br>"Deliver the package you stupid girl," she shook her head as she spit it at me. "The person at the bottom has already seen you naked. Do you think I would risk my good thing making you run to some unknown person? Miss Williams and I have just decided that it's time for you to start behaving like a MailGirl. So today you're going to run some packages around the building and we're gonna have fun with you. Or if you really want to," she grinned her stupid grin, "you can refuse and tomorrow you'll really be a MailGirl." <br><br>I thought about it. I really did. Three choices: I could still quit, sure pictures on the web, but I could quit, I could refuse and see what happens, or I could take the package. I wish I could say it took longer. I wish I could say I was brave. I wasn't. I just reached out for the package. As soon as I did she raised it above her head shook her head, and said "no no no… real MailGirls start on their knees." So she made me kneel. She made me kneel in front of the doorway, facing the doorway. There was even a MailGirls Pad there for me to kneel on. She made me kneel like a MailGirl, and she made me wait there for five minutes. I imagine that she was hoping I was thinking about my future as a MailGirl. I'm guessing that in her mind this time was for the five minutes I would normally be going to pick up the package. Then she just said it, "Thirteen I have a package for you come and get it."<br><br>I got up and turned around to get the package and I saw that she was writing a note which she slipped inside. She smiled her high school queen bee smile one more time and handed me the envelope. I looked at it and all it said was Miss Williams second floor.<br><br>"Second-floor" is a relief it's not the main lobby. It's well after hours now and it's just the stairwell to the second floor and then wherever she is waiting. Clearly this was still very much their own game and they weren't letting others in just yet. I moved toward the rooftop door and as I was opening it I heard her cough and say again "Thirteen?" I turned around and looked at her. She shook her head and said "you forgot to thank me."<br><br>I hated her so much in that minute that I could've spat at her. Instead I just said 'Thank you Ma'am' exactly the same as every MailGirl has ever said to me. I hope that I said it with the same sweetness that they have but I think mine was full of venom.  Maybe I just misunderstand the actual MailGirls, and all that sweetness is meant for us to choke on. <br><br>"Well, maybe, next time you'll sound like you mean it Thirteen. Maybe you'll realize just how lucky a girl you really are. Now, run your naked ass down to the second floor, and be quick or you'll get demerits!"<br><br>Good god! Demerits? What the hell would happen if I got demerits? I'm not even a real MailGirl! I took that package and I ran down the stairs. Maybe it's just that now that I'm running I take more of it in, or maybe it's that being in the state I was in made me more aware of what was going around, but I really don't think I've ever noticed how gray the stairs work or how cold they were. I never really thought about how much it must hurt the MailGirls feet every time they run down the stairs, or how hard it must be on their knees. Somewhere around the fifth floor it hit me that the stair should smell like dust but they don't. They smell a little bit like sweat and sex, like a locker room and a men's club mixed together. With Every step my feet hurt and I could feel the bones in my feet. By the time I got to the second floor I was already panting but I had only been running for about two minutes. I don't have big breasts, but every single step makes them jiggle and I can feel that and I realize they're there. I think a lot of times I don't think about the fact that I have breasts they're just there. But today I felt every step. I felt it in my feet and my knees, in my breasts and thighs. I have to admit I felt it in my ass and my pussy. I thought my ass must be jiggling and wondered what that looks like, and with every step I felt myself open and close, and felt my humiliation growing. I wasn't running far enough to work up a sweat. A few more floors and I would be, but this was just down, and not that many flights. Still I had started to imagine what it must feel like to be running and having your sweat drip down between your tits and your ass cheeks. It must get very noticeable, it must make you crazy. Maybe that's it, maybe all the other MailGirls were crazy? Sorry.. not "other" MailGirls. Just MailGirls. I'm not a MailGirl.<br><br>When I got to the third floor I started thinking through the second floor. Where would she be? How could I find her quickly so that I could get dressed? Dressed? Damn my clothes were up on the roof. I should have brought them with me. Can I do that? Am I allowed to carry my dress? What the hell does 'being allowed to dress' even mean? It didn't matter because as I rounded the corner on the mid-flight-landing between the third and second floors Miss Williams was standing there waiting. Her toes were tapping and she was looking at her watch, and next to her was a MailGirl pad.<br><br>I handed her the package and I look at the pad not sure what was expected of me, so I just waited. She open the envelope and took out the note she read it and smiled. <br><br>Incredibly matter of factly she both ignored and informed me of what was to come. "I'll have a reply for this in a moment Thirteen. Wait here." and she pointed at the pad. I looked at her, I suppose the disgust and anger in my face was seeping through,  but to be fair so was the dismissive condescension on hers. So I turned and knelt down on that pad and stared at the wall. After a bit of time had passed she handed me another envelope, this time with "Miss DeVoss, Roof" on it. So up I went. I ran as fast as I could. Part out of desire to get this over with. Partly to avoid demerits and whatever fresh hell they would entail. And honestly, and really I'm trying to be as honest as possible with you, partly to show that I could do. I could run like anyone. I had been in the gym for a month, and I had some stamina. I wasn't just the pretty girl I had been.. sorry I meant the woman… the zookeeper.. who had gone into the gym a month before. I was strong now. I could run. So I did. Up. Then down again, and up again. And again. And again and again. Each time I would end up kneeling and catching my breath, feeling the sweat pool on my neck and in the indentations my knees and feet made in the MailGirl mat. Every time it got a little harder to get up and run the next lap. Every time I got a little closer to five minutes. Time-wise, down wasn't a big problem, but I could feel the pounding my feet were taking in the soles of my feet. Up was getting harder. It wasn't 4 minutes anymore, it was 4:10, then 4:22.. time was creeping up. And every time Miss DeVoss would tut and tell me that I had just barely made it, and threaten me with demerits. I went up and down those stairs over and over. It felt like I had run them for hours, but really it was just 11 laps that I ran, just over an hour and a half of time had elapsed.<br><br>I had come down that grey concrete tube of a stairwell for the 11th time, and was dripping sweat. I handed over the envelope and didn't even look at her, just said "I have a package for you Ma'am," and handed it over. I turned without waiting to be dismissed and knelt on the pad to catch my breath. Then, seven minutes later I was on the move again. I almost didn't look at the package, and only caught it out of the corner of my eye. The package had a different address, this time up to the Seventh Floor and across to the office where a woman who was a friend of mine works. I was scared to death, but at this point,I'm not sure what choice I had left. I could go any time I suppose, and face one of those to forms I had signed 8 or 9 weeks ago popping up into my file. Either way humiliated beyond redemption. But aren't I already. I was heading to a woman who I had known for a couple of years, who had been my friend in grad school, who is important to me. I was going to stand in front of her, naked, and deliver a package from Miss Wallace. I felt the sweat this time. It dripped down my forehead and then off my eyebrow, it hit my nipple as my breast bounced up from a step. Another drop ran between my breasts and I could feel yet another starting to drip down between my ass cheeks. I feared that what was making it's way down my inner thigh wasn't sweat at all.<br><br>As I ran down between the empty cubicles to my friends office, my mind was nearly a haze. Am I turned on? Am I scared? Do I just want to deliver this package before the timer runs out? I knocked and stood there in the door way, mercifully I was greeted by the sight not of my friend, but of Miss DeVoss, her feet up on a desk she has never earned. Seriously, I was mad. She hadn't earned that desk, she was just pretending. She checked her watch. "My my.. with a minute to spare." Weirdly this room smelled of sex too.. had Miss DeVoss had her hands in her pants when I ran in? Was my debasement turning her on? "Well here is another package, as long as you're here. Off you go… five minutes…" This one was bigger, but not too heavy. I looked at it, read the routing. Horror filled me. This was to HR. Right next to the main lobby. Someone was sure to see me. I wasn't sure .. I didn't know what to do. She took care of that when she tapped her wrist. "You've lost 20 seconds. Better get going!" I looked at her. I looked at the package, and I sprinted out of the office and back across the carpeted floor. I ran to the stairwell, and then it hit me, use the other stairs, then I didn't have to cross the lobby, I would come down just a few meters from HR. I dashed across the office space, aware that I was losing time.<br><br>I held the box in front of me, and my arms got tired. Not heavy but an awkward way to run. I put it under an arm and it was better. I could open the door this way as well. I could feel it painfully digging into my hip and side. I opened the other stairwell and turned and ran. Sprinting down the cold stairs as fast as I could. My feet breaking as they hit this concrete. The black non-skid strips felt like knives on the balls of my feet, but I ran. Sweat was streaming now. I looked a mess. I felt a mess. I was grateful for the month in the gym and being an obedient non-nude MailGirl in training. I was tired but I could keep going. Me 8 weeks ago? I would have been on the floor. I burst through the door on the first floor. Hell, did I just see someone moving in the lobby? Oh, well, no time to worry. I ran the few meters to HR in giant bolting steps. All I could think was "get inside, get inside, no demerits, no one else seeing me, get the hell inside!" I grabbed the shiny silver handle which looked to me like the greatest trophy I had ever seen and pushed it down and .. nothing. It was locked. There on the floor next to the office was a mat. The door is locked. I tried again, nothing. I knocked. The lights, they are one, someone is there, open the door! Open the door! But nothing. I pounded on the door but no one answered.<br><br>I know what they want. They want me on the mat. They want to leave me here. The timer on my phone dinged. Five minutes were up and I had the package. I knelt down, naked in the lobby of my office building, the IDG office, a place I had been so proud of, and I cried. For about 5 minutes I knelt there in misery and waited. I guess I was so absorbed in my sense of grief that I didn't hear it, but then a voice came from behind me. "Well Thirteen, you…" she paused for a moment…" you are a terrible MailGirl." It was Miss Wallace, she wasn't in the office at all, she was in the lobby, that's who I had seen. I sniffled out a "Yes Ma'am," but never raised my head.<br><br>"Deliver the package Thirteen. You only have one job. Do it. Deliver the package." I looked at it again, and it wasn't for Miss Wallace. It had my name on it. I was confused. Had it been there before? Did it always say Claire Murphy? There are really only three possibilities; either I didn't read it, someone changed it, or I was used to being called Thirteen after an hour and half of their torment, that I didn't recognize my own name. 'Claire Murphy, Human Resources, Room 127.' I kept crying. "You're useless. And you can't run. Open the package. Be in Miss DeVoss' office on time for your waxing on Monday. Keep Friday Night open, you'll be running your route again."<br><br>I didn't know what else to say, so I just choked out "Yes, Ma'am" I stoop up and opened the box. Inside it were my clothes, my keys, my purse, even my ID. Everything that made me Claire and not Thirteen. I pulled a blue dress over sweating shoulders and slipped into my shoes. I felt for my car keys in my purse. There wasn't really anything else for me to do was there? So, picking up the box, and looking briefly at the now two women women leering and laughing at me, I walked out the door of IDG.<br><br>Is that the whole story? So far… well there was one thing… maybe I'm wrong, but I would swear I heard Miss DeVoss say "Yes Ma'am." On my way out the door, just after Miss Wallace said "Well that was fun, wasn't it Fourteen?"<br><br>So that's the story. It's how I lost my freedom. My boss has that contract and confession. I have run the stairs 3 weeks in a row now. It's pretty awful. I don't think Sam really understands what's going on, but on the other hand I don't think he minds. I mean the last few weeks I've pretty much been horny as a rabbit every friday. I know. It's awful. I swear one day I'm going to end up masturbating in the parking lot when the two of them let me go home. I know that somewhere in my Manager's office is an envelope, and inside the envelope is a contract. A short contract. And it has my signature on it. I can't stop thinking about. It haunts me, and what's so much worse, is that while it's so shameful, so humiliating and I can't seem to stop it from turning me on.<br>`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

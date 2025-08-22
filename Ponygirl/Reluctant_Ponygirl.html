@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>Reluctant Ponygirl</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --accent: #0f4c75;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b3b3cc;
+            --highlight: #4a9eff;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.8;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--highlight);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        .author {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 0.7rem 1.5rem;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid var(--highlight);
+            border-radius: 50px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: rgba(74, 158, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .control-btn.active {
+            background: var(--highlight);
+            color: white;
+        }
+
+        .story-content {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1.2s ease-out;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--highlight), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        .story-text {
+            font-size: 1.1rem;
+            line-height: 1.9;
+            text-align: justify;
+            transition: all 0.3s ease;
+        }
+
+        .story-text p {
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+
+        .story-text p:hover {
+            opacity: 1;
+        }
+
+        /* Reading modes */
+        .reading-mode-dark {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --text-primary: #e8e8e8;
+        }
+
+        .reading-mode-light {
+            --primary-bg: #f5f7fa;
+            --secondary-bg: #c3cfe2;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        .reading-mode-sepia {
+            --primary-bg: #f4f1ea;
+            --secondary-bg: #e8dcc0;
+            --text-primary: #5d4037;
+            --text-secondary: #8d6e63;
+            --border: rgba(139, 69, 19, 0.2);
+        }
+
+        /* Font sizes */
+        .font-small .story-text { font-size: 0.95rem; }
+        .font-medium .story-text { font-size: 1.1rem; }
+        .font-large .story-text { font-size: 1.25rem; }
+        .font-xl .story-text { font-size: 1.4rem; }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--highlight);
+            transition: width 0.1s ease;
+            z-index: 1000;
+            box-shadow: 0 0 10px var(--highlight);
+        }
+
+        .floating-controls {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 100;
+        }
+
+        .floating-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid var(--highlight);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-size: 1.2rem;
+        }
+
+        .floating-btn:hover {
+            background: rgba(74, 158, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(74, 158, 255, 0.3); }
+            to { text-shadow: 0 0 30px rgba(74, 158, 255, 0.6); }
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .story-content { padding: 2rem 1.5rem; }
+            .title { font-size: 2rem; }
+            .floating-controls { display: none; }
+            .controls { gap: 0.5rem; }
+            .control-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        }
+
+        .word-count {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body class="reading-mode-dark font-medium">
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1 class="title">Reluctant Ponygirl</h1>
+            <p class="subtitle">Adapted from DeviantArt</p>
+            <p class="author">by <a href="https://www.deviantart.com/djetla/art/NEW-GIRL-FOR-THE-MILKING-BARN-599688827" target="_blank" style="font-family: inherit; font-style: italic; color: inherit;">DjEtla</a></p>
+        </header>
+
+        <div class="controls">
+            <button class="control-btn" onclick="toggleTheme('dark')">🌙 Dark</button>
+            <button class="control-btn" onclick="toggleTheme('light')">☀️ Light</button>
+            <button class="control-btn" onclick="toggleTheme('sepia')">📜 Sepia</button>
+            <button class="control-btn" onclick="changeFontSize('small')">A⁻</button>
+            <button class="control-btn active" onclick="changeFontSize('medium')">A</button>
+            <button class="control-btn" onclick="changeFontSize('large')">A⁺</button>
+            <button class="control-btn" onclick="changeFontSize('xl')">A⁺⁺</button>
+        </div>
+
+        <main class="story-content">
+            <div class="story-text">
+                <p>[Ponygirls have a hard life. They are always naked. Their hands and arms are permanently fastened behind their back. Their voices are disabled so they remain silent. They have long, hard days of training with no days off. Not many young women want this life but there are a few who do.]</p>
+
+<br><br>
+
+<p>Millie was totally fascinated about the ponygirl life. Ever since she learned about the idea from an online video she has been totally frightened but also totally intrigued. She was stunned by the idea that a human being would live her life as nothing but a naked livestock creature. It seemed like a total nightmare from which you could never wake up. And also ... maybe it was also a sexy and interesting set of challenges, to deal with all lots of strong thoughts and emotions. The more she learned about the difficulties and the hardships the more intrigued she became. She knew about the “no release” rule for ponygirls. For Millie that was probably the most terrifying part of the ponygirl idea, and maybe the most darkly sexy and exciting. She tried to imagine the enormous horror of becoming a ponygirl, and the huge thrill.</p>
+
+<p>She decided to volunteer herself.</p>
+
+<p>While she was filling out the volunteer paperwork she realized she was scared and worried about doing this alone. She printed some extra volunteer paperwork and filled it out in the name of her best friend, Jennifer. She thought about asking Jennifer if she would sign the form to become a ponygirl. Instead she decided it would be easier to trick her friend into signing the form. Millie asked her to sign some paperwork, saying it was a character reference for a college study program. Jennifer didn’t ask questions. She signed the form without looking at it. As she signed Millie used her phone to record a short video of the event so there would be no doubt.</p>
+
+<p>Millie submitted all of the paperwork. Part of her felt bad about tricking her friend. In the long run she hoped that Jennifer would understand.</p>
+
+<p>When she got their reporting date she told Jennifer she was going on a vacation. She asked if Jennifer wanted to join her. The destination would be a surprise. Jennifer said “Sure.”</p>
+
+<p>They traveled to the ponygirl ranch by private jet and limousine. It was all very exciting and sexy.</p>
+
+<p>The girls got separated when they arrived. Millie was not there when Jennifer got the news she was to be a ponygirl. Millie could only imagine how that worked out.</p>
+
+<p>The girls got new names. This is normal for ponygirls, to help make a break from their old life and teach them that now they are not really human beings any more, but human livestock, with no more rights or freedoms than any beast of the field.</p>
+
+<p>Millie became “Peaches.” Jennifer became “Apple Dumpling.”</p>
+
+<p>For Peaches the new life was a tremendous shock. She had a tidal wave of emotions about her new life. It was tough to be permanently naked around the trainers and other people. It was a tremendously strange feeling to have her arms folded up behind her back and fastened very tight. This made her whole body feel much more exposed and vulnerable. She was extremely self-conscious about her bare tits and her exposed pussy. Her whole body felt incredibly exposed and vulnerable. She had no way to cover up. She didn’t know if she could ever get used to those strange feelings.</p>
+
+<p>The training days were very long and hard – far more difficult than Peaches realized they would be. She could only assume that Apple Dumpling was feeling all the same rush of tremendous emotions. They had no choice but to learn about their new lives and endure. As the trainers often reminded them, ponygirls have no choice and there's no way out! They had to make the best of it. If one messes up or fails to show good enthusiasm then they'll both suffer for it. Peaches sometimes felt bad about what she had done. But she also took some solace from knowing her friend was near and going through the same tough emotions.</p>
+
+<p>They are often required to work closely together as a well-coordinated team. If Apple Dumpling was angry or annoyed at her friend she didn’t get a chance to show those emotions. In order to avoid the wrath of the trainers the ponygirls had to get along very well and work well together, learning to step with precision.</p>
+
+<p>Peaches noticed that the trainers liked to dress well. It was almost like they were trying to mock the naked ponygirls. Peaches would sometimes look over their nice clothes and feel very sad and exposed. Other times it felt good to be bare and she could enjoy those feelings.</p>
+
+<p>The training was meant to make the ponygirls suitable for sale to a new owner. After being sold the girls will stay at the ranch and keep training. "The training will only get tougher!" the trainers like to tell them with a laugh. The new owner can visit the ranch whenever he wants, and take part in some of the training.</p>
+
+<p>Peaches thought about how they were going to be sold one day. A man was going to buy them. A man was going to own their bodies completely, with rights to do anything he wanted and even to dispose of them both. It was horrible. The thought made her guts churn. She was scared of the idea, but at the same time the idea was darkly funny and sexy. She could only wonder what Apple Dumpling was thinking about her body being sold to some rich man who would have total ownership. Maybe she hated the idea. Maybe she was scared. Or maybe she thought that being sold was funny and sexy and exciting. Peaches had no way to know.</p>
+
+<p>The human body cannot work hard all the time. A few breaks are built into the ponygirl training day. Sometimes during a break the trainers encourage the girls to enjoy a little cunnilingus with each other. They were reluctant at first. They were doubly embarrassed and reluctant to do it outdoors where there were others around who could watch. But ponygirls get no privacy! Ponygirls get no dignity! And the girls had quickly learned the trainers have a million ways to make their difficult lives far more difficult and unpleasant. It was best to do what the trainers said, and do it with good cheer, to keep them happy. Over time the ponygirls learned to really indulge and enjoy this activity, switching off from time to time as the giver and the receiver. It became one of the bright spots in their long training days, a nice way to have some fun and to share some kindness and intimacy with each other. Since ponygirls cannot talk, going down on each other became a nonverbal way "communicate" with each other. Peaches tried very hard to do her best, trying to send a message of kindness and affection. When it was Peaches turn to be the recipient she discovered that Apple Dumpling had *fantastic* ways of using her lips and tongue. She had a big effect on Peaches! She liked to think that Apple Dumpling was sending some kind of message, maybe something like, "No hard feelings" or "Let's make the best of our new lives." Sometimes the girls would do go down on one another without being told. The trainers didn't seem to mind that. Some liked to watch the girls doing their cute girl-girl show, having their fun.</p>
+
+<p>After a few months the shocks of being a ponygirl starts to wear off a little. Apple Dumpling seemed to be doing a little better. She seems to understand what the ponygirl concept is all about. She seems to have a little easier time adapting to the life, playing her role, and showing good ponygirl enthusiasm. The training days are very long and hard. But she could appreciate how it was making their bare bodies more toned and fit, especially from the waist down, and looking gorgeous. The trainers like to  point out how both girls had sensitive nipples that were often perky and engorged. It was pretty.</p>
+
+<p>Over time it was not totally clear if the girls were totally delighted at being ponygirls. Both of them were fit and gorgeous. They were smart girls who absorbed their training very well. They could step out together with great poise and precision. They could put on a convincing show, acting as if they were totally thrilled to be bare naked ponygirls, loving every minute of it, as if this was the life they were made for. It was time to put the girls up for sale.</p>
+            </div>
+        </main>
+
+        <div class="word-count" id="wordCount">
+            Word count: <span id="wordCountNumber">0</span> words | Reading time: <span id="readingTime">0</span> minutes
+        </div>
+    </div>
+
+    <div class="floating-controls">
+        <button class="floating-btn" onclick="scrollToTop()" title="Back to top">↑</button>
+        <button class="floating-btn" onclick="scrollToBottom()" title="Go to bottom">↓</button>
+        <button class="floating-btn" onclick="toggleFullscreen()" title="Toggle fullscreen">⛶</button>
+    </div>
+
+    <script>
+        let currentTheme = 'dark';
+        let currentFontSize = 'medium';
+
+        // Theme switching
+        function toggleTheme(theme) {
+            document.body.className = `reading-mode-${theme} font-${currentFontSize}`;
+            currentTheme = theme;
+            
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                if (btn.textContent.includes('Dark') && theme === 'dark') btn.classList.add('active');
+                else if (btn.textContent.includes('Light') && theme === 'light') btn.classList.add('active');
+                else if (btn.textContent.includes('Sepia') && theme === 'sepia') btn.classList.add('active');
+                else if (btn.textContent.includes('🌙') || btn.textContent.includes('☀️') || btn.textContent.includes('📜')) {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Font size changing
+        function changeFontSize(size) {
+            document.body.className = `reading-mode-${currentTheme} font-${size}`;
+            currentFontSize = size;
+            
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                if (btn.textContent === 'A⁻' && size === 'small') btn.classList.add('active');
+                else if (btn.textContent === 'A' && size === 'medium') btn.classList.add('active');
+                else if (btn.textContent === 'A⁺' && size === 'large') btn.classList.add('active');
+                else if (btn.textContent === 'A⁺⁺' && size === 'xl') btn.classList.add('active');
+                else if (btn.textContent.includes('A')) {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Progress bar
+        function updateProgressBar() {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.body.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = scrollPercent + '%';
+        }
+
+        // Scroll functions
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Word count and reading time
+        function updateWordCount() {
+            const text = document.querySelector('.story-text').innerText;
+            const words = text.trim().split(/\s+/).length;
+            const readingTime = Math.max(1, Math.ceil(words / 200)); // Assuming 200 words per minute
+            
+            document.getElementById('wordCountNumber').textContent = words;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Smooth entrance animation
+        function animateElements() {
+            const elements = document.querySelectorAll('.header, .story-content');
+            elements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.2}s`;
+            });
+        }
+
+        // Auto-save content (removed - editing disabled)
+        function saveContent() {
+            // Editing disabled - no auto-save needed
+        }
+
+        // Event listeners
+        window.addEventListener('scroll', updateProgressBar);
+        window.addEventListener('load', () => {
+            animateElements();
+            updateWordCount();
+            updateProgressBar();
+        });
+
+        // Update word count when content changes (removed - editing disabled)
+        // document.querySelector('.story-text').addEventListener('input', () => {
+        //     updateWordCount();
+        //     saveContent();
+        // });
+
+        // Update word count when title/subtitle changes (removed - editing disabled)
+        // document.querySelector('.title').addEventListener('input', saveContent);
+        // document.querySelector('.subtitle').addEventListener('input', saveContent);
+        // document.querySelector('.author').addEventListener('input', saveContent);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1': toggleTheme('dark'); e.preventDefault(); break;
+                    case '2': toggleTheme('light'); e.preventDefault(); break;
+                    case '3': toggleTheme('sepia'); e.preventDefault(); break;
+                    case '-': changeFontSize('small'); e.preventDefault(); break;
+                    case '=': changeFontSize('large'); e.preventDefault(); break;
+                }
+            }
+            
+            // ESC to exit fullscreen
+            if (e.key === 'Escape' && document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        });
+
+        // Initialize
+        updateWordCount();
+    </script>
+</body>
+</html>

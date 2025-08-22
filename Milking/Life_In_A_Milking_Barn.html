@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>LIFE IN A MILKING BARN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --accent: #0f4c75;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b3b3cc;
+            --highlight: #4a9eff;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.8;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--highlight);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        .author {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 0.7rem 1.5rem;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid var(--highlight);
+            border-radius: 50px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: rgba(74, 158, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .control-btn.active {
+            background: var(--highlight);
+            color: white;
+        }
+
+        .story-content {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1.2s ease-out;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--highlight), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        .story-text {
+            font-size: 1.1rem;
+            line-height: 1.9;
+            text-align: justify;
+            transition: all 0.3s ease;
+        }
+
+        .story-text p {
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+
+        .story-text p:hover {
+            opacity: 1;
+        }
+
+        /* Reading modes */
+        .reading-mode-dark {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --text-primary: #e8e8e8;
+        }
+
+        .reading-mode-light {
+            --primary-bg: #f5f7fa;
+            --secondary-bg: #c3cfe2;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        .reading-mode-sepia {
+            --primary-bg: #f4f1ea;
+            --secondary-bg: #e8dcc0;
+            --text-primary: #5d4037;
+            --text-secondary: #8d6e63;
+            --border: rgba(139, 69, 19, 0.2);
+        }
+
+        /* Font sizes */
+        .font-small .story-text { font-size: 0.95rem; }
+        .font-medium .story-text { font-size: 1.1rem; }
+        .font-large .story-text { font-size: 1.25rem; }
+        .font-xl .story-text { font-size: 1.4rem; }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--highlight);
+            transition: width 0.1s ease;
+            z-index: 1000;
+            box-shadow: 0 0 10px var(--highlight);
+        }
+
+        .floating-controls {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 100;
+        }
+
+        .floating-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid var(--highlight);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-size: 1.2rem;
+        }
+
+        .floating-btn:hover {
+            background: rgba(74, 158, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(74, 158, 255, 0.3); }
+            to { text-shadow: 0 0 30px rgba(74, 158, 255, 0.6); }
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .story-content { padding: 2rem 1.5rem; }
+            .title { font-size: 2rem; }
+            .floating-controls { display: none; }
+            .controls { gap: 0.5rem; }
+            .control-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        }
+
+        .word-count {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body class="reading-mode-dark font-medium">
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1 class="title">LIFE IN A MILKING BARN</h1>
+            <p class="subtitle">Adatped from DeviantArt</p>
+            <p class="author">by DjElta</p>
+        </header>
+
+        <div class="controls">
+            <button class="control-btn" onclick="toggleTheme('dark')">🌙 Dark</button>
+            <button class="control-btn" onclick="toggleTheme('light')">☀️ Light</button>
+            <button class="control-btn" onclick="toggleTheme('sepia')">📜 Sepia</button>
+            <button class="control-btn" onclick="changeFontSize('small')">A⁻</button>
+            <button class="control-btn active" onclick="changeFontSize('medium')">A</button>
+            <button class="control-btn" onclick="changeFontSize('large')">A⁺</button>
+            <button class="control-btn" onclick="changeFontSize('xl')">A⁺⁺</button>
+        </div>
+
+        <main class="story-content">
+            <div class="story-text">
+                <p>It's not an easy life.</p>
+
+				<p>At the start it was so scary! I remember when they told me it was time to get undressed. That’s a really strange experience — taking off clothing, knowing it's for the last time in my life. My heart was beating fast.</p>
+
+				<p>Then they guided me to my location in the barn, and I saw all these workers with tools and equipment, waiting at my station to get me set up properly.</p>
+
+				<p>Someone put a little footstool in front of my milking rack. They helped me to step up on it, turn my back to the rack, and get seated. They took the footstool away and I knew I wasn't getting down — that made my heart beat faster. After a bit more time one of the ladies said they were ready to get my arms fastened in. I watched closely as they installed the first cuff behind me on my right. I put my arm into the cuff when it was ready, and held steady while they tightened it down. After that, we did the same with my left arm. The left one was tougher — the cuff forced me to face forward and it forced my shoulders back against the top bar of the milking rack. The cuffs felt solid. It took me just a second to realize how much my chest was pushed outward. I felt vulgar, with my boobs thrust out in front of me like that, and people standing around looking at me. I tried to adjust my posture to take some of the pressure off of my arms and shoulders. But my squirming wasn't helping me get much more comfortable. And I realized all my fidgeting was making my boobs bobble back and forth for all to see — I was just making a spectacle of myself. Part of me wanted to keep struggling to try to get more comfortable, but part of me realized I had to stop and accept the feelings in my body.</p>
+
+				<p>Then they started to install the ankle cuffs. I looked down and saw how far apart they were. Oh my God! I think I was laughing to keep from crying, and I was blushing a dozen shades of red. When the time was ready, it wasn't too hard to get my leg into the first cuff. The second one was tougher — I couldn't quite get into it by myself, and I had to ask for some help. Once my leg was inside the cuff, I held myself as steady as I could while it was tightened down nice and snug.</p>
+
+				<p>After that, the workers spent a lot of time making small adjustments and making everything more snug.</p>
+
+				<p>One of the women paused briefly, she said, "I know you're nervous sweetheart."</p>
+
+				<p>I nodded.</p>
+
+				<p>She ran her eyes over my body. She brushed my shoulder gently with one hand, then let her hand brush against the side of one of my boobs. "You look really good. I think you'll be a good producer here. Just focus on doing the best you can, okay?"</p>
+
+				<p>I wasn't sure what she meant exactly. But it seemed like she was trying to be nice, and I nodded again.</p>
+
+				<p>Then she said, softly, almost as if talking to herself, "I could never do what you're doing. I'd be way too scared. I like my freedom way too much — I'd be way too unhappy to live this life."</p>
+
+				<p>I didn't know what to say. I guess I just gave her an awkward smile.</p>
+
+				<p>Then one of the men came up close to me. He put his hand on my bare knee, which I thought was really forward. He told me it was time to weld all the bolts in place so they would all be permanent.</p>
+
+				<p>I knew this part was coming. But still it made me gulp. I didn't know how I should feel. Should I be scared, or angry, or aroused? Should I cry, or pout, or flirt? I could feel the warmth of his body close to mine, and I could see the muscles under his t-shirt. In the end, all I could do was smile and nod, and give him a few words of encouragement. He went about his work and I watched closely. When he was done he stood back to take a long look. I wanted him to stand close to me one more time and say something again. But he just started packing his tools. I tried to catch his eye and draw him to me with a smile. I think I even arched my back a little extra, trying to draw his attention. I was just really nervous, and I wanted a little human contact. I wanted him to step close to me and say, "Everything is going to be okay — don't you worry about a thing." But he just drifted away.</p>
+
+				<p>I tested the feeling of the cuffs. They were firm, as if my arms and legs were held in solid rock or concrete. My past life was truly over — this would be my only home now, for as long as my production is good. I felt really exposed. I felt really sad and alone, in spite of all the people around me. But in other ways the cuffs felt great. It's complicated. I took some deep breaths to try to deal with the feelings.</p>
+
+				<p>After that, they put the tubes in my throat. Ugh!</p>
+
+				<p>Lastly my nipples got a lot of attention, while they installed the milking pumps. The pumps are mean little devices. They're designed to get the most from a girl, even if the nipples becomes plump and sore from being overworked.</p>
+
+				<p>That was my first day — I think about that day a lot.</p>
+
+				<p>My production is getting better each week, but I've got to do much better before I really earn my keep here.</p>
+
+				<p>The sex hormones in the food and water make me more productive. But every day I get more emotional and more horny. When some worker walks by I want to screw them silly.</p>
+
+				<p>I swear, I wish they'd set me free long enough for just one good chance to make love. That would be fantastic. I'd cherish every smell, and every feeling, and every taste. I'd be the happiest, most eager-to-please lover in the whole world. Then I'd be content. I'd gladly get back on this milking rack with a big smile, and I'd never wish for anything else ever again. I think about that all the time. Sometimes my thoughts and imagination become so real, I really feel like I've been released and I have some freedom to indulge myself. But sooner or later, usually about the time my fantasies start to get really good, my thoughts snap back to reality. I tug at my cuffs, which grip me as tightly as ever. I realize I'm never going to be free again, even on my last day. God — I get so frustrated!!!</p>
+
+				<p>Girls tour the barn here from time to time. If they think about signing up, I hope they think carefully — there's no going back. Most of them wouldn't dream of it, obviously — they just signed up for the tour because it's an excuse to spend a fun day with friends away from school or their other daily routine. Only rarely do I see someone who is really looking around closely and seriously giving it some thought. Overall the tour days are okay. I like to see what clothes and shoes the girls are wearing, and it's just fun to see girls who look happy and full of life, enjoying a day of freedom from their usual daily lives. But on the other hand seeing a group of lively girls just makes me feel more confined and helpless and sad. And I don't always like being stared at, like I'm some kind of animal in a zoo — that makes me feel "extra" exposed if you know what I mean. After the tour groups leave, the barn feels still and quiet with nothing but the normal hum of machinery. I think about the girls who were just here, and how they'll spend the rest of their day now that their tour is complete — going shopping, or eating with friends, going home to study, or talking with a boy, or any one of a million other things normal people do.</p>
+
+				<p>Once a week or so, I see a new girl walk by me on her way to get set up. Each one is so different. Some are really happy, bubbly and excited — they can't wait to walk to their rack, and they can't wait to get fastened in. It’s really cute. But I wish they'd slow down and savor their last few minutes of freedom instead of being in such a hurry. Others look worried and have a "walking to the gallows" attitude. I wonder what their story is. How did they come to be here? Will they feel okay about their new life here? Hopefully they'll all be okay — I hope they can all find some pleasures in this life to go along with the frustrations and hardships of being a milking girl. With the tubes in my throat I can't say anything, but when I see a new girl I try to give her a look that says "Welcome." I don't know if any of them get the message.</p>
+
+				<p>On the day I first got here I met this really perky, pretty receptionist sitting behind the front desk to welcome people. I was surprised to see her walk by me the other day with a team of workers. She was totally naked. The workers were escorting her to an empty milking rack. Obviously she's moving from "administration" into "production." She looked nervous, but happy. She's a short, slight girl who probably doesn't weigh 95 pounds. I don't know if her slim body will produce enough milk to meet her long-term quotas. And getting fastened onto one of these milking racks must be an awful stretch for her. I guess she must have thought about that before she signed up. It must feel odd to be around all of your former co-workers, fastened in place naked where every one of them can see you.</p>
+
+				<p>For me the best part of this life comes each morning. At night the milking pumps are shut off, and the clamps close down on my nipples. My boobs get overfilled. The pain gets so bad I get tears. Then morning comes. The clamps release themselves and the milkers turn on — vibrating and pulsing and sucking like crazy. I close my eyes, lift my chin and arch my back. I wish those feelings would never stop — God, it's so fantastic! That's when I think that maybe I'm in the right place for me. Maybe this is what I was born to do.</p>
+
+				<p>It's not an easy life. Don't let anyone tell you it is. Overall I try to make the best of it. Some days I think that maybe everything has worked out for the best.</p>
+            </div>
+        </main>
+
+        <div class="word-count" id="wordCount">
+            Word count: <span id="wordCountNumber">0</span> words | Reading time: <span id="readingTime">0</span> minutes
+        </div>
+    </div>
+
+    <div class="floating-controls">
+        <button class="floating-btn" onclick="scrollToTop()" title="Back to top">↑</button>
+        <button class="floating-btn" onclick="scrollToBottom()" title="Go to bottom">↓</button>
+        <button class="floating-btn" onclick="toggleFullscreen()" title="Toggle fullscreen">⛶</button>
+    </div>
+
+    <script>
+        let currentTheme = 'dark';
+        let currentFontSize = 'medium';
+
+        // Theme switching
+        function toggleTheme(theme) {
+            document.body.className = `reading-mode-${theme} font-${currentFontSize}`;
+            currentTheme = theme;
+            
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                if (btn.textContent.includes('Dark') && theme === 'dark') btn.classList.add('active');
+                else if (btn.textContent.includes('Light') && theme === 'light') btn.classList.add('active');
+                else if (btn.textContent.includes('Sepia') && theme === 'sepia') btn.classList.add('active');
+                else if (btn.textContent.includes('🌙') || btn.textContent.includes('☀️') || btn.textContent.includes('📜')) {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Font size changing
+        function changeFontSize(size) {
+            document.body.className = `reading-mode-${currentTheme} font-${size}`;
+            currentFontSize = size;
+            
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                if (btn.textContent === 'A⁻' && size === 'small') btn.classList.add('active');
+                else if (btn.textContent === 'A' && size === 'medium') btn.classList.add('active');
+                else if (btn.textContent === 'A⁺' && size === 'large') btn.classList.add('active');
+                else if (btn.textContent === 'A⁺⁺' && size === 'xl') btn.classList.add('active');
+                else if (btn.textContent.includes('A')) {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Progress bar
+        function updateProgressBar() {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.body.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = scrollPercent + '%';
+        }
+
+        // Scroll functions
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Word count and reading time
+        function updateWordCount() {
+            const text = document.querySelector('.story-text').innerText;
+            const words = text.trim().split(/\s+/).length;
+            const readingTime = Math.max(1, Math.ceil(words / 200)); // Assuming 200 words per minute
+            
+            document.getElementById('wordCountNumber').textContent = words;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Smooth entrance animation
+        function animateElements() {
+            const elements = document.querySelectorAll('.header, .story-content');
+            elements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.2}s`;
+            });
+        }
+
+        // Auto-save content (removed - editing disabled)
+        function saveContent() {
+            // Editing disabled - no auto-save needed
+        }
+
+        // Event listeners
+        window.addEventListener('scroll', updateProgressBar);
+        window.addEventListener('load', () => {
+            animateElements();
+            updateWordCount();
+            updateProgressBar();
+        });
+
+        // Update word count when content changes (removed - editing disabled)
+        // document.querySelector('.story-text').addEventListener('input', () => {
+        //     updateWordCount();
+        //     saveContent();
+        // });
+
+        // Update word count when title/subtitle changes (removed - editing disabled)
+        // document.querySelector('.title').addEventListener('input', saveContent);
+        // document.querySelector('.subtitle').addEventListener('input', saveContent);
+        // document.querySelector('.author').addEventListener('input', saveContent);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1': toggleTheme('dark'); e.preventDefault(); break;
+                    case '2': toggleTheme('light'); e.preventDefault(); break;
+                    case '3': toggleTheme('sepia'); e.preventDefault(); break;
+                    case '-': changeFontSize('small'); e.preventDefault(); break;
+                    case '=': changeFontSize('large'); e.preventDefault(); break;
+                }
+            }
+            
+            // ESC to exit fullscreen
+            if (e.key === 'Escape' && document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        });
+
+        // Initialize
+        updateWordCount();
+    </script>
+</body>
+</html>

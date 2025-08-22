@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>NEW GIRL FOR THE MILKING BARN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --accent: #0f4c75;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b3b3cc;
+            --highlight: #4a9eff;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.8;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--highlight);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        .author {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 0.7rem 1.5rem;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid var(--highlight);
+            border-radius: 50px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: rgba(74, 158, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .control-btn.active {
+            background: var(--highlight);
+            color: white;
+        }
+
+        .story-content {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1.2s ease-out;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--highlight), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        .story-text {
+            font-size: 1.1rem;
+            line-height: 1.9;
+            text-align: justify;
+            transition: all 0.3s ease;
+        }
+
+        .story-text p {
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+
+        .story-text p:hover {
+            opacity: 1;
+        }
+
+        /* Reading modes */
+        .reading-mode-dark {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --text-primary: #e8e8e8;
+        }
+
+        .reading-mode-light {
+            --primary-bg: #f5f7fa;
+            --secondary-bg: #c3cfe2;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        .reading-mode-sepia {
+            --primary-bg: #f4f1ea;
+            --secondary-bg: #e8dcc0;
+            --text-primary: #5d4037;
+            --text-secondary: #8d6e63;
+            --border: rgba(139, 69, 19, 0.2);
+        }
+
+        /* Font sizes */
+        .font-small .story-text { font-size: 0.95rem; }
+        .font-medium .story-text { font-size: 1.1rem; }
+        .font-large .story-text { font-size: 1.25rem; }
+        .font-xl .story-text { font-size: 1.4rem; }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--highlight);
+            transition: width 0.1s ease;
+            z-index: 1000;
+            box-shadow: 0 0 10px var(--highlight);
+        }
+
+        .floating-controls {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 100;
+        }
+
+        .floating-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid var(--highlight);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-size: 1.2rem;
+        }
+
+        .floating-btn:hover {
+            background: rgba(74, 158, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(74, 158, 255, 0.3); }
+            to { text-shadow: 0 0 30px rgba(74, 158, 255, 0.6); }
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .story-content { padding: 2rem 1.5rem; }
+            .title { font-size: 2rem; }
+            .floating-controls { display: none; }
+            .controls { gap: 0.5rem; }
+            .control-btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        }
+
+        .word-count {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body class="reading-mode-dark font-medium">
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1 class="title">NEW GIRL FOR THE MILKING BARN</h1>
+            <p class="subtitle">Adapted from DeviantArt</p>
+            <p class="author">by <a href="https://www.deviantart.com/djetla/art/NEW-GIRL-FOR-THE-MILKING-BARN-599688827" target="_blank" style="font-family: inherit; font-style: italic; color: inherit;">DjEtla</a></p>
+        </header>
+
+        <div class="controls">
+            <button class="control-btn" onclick="toggleTheme('dark')">🌙 Dark</button>
+            <button class="control-btn" onclick="toggleTheme('light')">☀️ Light</button>
+            <button class="control-btn" onclick="toggleTheme('sepia')">📜 Sepia</button>
+            <button class="control-btn" onclick="changeFontSize('small')">A⁻</button>
+            <button class="control-btn active" onclick="changeFontSize('medium')">A</button>
+            <button class="control-btn" onclick="changeFontSize('large')">A⁺</button>
+            <button class="control-btn" onclick="changeFontSize('xl')">A⁺⁺</button>
+        </div>
+
+        <main class="story-content">
+            <div class="story-text">
+                <p>We "retired" some milking girls recently.</p>
+
+                <p>It's hard. But it has to be done.</p>
+
+                <p>And it left some openings.</p>
+
+                <p>After years of work on the staff here, my boss asked if I wanted to take one of the open positions.</p>
+
+                <p>I don't know why she asked me, since we already have enough volunteers on the waiting list. The question was a shock -- it took my breath away for a second. I gulped and nervously said, "Okay."</p>
+
+                <p>A few days later I sat down with my boss in her office to do all the paperwork. My hand was shaking while I filled in the forms, but I had to smile.</p>
+
+                <p>Since then, I've been counting down the days until I start my new life – tomorrow is it.</p>
+
+                <p>Our girls can't see, or hear, or talk. But they communicate. A woman's body shows her feelings in a million ways – you just have to look.</p>
+
+                <p>All the girls have lots of ups and downs. They get strong sex hormones and other chemicals. Maybe that's what causes their roller-coaster emotions. Or maybe they're just struggling to deal with intense feelings. I can only imagine what they must think and feel – big doses of pleasure, fear, hope, despair, pride, shame, and more. Plus there’s a rumor that the hormones make lots of girls super horny, so they may have to deal with those feelings too.</p>
+
+                <p>All the girls feel frustrated and down sometimes. I can understand why – it's a hard life. The human body and mind were never meant for this. And the life doesn’t get easier as time goes by.</p>
+
+                <p>Some of the girls seem unhappy almost all the time. They constantly fight with their cuffs, as if they’re trying to plead for release. Oddly, some of these are top producers. Heh – that means they can expect to be here for a good, long-term career.</p>
+
+                <p>It's fun to see someone who’s having a good day, enjoying her cuffs and blindfold, and wearing them with pride. Sometimes an upbeat milking girl will tug on her cuffs in a playful, girlish, flirtatious way to show she's happy and has no wish to be free. It's cute. Our girls don't have a lot of ways to amuse themselves. If a girl wants to have fun by acting like a shameless little flirt she'll get no criticism from me.</p>
+
+                <p>The pumps run twice a day – that's great for morale. When the pumps start even the unhappiest girls seem thrilled to get relief from their badly overfilled boobs – they can’t hide their good feelings as they soak up the waves of pleasure. When the pumps stop even the happiest and most well adjusted girls can feel frustrated and cranky, knowing she’ll have a long wait until her boobs get pumped again.</p>
+
+                <p>I'm not one of those who has always yearned to be a milking girl. I love the life I’ve had until now. I’m sad it’s ending. There are a million great things I’m going to miss soon – books, nature, laughing with friends, art, music, clothes, family and a lot more. And I don't have illusions about my new life – believe me part of me is terrified about doing this. I've been trying to imagine what it's like to be a milking girl – all trussed up, totally helpless. Maybe that feels really good and bad. The restraints are permanent for life. Knowing there’s no hope for release, even on the last day or the last hour, is probably what scares me the most. It makes me sick with worry. And those feelings may get a lot stronger very soon. The “no release” rule is also kind of darkly sexy and exciting and part of me wouldn’t want it any other way. Dealing with all the complex emotions is probably hard. I guess a smart girl will try to savor and love and enjoy all the complicated feelings as much as she can. I guess it’s a challenge I can work on every day.</p>
+
+                <p>My mom has been having a hard time with my decision. She said that being a milking girl seems like a horrible torture and no one should ever agree to it. I wish I could explain my decision to her so she’d understand and feel better about it all. But I can’t.</p>
+
+                <p>I've been thinking a lot about tonight. I want to focus on simple pleasures – a hot bath, a glass of wine, and a big, soft bed. One of my friends said she'd stay over. That's nice – I don't feel like being alone tonight. Tomorrow I want to get back here really early. Thinking about my new life fills me with dread. But I'm curious and hopeful too. It's complicated.</p>
+
+                <p>I treated myself some fantastic new shoes. I'm going to wear them tomorrow, with my new long coat – nothing else. When I get here tomorrow they'll make me take off my coat right away. That will be scary. But maybe it'll be fun too and I’ll try to keep a good attitude. I think some of my friends on the staff here will get a big smile when they see that I’m ready to fully embrace all the hardships, pleasures and pains of my new life.</p>
+
+                <p>Well, sorry to talk so much. You can tell I'm nervous. I realize I've made my decision. I can live with my decision. If you come back soon you'll see me here. I’ll be just one more milking girl trussed up tight – basically I’ll just be one more pair of tits. I won't talk your ear off – I won't be able to talk at all. I probably won't even know you're here. But you can linger all you want, and see how I'm getting adjusted.</p>
+            </div>
+        </main>
+
+        <div class="word-count" id="wordCount">
+            Word count: <span id="wordCountNumber">0</span> words | Reading time: <span id="readingTime">0</span> minutes
+        </div>
+    </div>
+
+    <div class="floating-controls">
+        <button class="floating-btn" onclick="scrollToTop()" title="Back to top">↑</button>
+        <button class="floating-btn" onclick="scrollToBottom()" title="Go to bottom">↓</button>
+        <button class="floating-btn" onclick="toggleFullscreen()" title="Toggle fullscreen">⛶</button>
+    </div>
+
+    <script>
+        let currentTheme = 'dark';
+        let currentFontSize = 'medium';
+
+        // Theme switching
+        function toggleTheme(theme) {
+            document.body.className = `reading-mode-${theme} font-${currentFontSize}`;
+            currentTheme = theme;
+            
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                if (btn.textContent.includes('Dark') && theme === 'dark') btn.classList.add('active');
+                else if (btn.textContent.includes('Light') && theme === 'light') btn.classList.add('active');
+                else if (btn.textContent.includes('Sepia') && theme === 'sepia') btn.classList.add('active');
+                else if (btn.textContent.includes('🌙') || btn.textContent.includes('☀️') || btn.textContent.includes('📜')) {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Font size changing
+        function changeFontSize(size) {
+            document.body.className = `reading-mode-${currentTheme} font-${size}`;
+            currentFontSize = size;
+            
+            // Update button states
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                if (btn.textContent === 'A⁻' && size === 'small') btn.classList.add('active');
+                else if (btn.textContent === 'A' && size === 'medium') btn.classList.add('active');
+                else if (btn.textContent === 'A⁺' && size === 'large') btn.classList.add('active');
+                else if (btn.textContent === 'A⁺⁺' && size === 'xl') btn.classList.add('active');
+                else if (btn.textContent.includes('A')) {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Progress bar
+        function updateProgressBar() {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.body.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = scrollPercent + '%';
+        }
+
+        // Scroll functions
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Word count and reading time
+        function updateWordCount() {
+            const text = document.querySelector('.story-text').innerText;
+            const words = text.trim().split(/\s+/).length;
+            const readingTime = Math.max(1, Math.ceil(words / 200)); // Assuming 200 words per minute
+            
+            document.getElementById('wordCountNumber').textContent = words;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Smooth entrance animation
+        function animateElements() {
+            const elements = document.querySelectorAll('.header, .story-content');
+            elements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.2}s`;
+            });
+        }
+
+        // Auto-save content (removed - editing disabled)
+        function saveContent() {
+            // Editing disabled - no auto-save needed
+        }
+
+        // Event listeners
+        window.addEventListener('scroll', updateProgressBar);
+        window.addEventListener('load', () => {
+            animateElements();
+            updateWordCount();
+            updateProgressBar();
+        });
+
+        // Update word count when content changes (removed - editing disabled)
+        // document.querySelector('.story-text').addEventListener('input', () => {
+        //     updateWordCount();
+        //     saveContent();
+        // });
+
+        // Update word count when title/subtitle changes (removed - editing disabled)
+        // document.querySelector('.title').addEventListener('input', saveContent);
+        // document.querySelector('.subtitle').addEventListener('input', saveContent);
+        // document.querySelector('.author').addEventListener('input', saveContent);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1': toggleTheme('dark'); e.preventDefault(); break;
+                    case '2': toggleTheme('light'); e.preventDefault(); break;
+                    case '3': toggleTheme('sepia'); e.preventDefault(); break;
+                    case '-': changeFontSize('small'); e.preventDefault(); break;
+                    case '=': changeFontSize('large'); e.preventDefault(); break;
+                }
+            }
+            
+            // ESC to exit fullscreen
+            if (e.key === 'Escape' && document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        });
+
+        // Initialize
+        updateWordCount();
+    </script>
+</body>
+</html>

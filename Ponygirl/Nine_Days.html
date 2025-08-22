@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>The Reluctant Exhibitionist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        img {
+            align-self: center;
+            max-width: 90%;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "The Reluctant Exhibitionist",
+            author: "Falcon",
+            chapters: [
+                {
+                    title: "Chapter 1",
+                    subtitle: "Day- 1",
+                    content: `<img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_00.jpg"><br><br>I first glimpsed her at the Tsar's coming out ball. There were forty beautiful eighteen year old debutantes being introduced, the pride of St. Petersburg, but as soon as I saw her, I had eyes for no other.<br><br>She had a face that indeed could launch the thousand ships. Big beautiful brown almond shaped eyes that pierced my heart when she glanced my way. Luscious lips that were designed for kissing. Straight light blond hair, almost white. Draped over her bare shoulders, it was just begging to be pulled back tightly into a braided ponytail in a prophecy of her fate, of things to come. Delicate features with wide cheekbones, and a long, graceful neck, perfect for the adornment of a collar. Her strapless evening gown exposed slender shoulders above a tall and well-proportioned body, with well-toned arms and the hint of incredibly generous breasts.<br><br>She was perfect for my needs. I simply had to have her!<br><br>As the queue of debutantes approached me on the reception line, each with her father introducing his daughter into society, my eyes kept glancing at her. The girls would all curtsey and offer their gloved hand, and I'd kiss them, smile and say the usual admiratory remarks.<br><br>When she finally reached me, I noted this statuesque vision barely came up to my shoulders. Her father, the Count Severin, remarked deferentially, "My Prince, allow me to introduce my only child, Laura. Laura, this is his highness, Prince Peter, fifth in line to the throne."<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_dress.jpg"><br><br>Though Count Severin was titled, it was common knowledge that he had come on hard times several years ago, due to an insatiable gambling habit. He had wasted away most of his fortune and had driven his wife to suicide in despair. Yet he could not resist the addiction, and many in high society were surprised he had managed to even afford a suitable gown for his daughter to be presented in, as a debutante.<br><br>Laura curtseyed wonderfully low, giving me a delicious offering of her soft, tender mounds. I beamed my best and warmest smile. I took her hand, and as I bowed to kiss it, our eyes met. Immediately there was an incredible flash, an unsaid bond between us, as if we both sensed she should belong to me.<br><br>I managed to get my share of her dance card, and we whirled around the room as if we had always done so. Each and every time, I felt that same spark. Her eyes gave her away - she felt it also. Thus the evening passed, in a blur.<br><br>Just before midnight, I sent a card over to Severin, inviting the widower and his daughter to visit me tomorrow to spend a few days at my estate, fifteen kilometers from the city. I knew declining a Prince was not an option for him, and that he would now regard the evening as a great success for Laura's coming out. I did not need a reply.<br><br>The night and morning passed ever so slowly, but it gave me ample time to prepare for what was to come. Sweet anticipation.`
+                },
+                {
+                    title: "Chapter 2", 
+                    subtitle: "Day- 2",
+                    content: `Rumors had Count Severin owing millions to a number of unsavory types. So it came as no surprise to anyone when his carriage returned to his townhouse empty, nor when his body was found sliced through with a saber on the road to Moscow, five kilometers from town. There was even some gossip that his daughter was taken away by one of his debtors as booty, as human payment for what the Count owed.<br><br>I had planned adeptly, and played the rumor mill with my usual skill. None suspected that I was the masked swordsman that ran Severin through and rode off with his daughter, not even Laura.<br><br>Of course Laura had little time to figure anything out. She was frightened, screaming, frozen still during the deed, then quickly blindfolded and ridden away into the thick forest.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_horse.jpg"><br><br>I, her captor, that brigand, rode with her draped across my saddle, for what seemed like hours. Though a fiery, willful girl all her youth, she somehow, instinctively, just trembled passively during her abduction. And yet, in her unbelievable predicament, she felt something compelling stir in her very core. My strength was so strangely wonderful to her - she could feel it as I held her down firmly on the wild ride. Laura even enjoyed my scent, which she found alluringly male, even vaguely familiar.<br><br>She was still in this dazed revery when we stopped. She heard her captor dismount. There was that wierd tingle again in her when my strong hands lifted her off the saddle and lightly stood her on the ground. She expected me to rape her there and then, so she was shocked at the gentleness in me.<br><br>But I wasted no time on words. She had her arms drawn back behind her, then ropes encircling her delicately gloved hands, tieing her wrists together. She was truly my captive.<br><br>Without ceremony, she felt the brute cut off her dress with the very saber that took away her father. She was left in those gloves, her french lace panties and bra, her silk stockings, and heels - helpless, vulnerable, awaiting her fate.<br><br>I continued to rope her, winding several turns of rope on each ankle, then tieing them wide apart, to a wooden spreader. Laura thought herself so exposed, with her pussy slightly open inside her inexplicably moist panties.<br><br>I stopped to admire my handiwork. The pregnant pause served to heighten the sensations for both of us. After a few minutes, I continued, winding rope around each of her delicious thighs.<br><br>Laura was appalled at her unusual passivity. For a long time she had not screamed, not uttered a word. Was she being an unwitting accomplice in her own abduction? Had her anger and disappointment at her father gone that far, hatred indifferent at his death? Why was she almost glad? And why so wet and excited in anticipation of her fate?<br><br>But had she wanted to scream, it was now too late. I pressed her nostrils shut, and as she gasped, she felt me force something wide into her mouth. It was quickly buckled in the back. As she tried to expel the strange device she bit into it. That was when she realized a part of it went deeper into her, forcing her tongue down. It finally dawned on her, there was a bit in her mouth!<br><br>I left her no time to digest this development, but continued her roping, winding several turns tightly around her waist. She noted the rope was rough and scratchy, something she could not feel through her gloves and stockings before. But the roughness became the least of her problems when I ran the rope down her belly, split her pussy lips and tightly drew it up her ass crack to her waist.<br><br>Laura would have yelped, but what left her bitted mouth was a strangely indeterminate moan.<br><br>Those strong hands made her kneel, untied her wrists, only to tie her at the elbows, then retie her wrists behind her, and then somehow to the stick spreading her legs. Laura felt herself being drawn upwards until she was swinging off the ground in an uncomfortable backward arc, swaying, with her head hanging down.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_hang_1.jpg"><br><br>To add to her humiliation, I released her generous breasts from her bra, and cut away her sopping wet panties, letting the rough crotch ropes do their demonic work on her even better. Then I removed her blindfold, knowing all she could see was the trunk of a tree, with forest everywhere.<br><br>Finally, I stood where she would see only the boots of her upside down, masked tormentor and calmly stated, "I will ask only once. Will you agree to become my unconditional slave, my property, forever?"<br><br>Laura was shocked, in extreme discomfort, hanging helplessly. She said nothing.<br><br>"I am leaving you here. I may be back to ask you again. Then again I may not."<br><br>Laura could hear the clip-clop of his horse as her captor left. How she envied that horse for its comparative freedom! Then only the sounds of the forest remained.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_hang_2.jpg"><br><br>For the next fourteen hours, I came back regularly, and asked the same question, "Will you agree to become my unconditional slave, my property, forever?"<br><br>Each time I met with silence until eventually, after fifteen hours, exhausted, famished, half delirious, she made it clear to me with her whimpers and movements that she would be mine.`
+                },
+                {
+                    title: "Chapter 3",
+                    subtitle: "Day- 3", 
+                    content: `"Very well," I said. "You have chosen to become my property. This decision is final and permanent. From now on, you may not even talk unless I give you permission."<br><br>I blindfolded her, cut her down, and rode her home. There, I cut away all her clothing. Still bound, naked and deprived of sight, I fed and watered her by hand.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_pierce-s.jpg"><br><br>Laura ate and drank whatever was placed to her mouth. Somehow, even exhausted, she felt some kind of childlike worship of her powerful new Master, he who could give to her or deny her whatever he wished.<br><br>When I lifted her into the warm water of the tub, and sponged her confined body, she practically purred.<br><br>I towelled her dry, cut away her ropes, and made her kneel. After I retied her wrists behind her, I tied her elbows too. I was delighted that she was so supple that she could touch her elbows together, and reveled in how her breasts thrust out. I unbraided her hair and let it fall luxuriantly - it reached the floor.<br><br>At last she was ready to meet her Master and begin her training. I thought it would be better to have her introduced to the cane still blindfolded, and so I whacked her across her generously offered breasts, fairly firmly. This I repeated four more times.<br><br>To her credit she did not draw back, nor cry out. She merely whimpered at each stroke and held her kneeling position.<br><br>I removed her blindfold and let her see her new Owner.<br><br>Laura opened her eyes, blinked away her tears and looked at me. I was amused as the recognition came to her. But then I was delighted as she gave herself away, her brown almond eyes betraying her delight and not fear at who her Master turned out to be!<br><br>Laura gasped. She had given herself away unconditionally, and the fates had given her to the very man whom she desired the most.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_d.jpg"><br><br>There would be no mercy. I pinched her engorged left nipple. Wordlessly, Laura threw her head back and submitted to the throbbing pains and the surprisingly wondrous pleasures.<br><br>For the entire day I continued the same conditioning. I kept her in her ropes. She'd kneel by my bed, blindfolded. I'd feed and water her three times during that day. And each time I would slash her breasts with the cane five times and pinch one of her nipples.<br><br>She accepted it in silence, but I knew that the pain and pleasure her Master meted out were mixing in her psyche.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_pierce.jpg"><br><br>Then, near midnight, after her caning, while pinching her right nipple, I pierced and ringed her without warning. Laura gasped but kept her silence, even when I repeated it for her left nipple. Finally, to make her status crystal clear, I buckled a leather slave collar around her graceful neck.<br><br>Shamefully, Laura realized she would submit to anything to have this man pay attention to her. Attention was a funny thing, because her Master went to bed. She was expected to sleep that way, blindfolded, kneeling and bound, chained by her collar to the bedpost, her nipples throbbing and heavy with the unaccustomed weight of her new adornments.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-master_sleep_pierce.jpg">`
+                },
+                {
+                    title: "Chapter 4",
+                    subtitle: "Day- 4", 
+                    content: `Early next morning I started her nipple rein training. After pulling her long blond hair into a ponytail, I clipped some chain reins to her very new rings and removed her blindfold.<br><br>Laura felt herself drawn up from her knees by her new leash. She was so helpless, yet her sensitive, violated buds gave her no choice. Where she was drawn, she followed. Resistance was futile.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_chainpony.jpg"><br><br>Only her thoughts were her own. She wondered why she acquiesced to it all, so acceptingly, so passively. She was even more surprised at how her womanhood was so aflame, lubricating. She felt ready, no, wanting to be taken, roughly used by this man!<br><br>I drew her once around my bedroom, always by her reins, pulled her back into her kneeling position by my bed, and left her there, her leads tied to the bedpost. Every few hours I repeated this procedure.<br><br>Interestingly, by the evening her knees were betraying her feelings, nearly buckling as I led her around. I could see she was aroused, both by the flush on her beautiful face, and by the scent of the dew between her thighs.<br><br>Laura watched as her Master replaced her reins by a short silver chain, and stuck its middle in her mouth. He waited till she bit down on the chain, then made her raise her head slightly, so it would tug. She was still nipple reined, but now that chain also became her bit!<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_breastchain.jpg"><br><br>She dared not move her head, but did gaze into her Master's eyes. Wordlessly, with her eyes and body she begged him, "Take me, Master."<br><br>I watched her from my bed as she pleaded and squirmed silently, smiled at her and went to sleep, leaving her to her thoughts and needy desires.`
+                },
+                {
+                    title: "Chapter 5",
+                    subtitle: "Day- 5", 
+                    content: `<img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_chainpony-l.jpg"><br><br>Early in the morning, I replaced her slave collar with her more permanent leather posture collar, just to let her get used to the idea. Then I pressed her head forward, as far as the collar would allow, to have her learn its confining limitations.<br><br>After he changed my collar, my Master reclipped the reins on my nipple rings. I could feel him do this but the collar prevented me from looking down to see. He drew me up. I followed Him out of the bedroom, through some doors and out into the courtyard. I was outside, naked, roped and helpless! What if someone should see?<br><br>I secretly smiled at her discomfort at being outdoors, but totally ignored it. Like my bedroom, I had kept this courtyard out of bounds to all servants for the moment. Off to the exerciser we went, where I clipped her in and told her she was going for a walk. Then I tied some coarse rope around her waist tightly, and tied her wrists to it behind her. She would spend the whole day building up her stamina, in nipple rein obedience training.<br><br>Laura quickly realized the purpose of the contraption she was now attached to. There was a donkey also attached to it, and Master was just getting it unhobbled. She was to walk around in a circle, just like that donkey, except that she would be painfully pulled ahead by the reins if ever she faltered.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_donkey.jpg"><br><br>"I expect you to raise your legs to waist level with each step! And you will point your toes down, gracefully." I ordered, and left her to her duties.<br><br>All day she trudged around that exerciser, naked and nipple-leashed. I watched now and then from the window, taking great pleasure in her beauty. A few times I had to go outside and whip her ass, to remind her she had to raise her legs high, gracefully. By mid-afternoon her gait was ingrained into her, almost automatic.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd_laura_hit.jpg"><br><br>At dusk I released her and took her back to my bedroom. She knelt for the night bound and chained in her usual position, her nipple rein bit in her teeth. "Congratulations, girl, you have graduated. Tomorrow I'll give you your permanent diploma."<br><br>Laura had learned to sleep kneeling. Necessity was the mother of invention. She needed sleep, she was exhausted, so she adapted. She had drifted off wondering what that diploma could be.`
+                },
+                {
+                    title: "Chapter 6",
+                    subtitle: "Day- 6", 
+                    content: `<img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd_laura_training_1.jpg"><br><br>I woke her up, replaced her nipple reins and marched her to the dungeon. I was delighted to note that she raised her leg above waist high and pointed her toe with each step. She looked so beautiful.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_branding_1.jpg"><br><br>Master led me to a strangely eerie room I had never seen - it made me very nervous. There was a large brazier full of hot coals mid-room, with an iron glowing red in it. Beyond it there were some ominous looking wooden devices. He led me near a wall past the searing heat, unleashed me and cuffed my arms and legs spreadeagled to an x-shaped wooden structure. As I stood there on my tiptoes, I wondered if He would whip me again. I felt, rather than saw Him draw several turns of that coarse rope across my waist and the narrowest part of the frame. He made sure it was tied so impossibly tight that I couldn't even wiggle.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_branding_1_1.jpg"><br><br>"You have certainly earned your diploma," I said as I pressed my branding iron, which bore my "P" brand, deep into her left flank.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_branding_1_2.jpg"><br><br>Laura finally broke her silence, a long agonizing "NOOOOOOOOOOOOOOOOOOOOOOOOO!" escaping her lips. She was being branded!!!! The pain was so intense, unbearable. She nearly fainted.<br><br>I left her there on the frame for an hour, letting her accept her fate and accommodate to it. She sure looked delectable, with my brand of ownership on that creamy white flank!<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_branding_1_2_b.jpg"><br><br>She was still moaning softly when I took her outside for another long day on the exerciser with her donkey friend.<br><br>In the evening I returned and watched her as she pranced round and round in the growing darkness. She was truly a delicious vision. Though reluctant to end my pleasure, I finally released her and led her back to my bedroom. She was clearly exhausted and in pain, yet she followed her reins wordlessly, with the proper posture and high stepping gait.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_donkey-n.jpg"><br><br>I said, "Time for your permanent harness, girl."<br><br>Laura watched her Master bring a leather contraption near her and stood tall as He applied it to her body, His property. A wide leather belt with two buckles went tightly around her waist. From it came straps up and down. The upper straps somehow went above and below her breasts, making them stand out, rings shining. The straps then continued upwards. He buckled them all so tight, in a firm embrace, then buckled the remaining strap to her posture collar. Similar buckling took place behind her, and included the strap heading down from the belt, under her crotch, up between her ass cheeks, and on to the waist belt, quite tightly. More straps pressed upon her upper arms, her wrists and her thighs. Laura felt oddly constricted, ever so held, most definitely in harness.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_branding_leather_a.jpg"><br><br>I knew from previous experience that by now she would identify with me, and soon even be an eagerly willing masochistic accomplice to her own situation. I made her kneel, clipped on her silver nipple rein bit chain, and went to sleep.`
+                },
+                {
+                    title: "Chapter 7",
+                    subtitle: "Day- 7", 
+                    content: `Laura roused from an incredibly erotic dream to a strange sight. Before her lay long blond tresses her very similar to her own. They seemed attached to a strange phallus-like something.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_plug_b.jpg"><br><br>Unbeknownst to her, I had cut her long hair off during the night and glued it to a butt plug. She was still so young and naive to the ways of the worlds. She just gawked at it, clueless.<br><br>"Meet your new ponytail, girl. Yes, it is very like your own hair. In fact, it is your own hair."<br><br>She stared at me, shocked. Of course, with her wrists and elbows tied behind her, she could not move to check her hair. Slowly, I could see her comprehension, as she figured it out. She would not be my love slave, she would be some kind of pony girl! I kept looking deep into her lovely dark eyes, seeing bewilderment turn to shock, then to acceptance. I knew that whatever made her Master happy would henceforth make her cream. She truly was a delicious property.<br><br>I released her constrained arms from behind her and ordered, "Put your head to the floor and raise your rear, ponygirl!"<br><br>Laura wept her frustration, but obeyed instantly. As she cradled her head in her hands, she felt for and realized the absence of those long luxurious tresses on her head. Still, she barely grunted as I inserted her now-lubricated butt-plug tail of her own hair into her rear. There it would remain, impossible to expel, till I chose to take it out.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_branding_leather_2a.jpg"><br><br>I made her stand, constrained her arms behind her, clipped her pony reins to her nipples, and led her back to the exerciser. There she spent another long uneventful day, walking in circles with her new donkey colleague, in the high stepped pony gait, getting used to her new rear appendage. I only had to come whip her once.<br><br>She followed me back to the bedroom, tail swishing, knees high. She looked surprised but accepted it docilely when she knelt to sleep still tailed.`
+                },
+                {
+                    title: "Chapter 8",
+                    subtitle: "Day- 8", 
+                    content: `<img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_branding_leather_3a.jpg"><br><br>The next morning I added the final touches to her harnessing. First came her pony bit. It was made of hard rubber and steel, with a tongue depressor going well inside her mouth.<br><br>Laura shuddered as she was bitted. The pressure on her tongue was quite unpleasant. She shut her eyes tight and chomped on the bit, concentrating on getting used to the feel. She was still adjusting when she felt the sharp prick in her septum. It was really painful, yet she immediately realized it was another piercing needle and stayed very still, feeling her own warm blood drip and ooze onto her upper lip.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_pierce_nose.jpg"><br><br>The ring Master placed in her nose was humiliating and large, but she was in no position to do anything about it. Nor was she able to resist the little bells He clipped to her nipples.<br><br>I clipped a leather lead to her new nose ring and drew her outside by it for another of her all day workouts. It gave me pleasure to see her total humiliation - her bells chimed and her nose ring made her eyes tear. She was so pliant, obedient and clearly lovestruck. I saw that this once wild filly was almost completely broken in now.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_piercing_nose_1.jpg"><br><br>Laura spent another day following the donkey around and around the exerciser. By now she could high step without even thinking about it. At first, the nose ring bothered her, bouncing against her upper lip with every step. Then she forgot about it, lulled into a thoughtless stupor by the jingling of her nipple bells. Still, somehow, all day she was really excited, wet, down there. A few times she almost came. It was all so confusing.<br><br>When Master took her to the bedroom, fed and watered her, Laura was almost in a trance, totally unaware that He had drugged her drink. She drifted to sleep, kneeling, tailed, dreaming of His body.`
+                },
+                {
+                    title: "Chapter 9",
+                    subtitle: "Day- 9", 
+                    content: `<img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_finale_mirror.jpg"><br><br>I let her sleep in the next day, still drugged, while I fitted her with pony boots. By the time she awoke near noon, I had also shaved her head into a mohawk cut, leaving her only a lovely blond central mane. Finally, the transformation of the still-virgin debutante was complete - she was to ready begin her life as Prince Peter's ponygirl.<br><br>I shook her awake. Then I watched as she stood up, tottering on her ponyboots, actually testing her high step without prompting. I led her to a full length mirror to see what she had finally become. So feminine, she sized herself up, posing and posturing, looking quite satisfied with what she saw. All the while, she kept glancing at me with a worshipful adoration that correctly signalled her female certainty I would finally take her, very soon.<br><br>When I took her and my horse out to my open pastureland, she took to her role with great zest, frolicking, running with tail billowing, even jumping in her pony boots. She behaved just like the pony she was.<br><br>I smiled, pleased. She was even more statuesque in her boots and her high blond mane. She was ever so sexy, ringed, belled, tailed, bitted, harnessed and branded. She was truly a vision. The exact vision I had of her the moment I saw her. Yes, she was perfect for my needs, and I had her, my ponygirl.<br><br><img src="http://sirjeff.mirrors.bdsm.cz/gp/pics/peterpd/nine-days/sj-ppd-laura_finale.jpg">`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

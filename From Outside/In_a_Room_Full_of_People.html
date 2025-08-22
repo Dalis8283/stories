@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>In a Room Full of People</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        hr {
+            border: none; /* Remove default border */
+            border-top: 2px solid #333; /* Create a solid top border */
+            width: 70%; /* Set width to 70% of the parent container */
+            margin: auto auto; /* Add vertical margin and center the line */
+        }
+        img {
+            align-self: center;
+            max-width: 90%;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "In a Room Full of People",
+            author: "HeyAll",
+            chapters: [
+                {
+                    title: "Page 1",
+                    subtitle: "Catherine is hired to appear nude for an upscale party.",
+                    content: `Catherine's face turned flush.<br><br>"Are you sure? There must be some sort of mistake."<br><br>"I'm sorry Cathy," the manager replied. "You're a terrific person. You really are. But the job was seasonal. We made that clear from the start."<br><br>Catherine was still wearing her waitressing outfit at the restaurant. The 19 year old college student had a dumbfounded look on her face. She knew the job was seasonable, but she had hoped an extension would be possible.<br><br>"Are you sure there's nothing you can do? I thought I was a good waitress here."<br><br>"You're an excellent waitress," the manager replied sadly. "But I'm sorry, we can't afford to keep everyone. If business picks up and we need more employees, you'll be the first person I call. I promise."<br><br>Catherine nodded. "Thanks for the opportunity. I really appreciate it."<br><br>She extended her hand, and they both shook hands as a goodwill gesture. When Catherine turned to walk away, the manager suddenly looked uncomfortable.<br><br>"Excuse me, Cathy, I'm really sorry, but I'll be needing that outfit back. Those are for employees only."<br><br>An annoyed look appeared on her face. It was a final insult to her, even though it was strictly business. Catherine removed the waitressing outfit handed it to the manager. She stood in her jeans and small tshirt.<br><br>"There you go," she said as politely as possible. "You really know how to kick a girl while she's down. Have a good day."<br><br>Catherine left the restaurant and went back to her apartment.<br><br><br><hr><br><br>Later that afternoon. Catherine's long brown hair was spread across the couch. She was laying in the fetal position with a depressed mood while watching tv. The door to the apartment opened and her roommate entered.<br><br>"Well you look really happy," Abbey said sarcastically, before closing the door. She sat down in the living room next to her friend.<br><br>"I just lost my job. I'm so depressed now."<br><br>"Wasn't that job seasonable?"<br><br>"Yeah, but that's not the point," Catherine replied with her face buried halfway in a pillow. "I worked so hard that I thought my job would be extended. The manager told me months ago that it was a possibility."<br><br>"Lighten up. I'm sure you'll find another job eventually."<br><br>"Thanks. But I don't think our landlord will be so forgiving. And with college tuition being increased, I'm doubly screwed."<br><br>"We both are," Abbey sighed, sinking into the couch. "I'm not exactly swimming in cash either."<br><br>"At least you still have an income," Catherine replied. "My student loans are maxed out, and asking my parents for more money is out of the question."<br><br>"Why aren't your parents an option?"<br><br>"Because they think I'm too old to get financial support from them. Once I left the house, I'm on my own."<br><br>Abbey nodded. "My parents are the same way."<br><br>"Looks like I'll be hunting for another part time job."<br><br>Abbey thought for a moment. "I think I have an idea for you. Are you open to anything? I mean, anything?"<br><br>"Maybe. Depends on what it is."<br><br>"Why don't you try modeling?"<br><br>Catherine gave her friend a stern look. "Are you kidding me? I'm not exactly model material, in case you haven't noticed. My face is kind of average and my body could use work."<br><br>"A lot of men like nerdy women these days. Besides, I think you're very pretty. A lot of guys agree."<br><br>"Thanks," Catherine replied with a hint of sarcasm.<br><br>"Maybe you can pose for an art class on campus? I've heard that the professors pay well."<br><br>"Art class? You mean nude modeling?"<br><br>Abbey nodded. "Yep. It literally requires no skills. You just stand there for an hour and rake in the big bucks."<br><br>"This conversation is getting ridiculous," Catherine replied with a dry tone. "First of all, there's no way I'm posing nude so that people can examine my body. Secondly, there's no way I'm doing it in front of my fellow classmates. God, how could you suggest such a thing?"<br><br>"It's not a big deal. Plenty of students do it for extra money."<br><br>"The answer is no. Gosh, I can't believe you're still talking about it."<br><br>"Okay, fine," Abbey shrugged. "But I hear that some models are paid up to a hundred bucks per hour."<br><br>"For just standing there?" Catherine inquired.<br><br>"What else is a model going to do?"<br><br>Catherine thought for a moment. "That doesn't sound so bad."<br><br>"Are you interested then? I can let my art professor know that you'd like to model."<br><br>"I'm definitely not interested. Thanks for the suggestion though."<br><br>Abbey squinted her eyes. "Okay, sure."<br><br>"You're giving me a weird look."<br><br>"It's nothing."<br><br>"Just tell me," Catherine insisted. "I know you're thinking something weird about me."<br><br>"I can tell that you're kind of curious about posing nude. I can see it on your face. Frankly, I don't blame you. It's easy money and there's no work involved. So why not give it a try? Who cares what anyone else thinks?"<br><br>"If it's that simple, why haven't you done it?"<br><br>"Me? Model nude? No way."<br><br>"My point exactly," Catherine scoffed.<br><br>Abbey smiled, "Fair enough. Now if you'll excuse me, I need a shower. Good luck on your job search."<br><br>"Thanks."<br><br>When Abbey left, Catherine went back to laying in the fetal position on the couch.<br><br><br><hr><br><br>Later that night. Catherine was in her pajamas looking up job listings online. She skimmed through the various ads looking for part-time employment. Most of the jobs were out of her skill range. Other jobs were for manual labor.<br><br>After almost giving up hope, Catherine thought about nude modeling work, which Abbey had suggested. It wasn't something she took seriously, but it made her curious. She searched for what she could, and was underwhelmed. Most of the job listings for nude work were pornographic, which turned her off immediately. Nude art wasn't much better. The pay was extremely low.<br><br>Catherine scrolled down the screen and a particular posting caught her attention:<br><br>Looking for a nude female model between the ages of 20 to 25 to attend a private function. The model must currently be attending college, or a graduate school. No prior experience needed. Our preference is someone of average appearance and average physical build.<br><br>Starting pay is $500 per hour for an afternoon or evening service. Bonuses will be included depending on guest donations.<br><br>Dates to be determined.<br><br>The pay was simply too good to be true, she thought to herself. Catherine stared at the computer screen ,wondering if she had the courage to actually do it. She then emailed the link to Abbey.<br><br>Catherine closed her computer, turned off the lights, and went to bed.<br><br><br><hr><br><br>The next morning. The two roommates were in the kitchen with messy hair, preparing their granola breakfast cereals with almond milk. They were still in their pajamas as they started to eat.<br><br>"I saw that email you sent me," Abbey said, eating her food.<br><br>"What did you think about it?"<br><br>"Sounds like a great job opportunity."<br><br>Catherine shook her head. "Yeah right, like that's ever going to happen."<br><br>"No? Then why did you send me that email?" Abbey asked with an eyebrow raised.<br><br>"I just wanted your reaction, that's all. Apparently they're willing to pay $500 per hour for a few hours of work, plus tips. That's crazy, isn't it?"<br><br>"Not really. Did you see the zip code? It's in an upscale neighborhood. They could buy and sell our asses with ease."<br><br>"Oh, well that makes sense," Catherine nodded.<br><br>"Why don't you give them a call?" Abbey suggested. "If you do it, it's not like you're ever going to see those people in your everyday life. Just go there, do the nude thing, then leave with all your money. Everybody wins."<br><br>"I still don't know if I can do it. I've never been comfortable with a lot of people looking at me. Being naked would make things so much tougher."<br><br>"Why would it be tough? The job listing said they're looking for a girl with an average face and body."<br><br>Catherine shot her friend a stern look. "So that's me, right?"<br><br>"I'm only quoting the ad," Abbey smiled. "Don't be so sensitive. Okay, pretty girl?"<br><br>"I know I'm average looking. I guess that's why I'm so self-conscious about being naked in front of everyone. If I was a perfect 10, I wouldn't mind taking my clothes off for that kind of money."<br><br>Abbey got up and placed her phone and a small note pad in front of Catherine. There was a phone number written on the note.<br><br>"Just call them," Abbey said. "What's the harm? Find out if they're legit, then make your decision. The money is really good. Plus it could be great for your self-esteem. Maybe you'll finally realize how sexy you can be."<br><br>Catherine thought for a moment. "Fine. I guess I'll call."<br><br>*<br><br>She picked up the phone and called the number. After a few rings, a man answered the other line.<br><br>"Good morning, you have reached the Wilson's residency," a man said with a heavy British accent. "My name is Thomas. How may I assist you today?"<br><br>A sudden sense of nervousness came over Catherine. She had immediately realized that she was out of her depth. These were simply a higher class of people.<br><br>"Umm, hello Thomas," she said in a small, unsteady voice. "My name is Catherine. I'm calling in regards to the ad you placed online. You know, the one about the modeling service. That one, remember?"<br><br>"It's nice speaking with you Catherine," he replied politely. "Yes, I remember, we placed that ad several days ago."<br><br>"Oh, is the offer still there?"<br><br>"Yes, the offer is still valid. Would you like to arrange a meeting between us to determine your eligibility?"<br><br>"That sounds great," Catherine replied.<br><br>"When are you free?<br><br>"How about Friday 10 am?"<br><br>He wrote down the time. "Friday 10 am. We officially have an appointment. Let me give you the address."<br><br>Catherine wrote down the address after he gave it to her. "Thank you. I look forward to this."<br><br>"As do I," he replied. "See you then."<br><br>"Bye."<br><br>"Have a good day, Catherine."<br><br>*<br><br>When Catherine ended the call, she looked at her friend with a mortified expression. She was in disbelief after making an appointment for a nude modeling gig.<br><br>"What just happened?" she asked rhetorically.<br><br>"I believe you're on your way to your first modeling job," Abbey smiled. "Excuse me, nude modeling job."<br><br>"This is all your fault."<br><br>"My fault? All I did was hand you the phone. I didn't force you to arrange a meeting with the guy."<br><br>"I know," Catherine replied. "But you're like a drug dealer, tempting me with your sinful ideas."<br><br>"You won't be complaining after all that cash you make."<br><br>Catherine shrugged. "Yeah, I guess that's true."<br><br>"So are you going to the interview?" Abbey asked. "I'm not pressuring you or anything. It's totally your choice. All I'm saying is that it's a harmless way to make money. If you're not comfortable doing it, then I'll call him back and cancel the appointment."<br><br>Catherine thought for a moment. "You're right. It's completely harmless. And it's not like I'm ever going to see those people in my everyday life. I guess I'll go to the interview to see what the fuss is about."<br><br>"Wow. You're actually serious about this."<br><br>"Surprised?"<br><br>"I'm shocked," Abbey replied. "But in a good way. I like that you're trying new things. I could tell you were kinda interested in nude modeling when I brought it up yesterday."<br><br>"Only after you mentioned the amount of money I could make," Catherine said to clarify. "This seems like a whole different level though. I wonder what they have planned?"<br><br>They continued eating their breakfast. Catherine did her best to give an appearance of confidence, but deep down, the nerves were raging.<br><br><br><hr><br><br>Days later. It was Friday morning and the two college students were on their way to the job interview. Abbey drove her small car while Catherine was on the lookout for the address. They were in a wealthy neighborhood, which was far nicer than they had expected. The closer they came to the address, the bigger the houses appeared, and they were eventually surrounded by large mansions.<br><br>"Jeez, look at this place," Catherine gasped.<br><br>"I know. I hope this wasn't some elaborate prank for us to go bother some rich people."<br><br>"You think this might be a prank?"<br><br>"I'm joking," Abbey replied. "I'm sure this whole thing is totally legit."<br><br>Catherine kept her eyes peeled before finally spotting the address.<br><br>"There it is. On the left."<br><br>Abbey turned the car and they stopped in front of the gate of a large mansion. She rolled her window down.<br><br>"Cross your fingers," Abbey said, before pushing the button on the intercom.<br><br>"Wilson's residency," a man replied.<br><br>"Hi, my name is Abbey. My friend Catherine has a 10 am appointment with Thomas."<br><br>"Yes, come in."<br><br>"Thank you."<br><br>The large metal gates opened and Abbey drove inside the estate. Once again, the two young women marveled at their surroundings. The estate was large and spacious. The mansion was huge and elegant. Abbey parked her car and the two friends looked at each other nervously.<br><br>"I'll do the talking," Catherine said.<br><br>"Do you mind if I wait out here? I'll just walk outside and enjoy the scenery."<br><br>"What? Why?"<br><br>"It's less awkward that way," Abbey replied. "Plus, big mansions give me the creeps. I used to have nightmares about places like this. Too many horror movies."<br><br>"Well that's reassuring to hear right now. Thank you."<br><br>"You'll be fine. I'll be here to protect you in case anything happens."<br><br>"Of course," Catherine replied. "If you hear screams, I'm sure you'll use your 'particular set of skills' to rescue me like in that movie Taken."<br><br>Abbey nodded. "Unfortunately I didn't bring any weapons. So I'll just have to use my hands. Get in there already. Thomas is expecting you."<br><br>Catherine got out of the car and walked up the stairway of the large mansion. The door opened as she approached it, and she was greeted by an elegantly dressed man in his early 50's.<br><br>*<br><br>She sat awkwardly in the guest room while Thomas prepared a cup of tea. When it was ready, he brought it to her on a tray, and she graciously accepted it, taking a small sip. He sat down across from her and they looked at each other.<br><br>"Beautiful home," she said randomly.<br><br>"Yes, I've had the pleasure of working here for the past 15 years of my life."<br><br>"I'm assuming you're the housekeeper."<br><br>"Something along those lines," he nodded. "I'm in charge of running this household on behalf of Mr. & Mrs. Wilson. They are my employers."<br><br>"That's nice to hear. My mom used to be a housekeeper for a wealthy couple."<br><br>"Which brings us to the purpose of this meeting. Tell me, what made you respond to the ad I placed online."<br><br>Catherine gathered her thoughts. "Well, I'm a college student. Tuition and rent are going up, and I was recently laid off from my job as a waitress. My best friend suggested that I try doing art modeling since it's easy money. I wasn't interested at first, but I saw your ad and it caught my eye."<br><br>"Do you have any prior modeling experience?"<br><br>"None whatsoever."<br><br>"Perfect."<br><br>"Really? Why?" she asked, confused.<br><br>"The Wilsons prefer inexperienced women. It's a particular preference of theirs."<br><br>"What exactly is the job offer?"<br><br>"Many extravagant parties are held in this residency," Thomas explained. "All of our guests are financially wealthy people. The events are always formal, with guests wearing their finest outfits and their expensive jewelry. Although these are classy events, there are many adult aspects to them as well."<br><br>"Meaning, nude women?"<br><br>"Precisely."<br><br>"What do the women have to do?" she asked.<br><br>"Anything they're comfortable doing. Some women simply pose nude. Others serve drinks or socialize with the guests."<br><br>"Sounds interesting. And this is for $500 dollars per hour right?"<br><br>"$500 is what we advertise. The truth is, the women that come to work here are paid substantially more by Mr. Wilson, depending on the services rendered. Our guests also enjoy tipping the women. After a few hours, the women have made a considerable amount of money."<br><br>"How much on average?"<br><br>"I'd rather not say. But it's considerable."<br><br>Catherine thought for a moment. "If I was interested, how would this work? I simply show up and pose nude in a room full of people?"<br><br>"Precisely."<br><br>"It's that simple?"<br><br>He nodded, "It's that simple. The only thing we ask is that you sign a confidentiality agreement. You may tell your friend that you've modeled nude or other things which may occur, but under no circumstance may you reveal the identity of our guests to anyone. Our guests are affluent people, and they value their privacy. Breach of this agreement will result in immediate legal action."<br><br>The words 'other things' took Catherine slightly by surprise. There was a suggestive tone that she wasn't expecting. Regardless, she needed the money, and the job seemed simple enough.<br><br>"This sounds like something I might be able to do," she said. "Do I have to audition or anything?"<br><br>"No. The Wilsons have a preference for shy women with no experience in public nudity. They prefer women with average appearances. Someone like you is exactly what they want. It's a fetish that many of our guests share. Also, the Wilsons prefer college students because they value education, and they want to help women facing financial hardship."<br><br>"I fit perfectly in all of those categories," she replied, half jokingly.<br><br>"Indeed you do."<br><br>Catherine was slightly offended and had the urge to storm out of the mansion. But the job offer was great, and it caused her to think for a moment.<br><br>"I'll do it," she said.<br><br>Thomas stood up and extended his hand. Catherine stood up and did the same, and they shook hands.<br><br>"Our next party is the following Saturday, next week" he said. "Be here by 1 pm. After you've signed the confidentiality agreement, you will be working here from 2-6 pm. You are expected to be completely naked at all times."<br><br>Catherine's eyes widened.<br><br><br><hr><br><br>Days later. Catherine stood in front of the living room mirror, fully dressed, examining her body. She modeled herself in different poses. The front door opened and Abbey arrived to the apartment after finishing her classes for the day.<br><br>"What are you doing?" Abbey asked.<br><br>"Do you think I look okay?" Catherine replied, still modeling herself to the mirror.<br><br>"Stop being so nervous. You look fine."<br><br>"I don't think I can do this. No way. This isn't for me."<br><br>"Then are you going to call Thomas and tell him the bad news?"<br><br>"I don't know," Catherine shrugged.<br><br>Abbey walked directly behind Catherine, and they both looked in the mirror together.<br><br>"Of course you aren't going to cancel," Abbey said. "Deep down, I know you want to do this. I can tell you're curious."<br><br>"What makes you so sure?"<br><br>"We've been best friends for nearly 10 years. If you didn't want to do this, you never would have looked up that ad online. And you never would have picked up that phone for the job inquiry."<br><br>The two women continued looking at Catherine's reflection in the mirror, with Abbey standing behind her.<br><br>Catherine gave a long pause. "Even if I wanted to do it, I'm so insecure about my body that I'll probably freak out and make a huge fool of myself."<br><br>"Then I guess you need practice," Abbey said suggestively.<br><br>"I really don't like what you're up to."<br><br>"Come on, take your tshirt off."<br><br>"What?"<br><br>"You heard me. Take your tshirt off. If you can't do it in front of me, then you won't be able to do it at the party for big money."<br><br>"You're such a mean person," Catherine said.<br><br>"This is for your own good. Now take it off."<br><br>Catherine reached down and lifted her tshirt over head, tossing it to the couch. Both women looked in the mirror while Catherine was standing in her white bra. She had an average build for a female college student, with average sized breasts.<br><br>"Happy now?" Catherine asked with attitude.<br><br>`
+                },
+                {
+                    title: "Page 2", 
+                    subtitle: "Catherine is hired to appear nude for an upscale party.",
+                    content: `"Not yet. Take off the bra. No fussing either."<br><br>Catherine huffed at her best friend's order, and then reached back to unclasp her bra, letting it fall to the floor. Her breasts were perky, upturned, with puffy pink nipples. After several seconds of exposure, she used her hands to cover both breasts.<br><br>"Get a good look?" Catherine asked sarcastically.<br><br>"Sort of. I never knew you had such nice tits. They've got charm to them."<br><br>"Do you think they'll be a smash hit at the party? I'm counting on getting as many tips as I can."<br><br>"Those tits are definitely winners," Abbey replied. "But tits aren't the only money makers. Take off the pants, and the panties. Let's see what you've got downstairs."<br><br>"You've got to be kidding me."<br><br>"Do you want my opinion, or not?"<br><br>Catherine huffed once again and reached down to remove her pants, which she tossed to the couch. After another loud sigh, she reached down to remove her panties, tossing them to the side also. Both of them looked in the mirror, staring at Catherine's completely nude body. She had an abundance of dark curly pubic hairs, and her thighs and ass were shapely.<br><br>"Well?" Catherine asked.<br><br>"You've got a nice body," Abbey replied. "You've got that girl-next-door thing which is really attractive. Get rid of that bush though. That thing is grotesque."<br><br>Catherine blushed and used her hands to cover her pubic hairs.<br><br>"I think I'm starting to get the hang of this."<br><br>"It's not so bad, right? Before long, you'll be walking around nude at the party, and you won't even realize it anymore."<br><br>Catherine thought for a moment. "You know, during the interview, Thomas mentioned something about 'other things' that may happen at the party. So if something were to happen, what do you think I should do?"<br><br>"Other things?" Abbey asked with a puzzled expression. "You mean like an orgy might break out? Or do they want prostitution services from you?"<br><br>"I don't know. He was vague about it, and I didn't want to ask. Those people have a lot of money. So if something were to happen, hypothetically, what do you think I should do?"<br><br>Abbey thought to herself. "Hmmm... I really don't know. That's up to you."<br><br>"What would you do in that situation?"<br><br>Abbey thought once again. "I don't want to sound slutty, but I'd probably give a few blowjobs if the price was right. I've been told that I give award winning oral sex. I'm sure I'd make a lot of money from it."<br><br>"Oh my god. Abbey! I've never heard you talk like that before."<br><br>"You never asked."<br><br>"Well, the subject of public sex never came up."<br><br>Abbey gave a wicked smile. "Until now."<br><br>"Do you think I should do that?" Catherine asked. "You know, oral sex. Assuming there's an offer for something dirty."<br><br>"Depends. Are you any good?"<br><br>"I don't know."<br><br>"Wait here for a second," Abbey replied.<br><br>Abbey quickly went to her bedroom, and returned with an average sized dildo.<br><br>"Really? You have a dildo?" Catherine asked, in shock that her friend owned such a thing.<br><br>"I only have one. I was too embarrassed to show you."<br><br>"And why exactly are you showing me now?"<br><br>Abbey held the tip of the dildo in front of Catherine's mouth. "I'm going to teach you how to give an amazing blowjob, just in case you decide to do it at the party."<br><br>"You've got to be freaking kidding me. I'm not doing that in front of you. Especially since that thing was inside of your hole."<br><br>"All three holes," Abbey clarified. "Relax. I wash it thoroughly with lots of soap. Besides, you're already naked, so we might as well take things a step further."<br><br>Catherine sighed. "Fine. Let's just get this over with. Make it quick."<br><br>"Good. Open your mouth."<br><br>When Catherine opened her mouth, Abbey slid the dildo inside to teach her friend how to perform oral sex. Catherine closed her lips around the sex toy and listened to her best friend's instructions.<br><br><br><hr><br><br>It was Saturday afternoon. Catherine made her way to the backdoor entrance of the large mansion, after being dropped off by Abbey. She wore a simple yellow dress and a pair of comfortable shoes. On her way to the back entrance, she walked passed a slew of fancy cars and limos parked in the driveway. When she walked passed the main entrance, she saw that the large living room area was filled with elegantly dressed people. The party was extremely sophisticated, which intimidated her somewhat, even though she expected it.<br><br>After a few knocks on the backdoor, the door opened, and she was greeted by Thomas.<br><br>"I'm very glad you could make it," he said, with his typically expressionless demeanor.<br><br>"Glad to be here."<br><br>"Please, come in."<br><br>Catherine entered the backroom, which was empty. She expected to be greeted by other nude models, but none were around.<br><br>"Where is everyone?" she asked. "Aren't there other models coming today?"<br><br>"The other model we booked called in sick this morning. And unfortunately, we were unable to find a replacement, which means you will be the only model today."<br><br>Catherine's face turned flush and her jaw dropped. "You mean I have to go out there... by myself... naked?"<br><br>"Will that be a problem?"<br><br>"Ummm... yeah. I was under the impression that I was going to be doing this with other women. I wasn't expecting to do this alone. This is way too..."<br><br>Thomas cut her off and handed her a check. "The Wilsons understand any potential dilemmas or concerns you may have, so they've authorized me to increase your base pay. Hopefully this will compensate for any misgivings."<br><br>Catherine looked at the check and her eyes widened. "Umm... okay. Sure. When do we start?"<br><br>"In an hour," he replied. "In the meantime, help yourself to some food if you wish. And remember, the check your are receiving now is only an appearance fee. If you decide to further entertain our guests, in any way, then they may compensate you much further. Our guests are very generous."<br><br>She nodded. "I understand."<br><br><br><hr><br><br>An hour passed. Catherine tried to eat, but her stomach wouldn't allow it. She was too nervous to do anything except sit down and wait. Thomas entered the room in business mode, with perfect posture and a neatly pressed suit.<br><br>"You may begin," he said. "Remove your clothing. Leave it on the counter. Then I will lead you to the main hall."<br><br>"Okay."<br><br>Catherine slowly stood up and reluctantly wrapped her fingers around the thin straps of her dress.<br><br>"Have you changed your mind?" he asked. "Nobody is forcing you. If you've changed your mind, then you are free to leave."<br><br>"No, I want to do this. Do you mind turning around while I get undressed?"<br><br>A slightly annoyed look appeared on his face. "Miss, you've been hired to appear nude in a room full of people. Get used to it."<br><br>After a deep breath, Catherine slipped the straps from her dress, removing the dress from her body, and she placed it on the counter. She stood in her bra and panties. Thomas watched the college student as she removed her bra to expose her bare breasts, and then she removed her panties, to reveal her cleanly shaven pussy (with help from Abbey that morning).<br><br>Once she was naked, she instinctively placed her forearm around her breasts, and a hand over her crotch.<br><br>"Shoes off," he said.<br><br>Catherine looked down at her shoes and she removed them by kicking them off. She stood unclothed and barefoot.<br><br>"There. I'm naked."<br><br>"Very good," he said. "Are you ready to proceed?"<br><br>She nodded. "Yes, I am."<br><br>"Excellent. Follow me."<br><br>Catherine followed his lead through the kitchen. To her surprise, there were chefs and catering people who glanced at her nudity. The female workers didn't seem to mind. But the men grinned and smiled as they watched her walking naked, trying her best to cover her breasts and vagina. Her ass was completely exposed, and all of the men were able to get a nice look.<br><br>Once they reached a large door, Thomas stopped and looked Catherine in the eyes.<br><br>"This is going to be daunting," he said. "The first time is always a nervous experience for our new models. But once you learn to relax, I'm confident you will enjoy it. Remember, the power is in your hands. Nobody is forcing you. You can decline or accept whatever you want. Are you ready?"<br><br>She nodded. "I am."<br><br>He pushed open the large door and there was a room full of elegantly dressed people. Many of them turned their attention towards Catherine's nude body. Music was playing in the background. She froze.<br><br><br><hr><br><br>Catherine's face immediately turned beet red. She tried her best to use her arms to cover to breasts and pussy. Her toes curled from the embarrassment.<br><br>There was at least 50 people watching her in the large room. The men wore formal dining attire, while the women wore fancy dresses with expensive jewelry. Everyone was scattered around the room, having different conversations with each other. There was piano music playing. Tea and pastries were being served by the catering.<br><br>More and more eyes turned towards Catherine's direction. She took a few steps forward in the room.<br><br>Thomas leaned in her ear. "I shall leave you to your duties."<br><br>With that said, he turned around and left, closing the door behind him.<br><br>Catherine stood there in her frozen state. Her eyes wandered the room, and her hands started to shake. Her breaths became heavier and her mouth slowly widened. She clenched her breasts tighter in an attempt to kept them covered.<br><br>"Don't be shy," a man's voice said. "You have a beautiful body. Be proud of it."<br><br>"I agree," an older woman's voice said in agreement. "You're a cutie."<br><br>The more voices supported Catherine's nudity, the more people turned their heads to look at her. Even the piano player and the people serving drinks had to glance at the naked college student.<br><br>With the words of encouragement, Catherine lowered both arms to reveal her breasts and vagina to the crowd of people. After a deep breath, she slowly moved one foot in front of the other, so she could walk around the room nude.<br><br>The audience reacted in their typical manner. Some returned to their conversations. Others continued to glance or stare at the naked college student. It was obvious to Catherine that the guests were all used to seeing naked women at their parties.<br><br>It was the most mortifying experience of Catherine's life. She tried to keep a brave face as she continued to slowly walk around barefoot, and naked, through the room full of elegantly dressed people.<br><br>"Are you enjoying the party so far?" a woman asked Catherine.<br><br>The woman appeared to be in her late 40's, and she was sitting on a couch next to two other men.<br><br>"Yes ma'am," Catherine replied with a false confidence. "This is my first time here."<br><br>"I can tell. You seem so nervous. You should relax a little. Your beauty is something to be admired."<br><br>"Thank you."<br><br>The woman smiled, "Do you enjoy being the only person naked here? It must be liberating in many ways. I've always felt that there's a certain freedom in being undressed in front of others."<br><br>"It definitely takes time getting used to," Catherine replied.<br><br>"I'm sure it does," the older woman nodded with an eyebrow raised. "So what other services do you provide besides being naked? There must be other things you're willing to do to pay for your college education."<br><br>"I... I'm not sure."<br><br>"Do you know what I'm referring to?"<br><br>Catherine shook her head. "No ma'am. I may have an idea though."<br><br>The woman smiled, "I've had enough tea for today. Would you let me have a taste of what's between your legs?"<br><br>Catherine froze again, and her heart pounded. The offer was so casual and nonchalant, that it caught her by complete surprise.<br><br>"I'm not sure," she replied, not knowing what to say.<br><br>"Why are you unsure? It's your body. You should know what you want and what your limits are. You're a beautiful young woman and you have the right to make your own decisions."<br><br>"Maybe," Catherine shrugged, still at a loss for words. "Is it normal here?"<br><br>The woman raised both eyebrows. "Yes. You're here for money aren't you? I'll pay of course. My husband likes to watch me with other women."<br><br>Catherine looked at the man sitting next to the woman. He appeared to be in his 50's. He was her husband and there was a big proud smile on his face.<br><br>"I guess so," Catherine said nervously. "I mean, if you want to, I'll allow it."<br><br>"Good. Please, turn around. Put your hands on the table and spread your legs. Enjoy it. It's going to feel nice."<br><br>Catherine slowly turned around and put her hands on a nearby table, then she spread her legs. She had no idea what to expect. She had never been touched sexually by another woman before, let alone in a room full of people, and by an elegant older woman at that. When she looked around the room, she noticed that more people were looking at her again and smiling.<br><br>Catherine could hear the woman kneel down behind her, and in a quick moment, she felt a tongue press against her pussy.<br><br>"Oh!" she gasped.<br><br>The college student kept her eyes forward, towards the crowd, while she felt the older woman lick up and down the folds of her labia. The woman had a soft tongue and mouth which felt arousing against Catherine's pussy. The sexual pleasure she was feeling helped take the nerves away, even though she still felt embarrassment that so many people were watching her.<br><br>Moans escaped Catherine's lips, which only drew more attention to her. Many of the guests started to end their various conversations so that they could watch Catherine have her pussy eaten by a respectable older women. Some of the guests were sipping their cups of tea while they watched, as if the entire scenario was all so normal.<br><br>The older woman spread Catherine's labia apart, and continued to perform oral sex by using her tongue and slurping the vaginal fluids. Catherine's moans became louder. Her mouth was wide open, and both of her eyes became squinted. Before long, her toes curled against the floor, and her hands tightly squeezed the edges of the table. She came. Then her face and body relaxed.<br><br>"You obviously enjoyed that," the older woman said while rubbing Catherine's butt.<br><br>Catherine's body was slightly trembling as she stood up straight. Her toes were still curled. The orgasm felt so good, it almost made her forget that she was naked.<br><br>"That was, uhh, nice. It's been a while since I've felt anything like that."<br><br>"Lovely to hear. I know my husband enjoyed watching that."<br><br>The older woman then turned around and leaned over to kiss her smiling husband on the lips. Catherine watched the older couple swap her vaginal fluids as they kissed with their tongues.<br><br>"Do you provide oral sex?" a different man asked from behind.<br><br>Catherine turned around to see a handsome man in his late 40's. He looked like a complete gentleman, and she was surprised that he would ask such a dirty question so brazenly. The man looked strangely familiar to her, but she couldn't remember how she knew him.<br><br>"I don't mind," Catherine replied nervously, knowing the stakes would be raised.<br><br>"Are you any good?" he asked curiously.<br><br>"I guess so. I mean, I've been practicing lately."<br><br>The man smiled, "Excellent. I love a woman who knows how to suck."<br><br>Without any further words, the man started to undo his pants, looking directly into her eyes. Catherine knew what was expected of her, and she got down on her knees in front of the man, hoping to get it over with as soon as possible.<br><br>Once the man exposed himself, his penis was left dangling in the air, semi-erect. Catherine held it with both hands, while on her knees, and caressed it. She stroked it a few times and it instantly grew.<br><br>She leaned forward and wrapped her lips around it, forming a perfect O shape with her mouth, just like Abbey had taught her. She began to suck. Then she began to slowly lower her head, just like Abbey instructed her to do, and she took more of the cock inside of her mouth.<br><br>Catherine's eyes remained open. She briefly glanced around the room to see the crowd of people all staring at her while she sucked the man's cock. Her cheeks started to turn red again, but she wasn't as embarrassed as before. She was becoming more comfortable as she performed oral sex in front of everyone.<br><br>When Catherine looked up at the man, they looked each other in the eyes, and she finally recognized the man as being the Dean of the University she attended. She had seen him a few times giving speeches to the students. Once she realized who he was, she nearly spit his cock out and choked. But she kept on sucking, wondering if he had recognized her at all.<br><br>Her head kept on bobbing back and forth. She kept her lips wrapped tightly around him and continued sucking hard.<br><br>The man pressed his hand against her forehead and pulled back. His cock slipped out of her mouth.<br><br>"Stick your tongue out," he said.<br><br>He stroked his cock just inches from her face. Catherine stuck her tongue out. She felt humiliated and embarrassed that he was about to cum in her mouth for everyone to see.<br><br>He grunted a few times as he stroked his cock furiously. It wasn't long before heavy spurts of cum shot from his cock and into Catherine's mouth. She flinched the moment it hit her tongue. More spurts of cum coated her tongue. Some of the cum missed and hit her on the face, nearly getting in her eyes.<br><br>By the time he finished his orgasm, Catherine's tongue and face were coated with sperm.<br><br>Catherine was mortified. Her natural instinct was to spit the cum out of her mouth, but there was nowhere to do it, so she swallowed. She looked around the room and saw elegantly dressed men and women staring at her with extremely delighted looks on their faces. They were entertained by the show Catherine was putting on. Some of the men had amused smiles on their faces, while some of the older women almost looked envious.<br><br>Catherine suddenly remembered that there was cum splattered across her face, and she immediately attempted to wipe it away with her hands.<br><br>"Leave it there," he said. "It looks nice. I have a particular fetish for this sort of thing."<br><br>"Okay," she replied meekly, putting her hand down.<br><br>The college Dean tucked his cock back inside of his pants, even though it was still covered in saliva. Around the room, the guest began returning to their normal conversations after they watched the sexually explicit show. Catherine began to feel the embarrassment return as she continued her duty of walking around the room naked, this time with a coating of sperm on her face.<br><br>"You're putting on quite a show," another man said. "You're one of the best performers we've ever had. A complete natural."<br><br>The man was well dressed, in his mid 50's, and had a powerful stature.<br><br>"Thank you, sir," she said. "Do you come to these parties often?"<br><br>"Sure I do. I own the place."<br><br>Catherine's eyes lit up when she realized she was talking to the man who was paying her so much money to appear naked.<br><br>"You must be Mr. Wilson," she said. "Pleasure to meet you."<br><br>He smiled, "It's a pleasure watching you perform. I think you're great."<br><br>"Thank you, sir."<br><br>"You look especially stunning with all of that cum on your face," he said bluntly.<br><br>Catherine immediately blushed when she was reminded that it was there. She moved her hand to her face in a poor attempt to cover it.<br><br>"Oh... I... uh..."<br><br>"I'm only joking. Please excuse my sense of humor," he smiled. "There's someone I'd like you to meet. His name is Bill. I'd like you two to get better acquainted."<br><br>Mr. Wilson pointed to another man that was standing next to him. Bill was much younger, in his mid 30's, and fit. He was also sharply dressed.<br><br>Catherine and Bill shook hands and exchanged greetings.<br><br>Bill leaned forward and whispered in her ear, "I've been watching you since the moment you walked in. Don't you think it's time we put on a real show for this audience?"<br><br>`
+                },
+                {
+                    title: "Page 3",
+                    subtitle: "Catherine is hired to appear nude for an upscale party.", 
+                    content: `Her eyes widened, wondering what he could have meant by that statement.<br><br>"I've been trying my best sir."<br><br>"We can always do better. Turn around sweetheart. Hands on the couch. Spread your legs."<br><br>Catherine did what she was told to do. Bill's words let her know that she was in for something special. She put her hands on the armrest of the couch. She spread her legs. She knew was what coming.<br><br>Even though the room was filled with talking and music, Catherine could hear the sound of Bill unzipping his pants. She heard the noises of his pants ruffling as they were pulled down. Then she felt something stiff, with a soft touch, rub against the outer layer of her labia. It was his penis.<br><br>She gripped the armrest of the couch with both hands, squeezing tightly. She was preparing to be vaginally penetrated by a man she had just met, for the entertainment of other people.<br><br>Her hands squeezed tighter the moment Bill's hard cock slowly pushed its way inside of her. Her toes curled on the floor, and her back stiffened so that she would stay in place. Bill's cock continued to work its way inside of her. It felt like it was never ending. She never had a chance to see his cock, but she could feel that it was long and thick.<br><br>The penetration was especially uncomfortable since it had been a while since Catherine had sex. Bill went slowly, and her body had time to adjust to his size. Before long she felt pleasure when the cock entered all the way. The pleasure soon overcame the embarrassment she felt from having sex in front of a large group of people.<br><br>'I can't believe I'm doing this,' she thought to herself. 'I can't believe this is happening,'<br><br>Bill pulled his cock back, and thrusted it back in.<br><br>"Ohhhh god," she moaned out loud, which everyone heard.<br><br>It was by far the biggest cock that Catherine had ever felt. He was fucking her. She looked around the room and noticed that people were ending their conversations to watch her getting pounded from behind. Both men and women were smiling in amusement. Some of the guests were watching as they took sips of their tea.<br><br>Catherine should have felt mortified, but the pleasure was too great. She found herself enjoying the exhibitionist moment. Being watched only added to her pleasure. She eventually found herself pushing her hips back, and clenching her vaginal muscles, so that the sex would become even more intense. Bill grunted a few times as a result.<br><br>"You're pussy is so tight," Bill groaned. "You're an angel."<br><br>"Ughh... thanks... just keep fucking me."<br><br>A look of disbelief came over Catherine's face after she said those words. Her emotions were taking over and she no longer felt embarrassment for being nude. Her body was rocking back and forth while she continued looking at the audience which had gathered around her. Even the catering had stopped to admire. Before long, the casual sexual encounter turned into Bill pounding Catherine mercilessly from behind, for the entertainment of the entire party.<br><br>"I'm almost there," he grunted. "I'm close. Get down on your knees."<br><br>Catherine got on her knees, knowing what was expected of her. She opened her mouth wide, while Bill furiously stroked his cock. He orgasmed directly inside of her mouth, without missing a single drop until he finished. Once Catherine's mouth was full, she gulped it all down and swallowed.<br><br>"Bravo," Mr. Wilson said, as he began to clap.<br><br>The people in the room also began to clap as Mr. Wilson once again approached the naked college student. Catherine remained on her knees, unsure of how to react. Bill tucked his penis back inside of his pants.<br><br>"Once again, you were outstanding," Mr. Wilson continued. "You're a natural performer. Easily the best I've ever seen. Above all else, you're a natural exhibitionist. I see great potential in you."<br><br>"Thank you sir," she replied meekly, with the taste of cum still inside of her mouth.<br><br>"Do you still have energy to perform? My wife and I would like a turn with you."<br><br>Catherine nodded. "Anything for you, Mr. Wilson."<br><br><br><hr><br><br>It was almost evening by the time the party ended. Catherine's hair was a mess and her dress was sloppily worn. She walked to the front of the large mansion where Abbey was waiting in her car. Catherine carried an envelope with her. Once she got inside the car, she breathed a loud sigh of relief after a busy afternoon of hard work.<br><br>"How did it go?" Abbey asked curiously.<br><br>"I'm completely exhausted. It was a lot tougher than being a waitress."<br><br>"So you were actually naked?"<br><br>"The entire time," Catherine replied. "There was at least 50 guests there, and they saw everything. From head to toe."<br><br>"Wow. I didn't know you had it in you."<br><br>"Neither did I. But apparently I'm a natural. And I've been hired for the next party."<br><br>"What about the other thing," Abbey asked suggestively, before sniffing the air in her car. "And... what's that smell? It's musty all of a sudden."<br><br>"It's cum. Lots of it. I desperately need a shower and some mouthwash."<br><br>Abbey's eyes widened. "No way. Are you serious? I don't believe it."<br><br>Catherine lifted the bottom of her dress to reveal her exposed pussy, which still looked like a glazed donut. Abbey looked at the pussy in a state of complete disbelief.<br><br>"I serviced half of the room," Catherine stated. "Both men and women. Those oral sex tips you gave me really came in handy. The owner of this place said I was the best he's ever had."<br><br>"Oh my god, that's so wild. I can't believe it."<br><br>"Why don't you join me next time?" Catherine asked. "It's a lot of fun, and it's also a lot of money."<br><br>"I don't know if I can do it. Apparently I'm not as brave as you."<br><br>Catherine opened the envelope she was carrying and showed Abbey.<br><br>"Maybe this will change your mind," Catherine smiled.`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').innerHTML = `by <a href="https://www.literotica.com/authors/HeyAll/works" style="font-family: inherit; font-style: italic; color: inherit;">${storyData.author}</a>`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>

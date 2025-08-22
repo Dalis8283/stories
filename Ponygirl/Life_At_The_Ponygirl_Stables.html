@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>Life at the Ponygirl Stables</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --paper-color: #fefefe;
+            --line-color: #d1e7dd;
+            --text-color: #2c3e50;
+            --title-color: #1a365d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --binding-color: #8b4513;
+            --hole-color: #ffffff;
+            --hole-shadow: rgba(0, 0, 0, 0.3);
+            --tab-color: #fff5cd;
+            --tab-active: #ffe066;
+            --ink-blue: #1e3a8a;
+            --line-height: 24px;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-color);
+            line-height: var(--line-height);
+        }
+
+        .notebook-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            box-shadow: 
+                0 0 30px var(--shadow-color),
+                inset 0 0 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 5px;
+            overflow: visible;
+            transition: filter 0.3s ease;
+        }
+
+        /* Apply blur only to notebook container when dropdown is open */
+        .notebook-container.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Controls also get blurred when dropdown is open */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            transition: filter 0.3s ease;
+        }
+
+        .controls.blur-background {
+            filter: blur(3px);
+        }
+
+        /* Bookmark icon at upper right corner */
+        .bookmark-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--tab-active);
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .bookmark-toggle:hover {
+            transform: scale(1.1);
+            background: #ffd700;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bookmark-toggle.active {
+            background: #ff6b35;
+            transform: scale(1.1) rotate(180deg);
+        }
+
+        /* Chapter dropdown menu */
+        .chapter-dropdown {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(20px);
+        }
+
+        .chapter-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--tab-active) 0%, #ffd700 100%);
+            border-bottom: 2px solid #ddd;
+            text-align: center;
+            font-weight: bold;
+            color: var(--ink-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-content {
+            max-height: 320px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item:last-child {
+            border-bottom: none;
+        }
+
+        .chapter-item:hover {
+            background: var(--tab-color);
+            padding-left: 25px;
+        }
+
+        .chapter-item.current {
+            background: var(--tab-active);
+            font-weight: bold;
+            border-left: 4px solid var(--ink-blue);
+        }
+
+        .chapter-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .chapter-name {
+            font-weight: bold;
+            color: var(--ink-blue);
+            font-size: 1rem;
+        }
+
+        .chapter-desc {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .chapter-status {
+            font-size: 1.2rem;
+        }
+
+        /* Backdrop overlay */
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Notebook binding holes */
+        .binding {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 60px;
+            background: var(--binding-color);
+            background: linear-gradient(180deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            border-right: 2px solid #654321;
+        }
+
+        .binding::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-image: 
+                radial-gradient(circle at 30px 80px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 160px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 240px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 320px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 400px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 560px, var(--hole-color) 4px, transparent 4px),
+                radial-gradient(circle at 30px 640px, var(--hole-color) 4px, transparent 4px);
+            box-shadow: inset 0 0 10px var(--hole-shadow);
+        }
+
+        /* Main content area with proper line alignment */
+        .notebook-page {
+            margin-left: 80px;
+            padding: 40px 40px 40px 20px;
+            position: relative;
+            min-height: 100vh;
+            background: var(--paper-color);
+        }
+
+        /* Perfect lined background */
+        .lined-background {
+            position: absolute;
+            left: 20px;
+            right: 40px;
+            top: 40px;
+            bottom: 40px;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent calc(var(--line-height) - 1px),
+                var(--line-color) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+        }
+
+        /* Header - aligned with lines */
+        .notebook-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--title-color);
+        }
+
+        .story-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--title-color);
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 2);
+        }
+
+        .story-author {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            margin-bottom: 16px;
+            line-height: var(--line-height);
+        }
+
+        .story-date {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: var(--line-height);
+        }
+
+        /* Chapter content */
+        .chapter-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .chapter-content.active {
+            display: block;
+        }
+
+        .chapter-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: var(--line-height);
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--ink-blue);
+        }
+
+        .chapter-title {
+            font-size: 1.5rem;
+            color: var(--ink-blue);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-family: 'Times New Roman', serif;
+            line-height: calc(var(--line-height) * 1.5);
+        }
+
+        .chapter-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-style: italic;
+            line-height: var(--line-height);
+        }
+
+        /* Story text - perfectly aligned with background lines */
+        .story-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1rem;
+            line-height: var(--line-height);
+            text-align: justify;
+            min-height: calc(var(--line-height) * 10);
+        }
+
+        .story-text p {
+            margin: 0;
+            padding: 0;
+            text-indent: 24px;
+            word-wrap: break-word;
+            hyphens: auto;
+            line-height: var(--line-height);
+            margin-bottom: var(--line-height);
+            height: auto;
+            min-height: var(--line-height);
+        }
+
+        .story-text p:first-of-type {
+            text-indent: 0;
+        }
+
+        .story-text p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        /* Page corner fold */
+        .page-corner {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(-45deg, transparent 16px, var(--paper-color) 16px);
+            box-shadow: -2px -2px 5px var(--shadow-color);
+            z-index: 1;
+        }
+
+        /* Font style variations */
+        .handwritten {
+            font-family: 'Kalam', 'Comic Sans MS', cursive;
+        }
+
+        .typewriter {
+            font-family: 'Courier New', monospace;
+        }
+
+        .serif {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+
+        .control-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+        }
+
+        /* Stats */
+        .story-stats {
+            position: relative;
+            z-index: 2;
+            margin-top: calc(var(--line-height) * 2);
+            padding: 16px;
+            background: rgba(255, 248, 220, 0.8);
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            line-height: var(--line-height);
+        }
+
+        /* Page texture */
+        .notebook-page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(120, 119, 108, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 119, 108, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .notebook-container {
+                margin: 0;
+            }
+            
+            .notebook-page {
+                margin-left: 60px;
+                padding: 20px 15px;
+            }
+            
+            .binding {
+                width: 40px;
+            }
+            
+            .bookmark-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+            
+            .chapter-dropdown {
+                top: 4rem;
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+            
+            .controls {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .story-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls, .bookmark-toggle, .chapter-dropdown {
+                display: none;
+            }
+            
+            .notebook-container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+
+        /* Resume notification styles */
+        .resume-notification {
+            position: fixed;
+            top: 120px;
+            right: 2rem;
+            background: rgba(255, 229, 102, 0.95);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            animation: slideInRight 0.5s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffa500;
+        }
+
+        .resume-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: bold;
+        }
+
+        .resume-content button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-content button:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        hr {
+            border: none; /* Remove default border */
+            border-top: 2px solid #333; /* Create a solid top border */
+            width: 70%; /* Set width to 70% of the parent container */
+            margin: auto auto; /* Add vertical margin and center the line */
+        }
+        img {
+            align-self: center;
+            max-width: 90%;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn active" onclick="changeFont('typewriter')">📝 Typewriter</button>
+        <button class="control-btn" onclick="changeFont('handwritten')">✍️ Handwritten</button>
+        <button class="control-btn" onclick="changeFont('serif')">📖 Serif</button>
+        <button class="control-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+
+    <!-- Bookmark toggle button -->
+    <div class="bookmark-toggle" onclick="toggleChapterDropdown()">🔖</div>
+
+    <!-- Backdrop for blur effect -->
+    <div class="dropdown-backdrop" onclick="closeChapterDropdown()"></div>
+
+    <!-- Chapter dropdown menu -->
+    <div class="chapter-dropdown" id="chapterDropdown">
+        <div class="dropdown-header">
+            <span>📚</span> Choose Chapter
+        </div>
+        <div class="dropdown-content" id="dropdownContent">
+            <!-- Chapter items will be generated here -->
+        </div>
+    </div>
+
+    <div class="notebook-container">
+        <div class="binding"></div>
+        
+        <div class="notebook-page">
+            <div class="lined-background"></div>
+            
+            <div class="notebook-header">
+                <h1 class="story-title" id="storyTitle">Your Story Title</h1>
+                <p class="story-author" id="storyAuthor">by Author Name</p>
+                <p class="story-date" id="currentDate"></p>
+            </div>
+
+            <!-- Chapter content will be dynamically loaded here -->
+            <div id="chapterContainer">
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">Welcome</h2>
+                        <p class="chapter-subtitle">Start Your Story</p>
+                    </div>
+                    <div class="story-text">
+                        <p>Your story content goes here. Replace this text with your chapters.</p>
+                        <p>The text will automatically align with the notebook lines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-stats" id="storyStats">
+                <strong>Chapter <span id="currentChapterNum">1</span> Statistics:</strong>
+                Lines used: <span id="lineCount">0</span> | 
+                Words: <span id="wordCount">0</span> | 
+                Characters: <span id="charCount">0</span> | 
+                Reading time: <span id="readingTime">0</span> minutes
+            </div>
+
+            <div class="page-corner"></div>
+        </div>
+    </div>
+
+    <script>
+        // Story data - Add your chapters here
+        const storyData = {
+            title: "Life at the Ponygirl Stables",
+            author: "DjElta",
+            chapters: [
+                {
+                    title: "Chapter 1",
+                    subtitle: "",
+                    content: `The barn can hold 36 ponygirls but it usually has less — often about 28-30.<br><br>Physically, it's surprisingly easy to change a young woman into one of our ponygirls. They take all her clothing, naturally. And they have her vocal cords removed right away so she can make almost no sound — sometimes just a weak bleating noise. She gets a collar. And she gets her arms fastened back. That's it.<br><br>After a little experimenting in the early years the owners found that the best way to secure a ponygirls arms. They have her fold up her arms behind her back, with each hand resting in the opposite elbow. Then they apply a strong, light fiberglass cast that covers her forearms and elbows. They carefully leave a bit of each fingernail exposed so they can keep her nails trimmed. It's an effective technique. Not only does it keep her restrained it tends to pull back the shoulders a bit especially when she inhales, which looks pretty.<br><br>While the physical changes are quick and easy the training for body and mind is another matter. They have to convince a healthy, happy, lively young woman that she is really no longer a person — she's now basically just an animal and that's all she'll be for the rest of her life. Even when a girl is really happy and eager for this role it takes months and years of hard training to really get that message to start to sink in deep. If a young woman comes to us who isn't very happy and enthused about her new life, well the training is going to be that much more difficult for her.<br><br>There's no release from our facility — not ever. When a young woman arrives here to start her new life it's always one-way trip. If her owner gets tired of her, or wants younger models, or stops paying the bills, then she gets harvested right here at our facility. It's called the "glue factory" but actually it's more like a medical operating room. They harvest the useful organs and other parts of her body, which can be sold for a lot of money. Most of what's left gets ground up for feed.<br><br>The facility owner, Ms. Williams, always told me the most important part of training is to work each one to exhaustion every day. That way each one stays very fit and looks fantastic. Long, exhausting workouts also help each ponygirl eat and sleep well. And when she's very well trained there's less need for heavy use of the whip or an electronic prod. So long training is part of the culture here. Even when a girl gets to her very last day here it's common to give her a long and hard final training session.<br><br>The costs are exorbitant. Only the wealthiest owners can afford to keep a ponygirl or two. The owners can visit whenever they want, and the management will help to make their visit fun.<br><br>They can set up a ponygirl race. That's kind of fun to see. The racers have to wear these leather boots with ridiculous high heels. So while they try to get around the track pulling a cart and a rider there's lots of "jiggling" movement during a race, especially from the ponygirls who are the most busty. Guys seem to really enjoy that. Lots of women do too.<br><br>The owners can also see a demonstration of skill. I like to watch the precision maneuvering while blindfolded. They put a big, thick mask on a ponygirl. With practice, a rider in a cart can guide her through some very complex maneuvers with just some clicking sounds and use of the reins and whip. It takes lots of practice for a girl to get good at this — when she's good at it, it's really fun to see.<br><br>When an owner visits the most popular activity is to go out for long rides in a cart — the estate here is enormous with vast miles of quiet, shady country lanes. The management will pack a nice picnic lunch and maybe a bottle of wine. The owner can drive the cart anywhere he wants, with a guest if he wishes, for as long as he wants to enjoy all the beautiful sights.<br><br>When an owner is going to visit it's an exciting time. His ponygirls get extra attention before each visit. They get extra exercise and extra grooming. When an owner is coming to visit you can sense the excitement and pride in his ponygirls — they stand straighter and train harder, trying to look their best and please the master.<br><br>I took a job at the stables during my senior year, and started full-time work after graduation. I enjoyed it.<br><br>While I was working at the stables I felt sad for two of our prettiest ponygirls, Buttercup and Snickerdoodle, because their owner never visited. Every day they trained very hard. They both looked so poised and elegant and gorgeous. I never really heard how they came to be ponygirls. Someone said they were friends in college and were both ballet dancers before they got an offer to leave school to become ponygirls. I can believe that — they both have the right body type for ballet. I wondered what they must think and feel, never being visited by their owner. Did they feel sad and frustrated? Or did they feel content?<br><br>Then one day we got some exciting news. Buttercup and Snickerdoodle were getting a visitor. Their owner wasn't planning to visit — his son had permission to visit the estate for few days while his college was on a break. And we heard he was bringing a guest. I felt like that was good news for the ponygirls. All of us on the staff made an extra effort to help them be ready and look their best.<br><br>When the young man arrived he made a good impression. Phillip was his name. Being handsome, well-mannered and from a billionaire family, lots of the women on the staff couldn't help but swoon a bit. I got the sense he could charm lots of women when he wanted, and he enjoyed doing it.<br><br>He arrived with a girlfriend, Cynthia. She was about average height, very slim and beautiful. Someone here on the staff joked that we looked so similar we could be sisters. I doubted that was true — I think she's much prettier than I am. But I took it as a nice compliment. She and I seemed to get along pretty well right from the start.<br><br>Phillip and Cynthia moved into one of the guest cottages here that we keep for visitors.<br><br>Cynthia seemed shocked by the idea of real, live ponygirls. I'd been around them so much that I sometimes forgot how unusual this can seem to people who haven't been.<br><br>At first Cynthia was embarrassed and nervous to even look at them. When she was near one of the ponygirls she'd sometimes laugh and hold up her hand the side of her face to block her view. In time, she overcame some of her shock, but still seemed somewhat guarded and nervous around them.<br><br>She seemed to dote on Phillip.  The two of them took the ponygirls for long walks all over the estate. He'd usually get into the cart first, sit down, and take up the reins. Then Cynthia would get in and snuggle up next to him, holding one of his arms. She seemed happy. They'd leave in mid-morning and not be back until dusk. They both seemed equally happy at the end of the day, so whatever went on between them it must have been pleasant.<br><br>Phillip sometimes offered to let Cynthia hold the reins in the cart and she refused — she said that's strictly a role for a man. But she was intrigued by the ponygirl life and asked if she could help with their care in other ways. He said "Sure." So Cynthia came to spend time with me in the evenings. I showed her how we walk them over to the washing station with a leash, then lock their ankles in place in the washing rack.<br><br>I asked if she wanted to help with the washing. She was timid at first about that but said she's willing. I told her she wasn't doing them any favors if they don't get a really good, thorough washing all over — not skipping any parts of the body. They have a tough, exhausting life and the best way to show kindness to a ponygirl after a hard day is to make sure she's thoroughly cleaned and groomed of the sweat, dust, grime, and whatever else is on her body.<br><br>With a little coaching Cynthia got more comfortable at doing the whole evening routine along with me and the other washing girls. Once I saw she was doing a good job I let her take care of Buttercup and Snickerdoodle in the evening while I took care of other ponygirls. Phillip would sometimes stroll over in the evenings to chat. He seemed to like to see us going through the end-of-day process with the ponygirls — lots of men like to watch that.<br><br>As she got a little more comfortable around the ponygirls Cynthia started noticing more about them. She noticed lots of them often have very erect nipples, even during the warm desert days.<br><br>I told her that's real common. And not just in the nipple area. Maybe being a ponygirl is a really fun and exciting life for many of them, I told her. And maybe that excitement shows on their bodies. Or maybe the management puts some hormones, or something like that, into the food and water and the weekly "vitamin" injection they all get. God only knows what compounds the ponygirls are getting that might make them more perky and horny and aroused.<br><br>Sometimes when I'd see a ponygirl with really extra perky nipples I wondered if I should feel sorry for her. Maybe she feels embarrassed and sad to look that way, especially with no way to cover herself. But on the other hand it looks really sweet and feminine and cute. It draws the eyes of onlookers to the breasts. Maybe some ponygirls feel proud and happy to look so perky and pretty. I figured a smart ponygirl will try to accept her life and try to enjoy the complex emotions and experiences as much as she can.<br><br>Cynthia asked if she could put some makeup or jewelry on the ponygirls. She thought they might enjoy that.<br><br>I told her the rules are really strict — ponygirls aren't allowed any kind of makeup, jewelry, or anything like that. Nothing should detract from their natural feminine beauty. The only exception that we sometimes allow is a hair ribbon — nothing more.<br><br>Cynthia smiled and perked up at that. She seemed to like this rule. With a happy tone of voice she said, "Oh if I was a ponygirl I think I'd definitely enjoy a hair ribbon now and then."<br><br>The next day we got the ponygirls hitched to the cart like normal for the daily drive. Then I gave the clicking sound that was the command for them to kneel.<br><br>They both kneeled in perfect unison. They crisply took up the correct position — chin up, shoulders back, eyes straight ahead. They both crossed their ankles in the proper "X" position. Their knees were spread wide apart in a beautiful, sweet and submissive way. They're very well trained. I looked at them both closely. They looked so lovely, cute and pretty I had to smile.<br><br>I wondered what they must be thinking and feeling. Did they hate being ponygirls? Did they love and adore the chance to live as ponygirls? Did they have mixed feelings? They were both so poised and patient while they waited that I couldn't tell what either of them were feeling. Maybe it's strange to say but I felt a touch of envy for the life they get to live — living a life with no other role and no other purpose than being very highly fit and highly trained and so gorgeous for anyone to look at. <br><br>I had a spool of plain black ribbon ready for Cynthia with scissors. Cynthia took pleasure in snipping off a couple of ribbons from the spool.<br><br>Cynthia stepped behind them both. The ponygirls had their long hair tied back in a ponytail (of course) with a simple band. Cynthia took her time putting a ribbon onto the hair of each one and tying it up with a pretty 4-way bow just the way she wanted it.<br><br>She had a smile the whole time. The whole scene reminded me of a young girl playing with her Barbie, having fun fixing the hair on the doll just the way she wants it. Cynthia seemed to have the same kind of feelings when applying a bit of decoration to the two real-life girls. It was cute.<br><br>When Cynthia was done she stepped back to admire her work. I made the clicking sounds for the girls to stand up, and they did so. I think they seemed to like the extra attention — the two magnificent, gorgeous naked ponygirls seemed to stand a little more tall and a little more proud, with their shoulders back a little extra after getting the special hair decoration.<br><br><br><hr><br><br>Phillip and Cynthia only had a few days to visit. When it was over I told them it was nice to meet them both. I hoped they had fun and would return soon.<br><br>About a month later, I was surprised to see Cynthia again at the stables. I remember that vividly. It was a beautiful afternoon when she strolled over to say "Hello." She was dressed very informally in a really short denim skirt, sandals, and a tight tank top. Her simple outfit really showed off how slim and beautiful she is.<br><br>While it was great to see her I was very confused. "Well Hi," I said. I asked if Phillip was with her.<br><br>She said, "No."<br><br>That was very strange. Only the owners or their very close family are allowed to visit. And our security is extremely tight. Had she gotten in by mistake?<br><br>She shook her head. "No mistake," she said.<br><br>"What brings you here sweetheart?" I asked. I started to have a little hunch about what was going on but it was really hard to believe.<br><br>She said Phillip had given her a sealed envelope. Inside were all the forms necessary for her to become a ponygirl, along with a big check for the first few years of her boarding, care, and training. All she had to do was walk over to our main office and drop off the envelope — everything would be taken care of.<br><br>"Oh my God," I said. I was truly stunned and taken aback. I was sure there had to be some mistake or misunderstanding. "You realize there's no going back, don't you? You know this is permanent — like, for the rest of your whole, entire life, right?" I said, feeling very concerned for her. She seemed like such a nice girl and we'd gotten along so well. I was very worried she didn't understand the gravity of her situation.<br><br>It was obvious she was nervous. But she said she was willing to move forward and she knew there's no way to back out later. I was still having trouble picturing her as one of our ponygirls. But I didn't feel like it was my place to try to talk her out of it if it's what she wanted to do. An offer like that happens only once in a lifetime. There are only a few billionaire families who could afford this sort of thing and fewer still who want to own ponygirls. An offer to become a ponygirl almost never happens, and when it happens it's safe to assume it'll never be repeated.<br><br>"I thought you and Phillip were getting along so well," I said. "You two looked great together."<br><br>"He's a great guy," she said. "But I always knew he was not THAT interested in me. We had a lot of fun together! But he's got a fiancé. I always knew our dating was just a fling for him."<br><br>"You're going to become his property and he can do anything he wants to you — you understand that, right"? I asked.<br><br>She didn't seem too worried. She gave a bit of a shrug and a bit of a smile. "He can't do too much to me he hasn't done to me already."<br><br>"You're such a smart and gorgeous girl — you could do a million other things with your life." I said.<br><br>"Thanks," she said. She gave a big sigh. "This is what I want to do," she said, but it sounded like she wasn't totally sure and was trying to convince herself.<br><br>"God — I hope you know what you're getting into," I told her.<br><br>"You don't think I can handle it?" she asked.<br><br>"Oh sweetheart — it's really hard, but if it's something you want to do I think you can handle it." I told her. "And believe me — you will look extremely gorgeous, fantastic and amazing. You will turn lots of heads wherever you go."<br><br>She got a nervous smile. "Thanks," she said.<br><br>I asked her what report date was on the papers.<br><br>"Today," she said.<br><br>That was a bit of a problem. It was already late in the afternoon and the front office would close within the hour. "You don't want to be a day late," I told her. "And you don't want to show up right at closing time either — that might get them ticked off. They can make your life extra harsh for months and years if you annoy them on your first day." I said.<br><br>She nodded. "Yeah, I better get over there soon," she said.<br><br>I said I'd walk over to the office with her if she wanted moral support.<br><br>"Well," she said. "Uh ... there's one more thing," she said obviously nervous.<br><br>"What's that?" I asked.<br><br>"Phillip ... he gave me a second envelope. It has a second set of forms and a second check."<br><br>That made sense. Very wealthy owners often like to have a pair of ponygirls — not just one. Typically they want girls with a similar height and body type, to look best as a pair.<br><br>"Who's the other girl?" I asked. "She better not be late."<br><br>"Well..." Cynthia said. "I hope you're not mad at me to tell you ... the forms in the second envelope have your name on them ... if it's something you want to do."<br><br>"Me!? Me!?" I said, stunned. "Why would I do this!? Do you even know what you're asking?" I said.<br><br>She shrugged. "I told him you probably wouldn't be interested," she said. "I just wanted to let you know it's an option. Phillip thinks you're really gorgeous. I do too," she said with a bit of a smile. "I think we're about the same height and weight. He thought you and I would look great as a pair."<br><br>I was stunned. I had to sit down for a second and catch my breath.<br><br>"Are you f-ing kidding me?" I asked. I was hoping this was some kind of joke or hoax.<br><br>She shook her head seriously. I could see she wasn't joking.<br><br><br><img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/211ab028-d04b-484e-b1f2-b3741dca8d77/dc3z8u0-aca4add8-e5a6-4199-897e-b9e3bff8810f.png/v1/fill/w_1024,h_700,q_80,strp/ponygirl_washdown__art_by_gallows_girl_amy__by_djetla_dc3z8u0-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NzAwIiwicGF0aCI6IlwvZlwvMjExYWIwMjgtZDA0Yi00ODRlLWIxZjItYjM3NDFkY2E4ZDc3XC9kYzN6OHUwLWFjYTRhZGQ4LWU1YTYtNDE5OS04OTdlLWI5ZTNiZmY4ODEwZi5wbmciLCJ3aWR0aCI6Ijw9MTAyNCJ9XV0sImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS5vcGVyYXRpb25zIl19.ZUQns178yAGFIGC3lQZvBY1JMjzz_NFKGeQVy-pHxtI">`
+                },
+                {
+                    title: "Chapter 2", 
+                    subtitle: "",
+                    content: `"Oh my God," I said.<br><br>"Sorry to shock you like that," Cynthia said.<br><br>She reached into her purse and pulled out a thick, tightly sealed envelope. "Anyway, this is yours," she said and handed it to me. "You can burn it or shred it, or do whatever you want with it."<br><br>I took the envelope. My first thought was to shred it and then burn the shreds.<br><br>"I hope you're not mad," she said. "I should go over to the office now. I'll ... see you around I'm sure."<br><br>"Wait — I'll walk with you if you want," I said.<br><br>"Thanks — that's sweet!" she said with a big smile and a nod. "I want to do this but God I'm nervous! I could use the moral support. We've only spent a little time together and you've been a really good friend." From her tone it was obvious she was feeling a lot of emotional stress.<br><br>I put the envelope in my back pocket and grabbed her arm tightly. We started walking over to the main office.<br><br>I tried to walk slowly and she seemed okay with that — maybe she was thinking about how this would be her last few minutes of freedom for the rest of her life. Maybe she was trying to savor her last few minutes of freedom.<br><br>I thought about what was ahead for her. I felt really worried and scared for her. The ponygirl life is very hard every day. And there's no way to stop the hardships or look forward to any release. Cynthia seemed like such a sweet girl and I was filled with worry about what she was getting into.<br><br>On the other hand I hoped she could enjoy her new life too — at least once in a while. From time to time I sometimes thought it might be kind of fun to be a ponygirl. I could only imagine what all the powerful good and bad feelings might be like.<br><br>When we got the office the receptionist, Kay, was there. I always like seeing Kay — she's so pretty and upbeat.<br><br>"Hey Sweetie!" Kay said to Cynthia. "We're expecting you. I was starting to think you changed your mind."<br><br>"I'm here," Cynthia said, with a smile and a big sigh.<br><br>"It's a big, exciting day for you isn't it?" Kay said with a big smile. "Gosh you look so calm. I admire that. If I was in your place I'd be a total emotional wreck."<br><br>"I'm plenty nervous inside," Cynthia said.<br><br>"Well don't you worry about a thing. Look at you — you're so brave and gorgeous. You're going to be a fantastic ponygirl. I hope it's a huge amount of fun. Part of me is a little bit envious of you," Kay said. "You should go right in — Ms. Williams is expecting you," she said, gesturing to the office door.<br><br>Cynthia glanced over at the open office door. "I better go now," she said to me with a lot of tension in her voice. "Thanks for everything."<br><br>I had never seen someone turn herself in to become a ponygirl. Part of me felt sick about the whole thing. Another part of me was a bit intrigued.<br><br>"Can I go with her?" I asked Kay. I was partly hoping she'd say "No."<br><br>"Of course, sweetheart!" she said to me. "And how are you today — you doing okay?"<br><br>She seemed to have a look of kindness and concern on her face. I wondered if she knew about the offer I'd received.<br><br>My insides were churning. Part of me wanted run out of that office and never look back. But part of me wanted to stay and see what would happen. "Thanks — I'm good," I told her.<br><br>Cynthia and I walked into Ms. Williams' office. She's a hard driving perfectionist who usually has a dour attitude.<br><br>"You're running late little lady," she said to Cynthia.<br><br>"I'm here, Ma'am," Cynthia said. We stood in front of her desk.<br><br>"Well do you have something for me?" Ms. Williams asked. She never liked much chit-chat.<br><br>Cynthia nodded. She took a pause and a deep breath and handed over her sealed envelope.<br><br>Watching that made my heart skip a beat. She was locking herself into a life with huge, constant hardships and no escape.<br><br>Ms. Williams turned to me. "What brings you here darling?" she asked.<br><br>I was breathing hard. I thought about the tremendous difficulties ahead for Cynthia, a beautiful young woman forced to become a barnyard animal. I thought she had no idea how tough her life was about to become. I also thought about how pretty a ponygirl can look, totally bare and fit and gorgeous. In spite of the huge hardships I thought it might be fun to look so good. I thought the ponygirl life must have some huge good and bad emotions. Living that life and trying to keep a good attitude might be a really tough but interesting challenge. It was a chance to do something that most women could only imagine.<br><br>I swallowed hard. I got the envelope from my pocket. Part of me felt horrified at what I was doing. Part of me felt good. My hand was shaking a bit and I made myself hand it over to Ms. Williams.<br><br>Cynthia looked shocked. I think she was so surprised she forgot all of her own worries for a moment or two. She glanced over at me and gave me a big, happy grin. I couldn't help smiling too in spite of my fears.<br><br>"All right," Ms. Williams said to me. "I didn't think you wanted to be a ponygirl, sweetie — I didn't see that part of your personality. I guess we should never make too many assumptions about people."<br><br>"Anyway," Ms. Williams said, taking a deep breath. "Let's not get ahead of ourselves girls. I can't accept either of you until I see if the paperwork is okay. So let's see what we have here. Just wait where you are while I look this over."<br><br>She took some time to find a letter opener in her desk drawer. Then she opened the envelopes one at a time. She took out the contents, unfolded them, and spent some time studying all the forms. We both just stood there. I kept my arms behind my back while we waited — that seemed appropriate. Cynthia did the same.<br><br>When Ms. Williams was done with the forms she looked up. "Well, the paperwork looks okay, girls," she said. "I hope that's good news for both of you."<br><br>She glanced down. "Well, let me take that back," she said. "It looks like Phillip forgot to sign one spot on one of the forms for both of you."<br><br>"Men!" she said with a bit of exasperation. "They're not known for their attention to detail, are they? But men have other good qualities and they let us pay our bills. Anyway I don't want you girls to worry your pretty heads. I don't think it's a big deal. Maybe you're both eager to get started on your new lives and we don't need to let a little thing like this cause delays. I'll just get the extra signatures next time he's here."<br><br>She looked up at me. "Now you know what we do here, sweetheart," she said. "We can't go easy on you because you've worked here, right?" she asked.<br><br>I gulped and nodded. "Yes," I said. I tried to sound bold and brave but I guess my voice was shaky.<br><br>She turned to Cynthia. "When you visited us, dear, did you get to tour all of our facilities? Do you understand what you're getting into? Do you understand this is permanent and you'll never be released?"<br><br>"Yes Ma'am," Cynthia said with a nervous smile.<br><br>"Okay," Ms. Williams said.<br><br>She took a breath and continued, "These contracts have a 'back-out' clause. You can both change your mind. And that's okay — I don't want you to be here if it's not what you want. We'll call you a taxi," she said cheerfully. "We'll pay for the taxi and the rest of your travel. You can go home and have a nice, normal life. Years from now you can think back to the day you almost became a permanent ponygirl."<br><br>"But ..." she said, looking at her office clock, "the back-out clause is only good for another 15 minutes. So if you want to leave you ought to do it now."<br><br>Cynthia and I glanced at each other. I knew neither of us would leave. At the same time I could guess what Ms. Williams was going to say next. That filled me with dread. And okay — maybe I felt a little intrigued or turned on too in spite of my fear.<br><br>She took a long pause. Then took a deep breath and continued. "If you want to stay here you get to live the rest of your life as extremely motivated and happy ponygirls. If that's what you want then I suppose you're both dying to get out of of those clothes you're wearing, right? A ponygirl who is extremely happy and extremely high-spirited doesn't need any clothes — and she doesn't want any clothes. You can strip down to your panties and put all your things into the bins over there. You can leave your panties on my desk."<br><br>Cynthia and I glanced at each other again. My heart was racing. I felt glad she was there with me. I think this whole process would be much harder for someone who was by herself. Maybe Cynthia felt the same — if so then I felt glad I could be there for her to help make the process a little easier for her.<br><br>Anyway we exchanged some nervous smiles, and we did what she said.<br><br>When I was down to my panties I had to take a pause to catch my breath. Cynthia did the same.<br><br>I noticed Cynthia was wearing some pretty, tiny little lingerie panties. They didn't cover much. They looked very cute and adorable. If I had known this would be a special day I would have done the same. Mine were just ordinary — just skimpy little white cotton panties with a tiny little strawberry pattern around the waistband for decoration.<br><br>We both took a couple of deep breaths to build up courage. Then I slipped off my panties put them on the desk. Cynthia watched me, then she did the same.<br><br>I was feeling incredibly self-conscious. I wanted to cover my body with my arms but I knew that was a bad idea. I made myself keep my arms at my side.<br><br>Next we had to sign the paperwork in a couple of places. When it was my turn to sign the papers I tried to write big and clear, so there'd be no doubt or ambiguity about my signatures. I guess some of my signatures came out kind of shaky. But Ms. Williams nodded as I signed all of my forms and all of the signatures seemed to be okay with her.<br><br>Ms. Williams went on, "It's too late in the day to get your arms fastened behind your back tonight. But don't feel sad — I promise we'll get that done tomorrow and then you can enjoy those feelings for the rest of your life."<br><br>"Almost everyone loves to see a beautiful ponygirl and I think you two might do very well," she continued. Then she paused and dropped her tone to emphasize the seriousness of what came next. "Listen now — your lives depend on it. Being a fantastic ponygirl doesn't just come from being young and beautiful. It doesn't just come from being superbly fit, and well trained, and exceptionally obedient, okay? It comes from showing the world an extra sunny and happy attitude all the time," she said soft but very clear. "I don't want you to 'accept' your new life. I want you to embrace it and love it and show the world every day how excited and thrilled you are to live this life. That's your challenge. Being a ponygirl is not a long life — it can end any time. I think you both know that. Try to really love and enjoy every single day. Try to savor the ups and downs of every hour and every new experience. Is that clear?"<br><br>Her words were scary but she made good sense. We both nodded.<br><br>Finally she said, "This will be the last night when your hands are free. You might want to ... you know ... uh, use the time well, if you know what I mean. Maybe you want to really savor good feelings and give yourself some great memories you can hold onto later on."<br><br>I had to blush and smile at that. I knew what she meant. I figured Cynthia knew too. It was kind of Ms. Williams to say that. And she had a good point — especially the part about "savoring." It seemed like a smart idea to let my fingers do a little bit of wandering that night in spite of whatever difficult emotions I was feeling. I'm glad I did.<br><br>She had some temporary collars for us. I knew we'd get permanent collars soon.<br><br>I was going to put my collar on myself but Cynthia turned to me and gestured like she wanted to do it. I nodded to her, turned away from her, and I gathered up my hair to hold it clear. She stood very close. I thought I could sense the warmth of her bare body near my bare skin. She put the collar around my neck gently and locked it snug. I took a moment to touch it. It felt funny. But it felt okay too. It's complicated.<br><br>Then Cynthia turned away from me and gathered up her hair.<br><br>I got very close to her ear. "Now just stand still for me like a really good little pony," I said softly.<br><br>She giggled and nodded.<br><br>I took my time. I figured there was no need to rush — I might as well take my time and have fun.<br><br>Finally Ms. Williams checked the paperwork to see our new names.<br><br>She looked up at Cynthia. "Now you're 'Gumdrop,'" she said.<br><br>She nodded.<br><br>She turned to me, "And you're 'Bonbon.'"<br><br>I nodded. That's been my only name ever since.<br><br>One of the trainers came over to the office with a couple of short leashes. I watched very closely as she went to Gumdrop first. Gumdrop seemed happy to lift her chin up to show she was ready for the leash. I guessed that her calm exterior was hiding a lot of complicated emotions.<br><br>Then it was my turn and I lifted my chin up too. Being leashed that day was a new experience for me.<br><br>The trainer led us outside to a small building that had some holding cells.<br><br>That was my first time walking across the training yard while I was naked for all to see. No matter how much I do that it always feels funny.<br><br>Being locked inside my holding cell was another new experience. I got food and water later but otherwise there wasn't much to do. The walls were brick and cell doors were heavy wood from floor to ceiling, so I couldn't see out. I couldn't communicate with Gumdrop or anyone else. I got to sit and think about the stunning events of the day. And I got to think about what was ahead. I thought about everything Ms. Williams had said. It was good advice. I promised myself I'd try my best and try not to look back on my decision with much regret.<br><br>I think about that day a lot.<br><br>Since then I've been fully immersed in this life. I have all the restraints. I have to get used to bits and bridles and blinders, and the stroke of the whip. We spend long days trying to learn how to be good ponygirls. It's all much stranger and far harder than I thought it would be.<br><br>I seem to have a lot of mood swings. I don't know if they put something in the food and water. Or maybe that just comes from all the very strange pains and pleasures, hopes and fears of being a ponygirl.<br><br>On the bad days this is a nightmare. I didn't know I could feel so sad and helpless and frustrated. The whole ponygirl idea feels incredibly stupid and cruel and sadistic — it has no purpose except to make a young woman feel totally exposed, vulnerable and humiliated for every minute of her life. And there's no hope that things will ever get better.<br><br>On my worst days I hate everything about the ponygirl life — not being able to talk, or wear any clothes, or have any freedom. Probably the worst feeling of all is having my arms fastened behind my back so tightly. I feel incredibly sad and useless and helpless because I can't do the simplest things like wash myself or feed myself or a billion other things. I feel useless to do anything in life except pull a cart. The staff often remind me I have no purpose in life other than being a ponygirl and they treat me like I'm less than human. I'd give anything if I could be a normal girl again so I could move my arms and maybe wear something like panties or a skirt to cover myself. Even if I could do that for an hour it would make me SO happy. I think about how that is never going to happen and I get filled with despair. Sometimes I think death would be better than being so helpless and naked all the time. But I don't have any control over that either.<br><br>Sometimes I'm so frustrated and unhappy that I'm just about in tears. I know I'm supposed to show the world a sunny, happy attitude. I didn't know it would be so hard! When I'm feeling my worst it takes all my willpower not to let that show — Gumdrop and I are a pair and it wouldn't be fair to her if I slack off. So I try extra hard to keep my chin up, shoulders back, tits pushed forward, with a proper, happy stride. I try to remember what Ms. Williams said — a fantastic ponygirl doesn't think about clothes and she doesn't want any clothes. When I pretend to be very happy I think that helps me feel a little better. I suppose it's a good thing we get hard training every day — when I'm focused on the training I don't have time to feel too sad.<br><br>Some days this life isn't all bad. It has some interesting challenges and experiences. I get lots of fresh air and exercise. With the constant daily workouts I feel my body getting more slim and fit all the time. What girl wouldn't enjoy those feelings?<br><br>I can lift my mood a bit by noticing nature and my surroundings. I can sense far more about nature now. It's odd. Maybe that's because I have no books, no magazines, no phones or more to distract my thoughts. I see animals around me, like birds and squirrels, and their daily patterns of life. They look so free. On dark, chilly mornings when I'm getting hitched up to a wagon I feel really chilly in ways I never noticed before let me tell you. Oh my God it feels incredibly good to finally get started on the daily training and feel my body getting warmer with exercise and the rising sun. When there are distant thunderstorms coming our way I can sense lots of little changes in the breeze, and changes in the light. I can smell the little changes of moisture in the air as the storm approaches. It's strange and weird to notice so much more about nature than I used to — it's fun.<br><br>Some days I'm in a fantastic mood. I don't know why. When I'm having a great day then this life is terrific and wonderful. I think about how every part of my body is exposed and naked for all of God's creation to see. That's scary. But it can be scary in a fun way that makes me blush, gets my heart beating, and gets me breathing deep. I can't help getting a great big smile even when there's a bit strapped deep in my mouth. I think about how my arms are folded up snug behind my back and fastened together very tightly. God — when I'm in the right mood that feels completely fantastic and sexy and wonderful. I feel so lucky and special.<br><br>It's fun to tug against the restraints on my arms just to feel how solid they are — I don't have the slightest wiggle room. That makes me feel happy and tingly. I think about how there's no chance my arms and hands will ever be free for the rest of my life. Oh my God — that gives me an electric little thrill right up through the most special and sensitive part of my body if you know what I mean.<br><br>I think about the women around me who work here. They can wear clothes, and talk with each other. At the end of the work day they can go home to a husband, boyfriend, maybe kids, and have a normal life. That's so different from my life. They have no idea how many million things they can do that I can't — to drive a car or cook some food or go shopping with friends or talk with a man, or just wash themselves. All those things are gone for me. I feel incredibly sad sometimes. Other times I feel fantastic — being a ponygirl is incredible.<br><br>When I'm in a great mood I can't help myself — I love to inhale and arch my back and soak up the amazing feelings. I feel aroused, warm and tingly inside. I feel sorry for women who don't know how fun this life can be. Sometimes I think that if I'm sent to the glue factory tomorrow it's all been worth it to have this amazing and incredible experience. I feel very blessed — I wouldn't want it any other way.<br><br>When I'm most turned on and aroused I sure can't hide it. My feelings are written all over my body for all to see. Sometimes the trainers pretend not to notice. Other times they get a smile or a snicker. That can be so embarrassing. But sometimes having my feelings totally on display can be kind of fun and it makes me smile.<br><br>On the best days I wish Phillip was here so I could give him a proper "thank you" for letting me live this life. That would be really fun. Since he's not here I guess the next best thing I can do is focus really hard on getting all the training for my body and my mind.<br><br>I really think they put something in the water and food and injections they give us because getting laid is constantly on my mind and I get aroused very easily. When I see a man walk by my field of vision I think of sex, even if he's very plain. I look at female bodies differently now too. Those feelings and urges are kind of scary to me but they can be kind of fun too.<br><br>The evening wash-down is one of the better parts of the day. Even if I've had a rough day or my mood isn't the best it's always a lot of fun to get my ankles locked into one of the washing racks and wait my turn for one of the washing girls to come by with a big bucket of hot, soapy water to scrub away the daily sweat, dust, grime and more. While I'm waiting there aren't any trainers around. Still, I want to use the time well so I like to practice my proper ponygirl skills — I try to keep my head up, shoulders back, eyes straight ahead, and think about how I'm supposed to show off a sunny, happy attitude. I'm usually waiting 30-90 minutes and I challenge myself to see if I can hold a good posture and a steady gaze and cultivate a happy attitude the whole time. It's not always easy. But with practice I think I'm getting a bit better each day.<br><br>There are several washing girls here. It's always fun when one of them arrives at my station and I know it's my turn. Each of them does the job a bit differently and I have my favorites. But they all do well — they all take plenty of time to do a thorough washing job with lots of scrubbing and lots of hot soapy water, not skipping or neglecting any part of the body whatsoever.<br><br>When the washing girl is cleaning around my special spot I sometimes can't help letting out a gasp and trying to rock my hips against her hand and the washcloth she's holding. That's so embarrassing. But I can't help it. I hope she doesn't think less of me. I'd like to apologize but I can't — I have to let my body language speak for me. None of the washing girls seem to mind much, thank goodness. One in particular likes to give a smile. If she's in a good mood she'll stand really close and give me some prolonged scrubbing in that area. I can feel the steady pressure of her hand in the warm soapy washcloth making a steady, circular motion. I lift my chin, arch my back, inhale deeply, and rock my hips against her. Oh my God — that sends me right to heaven. But just about the time it starts to be the best she'll get a devilish grin and move her hand away. I usually get a great big smile and great big grimace all at once. Ponygirls aren't allowed to climax and the frustration drives me crazy!<br><br>Later I get rinsed off with cooler or cold water. That part isn't as much fun. I wish they'd warm up the rinse water a little. But overall the evening washing is great — it's definitely one of the nice parts of being a ponygirl. It makes me feel pampered and special.<br><br>I don’t really know how Gumdrop is doing. I spend endless hours with her, from sunup to sundown. We're constantly pulling a carriage or a weighted sled or some other contraption. But I almost never get to see her because we're both wearing big blinders that block our vision to the left and right. And anyway the trainers have a really strict rule that ponygirls should look straight ahead to the horizon all the time no matter what's going on around them. That's a tough skill to learn. But I think I'm getting better at it. At night the two of us are taken to different parts of the barn for washing and sleep so I don't get to see her then either.<br><br>Since I never see Gumdrop's face or her expression I don't know how she's feeling. Maybe she feels as horrible, sad and hopeless as I do on my worst days. That would probably be a normal reaction for many girls. If that's how she feels there's not much I can do for her — I'm as naked, exposed and helpless as she is. But maybe she'd like a look of sympathy so she knows I understand how she's feeling. Or who knows — maybe she's thrilled by the ponygirl life, having a great time, and loving all the new challenges and experiences of this life. If so it would be fun to know that. It would make me smile to know she's happy. Maybe she has a lot of strong, mixed feelings like I do. I think I get a little idea about how she's doing from the feel of the harnesses when we're moving. From the feel of the harness I think I can sense she's getting more and more fit. I hope she feels happy about that.<br><br>In a few months we might start some blindfold training. I used to love watching a gorgeous, skilled ponygirl get guided through a complex obstacle course. I think it might be a lot of fun to wear the big, heavy blindfold and try to learn those skills.<br><br>The trainers seldom give us any compliment. They mostly keep a pretty grim attitude. Once in awhile one of them will let a compliment slip out, telling the two of us we're doing well and look fantastic. Something like that is wonderful to hear — it makes me smile and feel great for the rest of the day. It makes me feel good I picked this life.<br><br>The strangest part of this life is probably in the late evenings. When I've been washed and fed and watered they lock me in my stall for the night. The walls are thick. The big, heavy door is thick too and goes from floor to ceiling. So I'm pretty well isolated. There's no cot, just straw on the floor that gets changed about once a week. It definitely has a "barnyard" smell, especially when the straw is about due to be changed. At least my stall is pleasantly warm and there's plenty of drinking water. I know I have to get good rest to get ready for training the next day. So I try to get as comfortable as I can even though I'm usually sore. While I try to unwind at the end of the day I have time to think.<br><br>I often think back to people I used to know and I wonder how they'd react if they could see me in this life. I think Miss. Stinson was my favorite teacher — I took AP English with her. She's so fun and smart and gave me lots of encouragement for reading and writing. I learned we had a mutual love for Jane Austen novels. I wonder how she'd react if she could see me as a silent ponygirl who's naked and bound for the rest of her life. I think about that a lot. I'd feel really sad if she was disappointed in me and if she thought I was wasting my chance to develop my talents. Or maybe she could smile and enjoy the view and see how hard I've been training. I hope she wouldn't worry about me and could see I'm doing okay overall. My cross-country coach in high school always seemed kind of pervy — it was pretty clear in the way he looked at all of the girls on the team. If he could see me now I think I know what would be on his mind!<br><br>For the first few months I'd think back to my past life and sometimes feel really sad that it's gone. But lately I'm trying hard to get away from bad habits. I try to think about the parts of the ponygirl life I enjoy and count my blessings. Fortunately I'm usually so exhausted that sleep comes before long.<br><br>At night I often dream of my old life. Sometimes I dream I'm out with friends, talking and laughing. Sometimes I'm wearing a new outfit. I can gesture with my hands and arms while I'm talking in my dream, and I can sip a cool beverage. Waking up from that kind of dream can be a shock because it takes me a minute or two to realize where I am, and that I'm naked with my arms fastened behind me. Sometimes my dreams have a twist. One that comes to me often is being at my old high school and I have to walk down a hallway naked. My arms are free and I know I have to keep them at my sides. All the other teachers and students are there, and even one of the janitors who was always nice to me. They know I'm going to become a ponygirl. I don't know why that dream comes back to me so often.<br><br>One of the trainers said something interesting the other day., "You girls are doing well — it's like this is the life you were born for."<br><br>I guess that's a compliment. It made me smile. But it got me thinking, especially in the quiet hours at night when I'm trying to unwind in my stall. Is this really what I was born for? Was it my destiny from the start of my life to be a ponygirl? Maybe I took the job at the ponygirl stables because I secretly yearned for this life. Is that possible? Maybe. Or is it possible there's some higher power who has a plan for me, and this is it? That's a strange thing to believe but maybe it's true. Well, it's too late to second-guess my decision now. This is my life. I have to try to be the best ponygirl I can. And I have to try to enjoy it a much as I can.<br><br>Snickerdoodle and Buttercup are still here. They train hard every day like the rest of us. Sometimes I catch a glimpse of them. They're both so poised and elegant. Sometimes I think it must be great to be a wealthy man who gets to own such magnificent creatures. But when I'm having a really good day I think it's much more fun to be a ponygirl.<br><br>Phillip's father still hasn't been here to see them. I don't know if I should worry about them. I hope he doesn't lose interest or stop paying for their upkeep. I'd feel very sad if such gorgeous and superbly trained ponygirls had to go to the glue factory for disposal while they're very much in the prime of their beauty. But I guess that's a risk for every ponygirl. And some day we all have to visit the glue factory.<br><br>They say Phillip might visit in the next few months. I admit it's fun to think that might actually happen. Gumdrop and I can show off for him, and show him all we've learned. The trainers here are women and they do a good job, don't get me wrong. But I think it'll feel quite different to be driven in the countryside when a man is holding the reins and holding the whip. That will be a different experience and I imagine it'll feel extra sexy.<br><br>I wonder if he'll travel here with a girlfriend, or maybe with a wife? I don't know. That'll feel very strange to me. If so I wonder how she'll react. She might look at us with strong feelings of disgust or contempt. She might think, "These losers couldn't accomplish anything in life so they have to get naked to seek attention." That would make me feel sad. But I suppose that kind of reaction would be normal for lots of women if the man in her life owns a couple of very fit, slim, well trained naked ponygirls. Or maybe she'll enjoy the ponygirl idea. Maybe it'll all seem fun and funny and sexy to her. Maybe she'll even feel some secret envy for the life we get to have. Will she take a moment to put a hair ribbon on us? I'm not sure. I admit it might feel really great to have some extra decoration. But I don't want to hope for that too much and feel disappointed if it doesn't happen. It's complicated.`
+                }
+                // Add more chapters as needed
+            ]
+        };
+
+        let currentChapter = 1;
+        let currentFont = 'typewriter';
+
+        // Initialize story
+        function initializeStory() {
+            document.getElementById('storyTitle').textContent = storyData.title;
+            document.getElementById('storyAuthor').textContent = `by ${storyData.author}`;
+            setCurrentDate();
+            generateDropdownContent();
+            
+            // Load saved chapter or start with chapter 1
+            if (!loadSavedChapter()) {
+                showChapter(1);
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('currentDate').textContent = formatted;
+        }
+
+        // Generate dropdown content
+        function generateDropdownContent() {
+            const dropdownContent = document.getElementById('dropdownContent');
+            
+            dropdownContent.innerHTML = storyData.chapters.map((chapter, index) => {
+                const isCurrentChapter = (index + 1) === currentChapter;
+                return `
+                    <div class="chapter-item ${isCurrentChapter ? 'current' : ''}" onclick="selectChapter(${index + 1})">
+                        <div class="chapter-info">
+                            <div class="chapter-name">${chapter.title}</div>
+                            <div class="chapter-desc">${chapter.subtitle}</div>
+                        </div>
+                        <div class="chapter-status">${isCurrentChapter ? '📖' : '📄'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle chapter dropdown
+        function toggleChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
+                closeChapterDropdown();
+            } else {
+                openChapterDropdown();
+            }
+        }
+
+        // Open chapter dropdown
+        function openChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            // Update dropdown content with current chapter info
+            generateDropdownContent();
+            
+            dropdown.classList.add('open');
+            backdrop.classList.add('open');
+            bookmarkButton.classList.add('active');
+            
+            // Apply blur only to background elements
+            notebookContainer.classList.add('blur-background');
+            controls.classList.add('blur-background');
+        }
+
+        // Close chapter dropdown
+        function closeChapterDropdown() {
+            const dropdown = document.getElementById('chapterDropdown');
+            const backdrop = document.querySelector('.dropdown-backdrop');
+            const bookmarkButton = document.querySelector('.bookmark-toggle');
+            const notebookContainer = document.querySelector('.notebook-container');
+            const controls = document.querySelector('.controls');
+            
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('open');
+            bookmarkButton.classList.remove('active');
+            
+            // Remove blur from background elements
+            notebookContainer.classList.remove('blur-background');
+            controls.classList.remove('blur-background');
+        }
+
+        // Select chapter from dropdown
+        function selectChapter(chapterNum) {
+            showChapter(chapterNum);
+            closeChapterDropdown();
+        }
+
+        // Show specific chapter
+        function showChapter(chapterNum) {
+            const chapter = storyData.chapters[chapterNum - 1];
+            if (!chapter) return;
+
+            const container = document.getElementById('chapterContainer');
+            
+            container.innerHTML = `
+                <div class="chapter-content active">
+                    <div class="chapter-header">
+                        <h2 class="chapter-title">${chapter.title}</h2>
+                        <p class="chapter-subtitle">${chapter.subtitle}</p>
+                    </div>
+                    <div class="story-text">
+                        ${chapter.content}
+                    </div>
+                </div>
+            `;
+
+            currentChapter = chapterNum;
+            document.getElementById('currentChapterNum').textContent = chapterNum;
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Update stats
+            setTimeout(() => {
+                updateStats();
+                saveCurrentChapter(chapterNum);
+            }, 100);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const content = document.getElementById('chapterContainer').textContent;
+            const words = content.trim().split(/\s+/).length;
+            const characters = content.length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+            
+            // Calculate approximate line usage based on content height
+            const contentElement = document.getElementById('chapterContainer');
+            const lineHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height'));
+            const contentHeight = contentElement.offsetHeight;
+            const lineCount = Math.ceil(contentHeight / lineHeight);
+            
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = characters;
+            document.getElementById('readingTime').textContent = readingTime;
+        }
+
+        // Font style changes
+        function changeFont(fontType) {
+            const content = document.querySelector('.story-text');
+            if (!content) return;
+            
+            content.classList.remove('handwritten', 'typewriter', 'serif');
+            content.classList.add(fontType);
+            
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            currentFont = fontType;
+            setTimeout(updateStats, 100);
+        }
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Save current chapter (fallback for environments that support it)
+        function saveCurrentChapter(chapterNum) {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    localStorage.setItem('currentChapter', chapterNum.toString());
+                    localStorage.setItem('lastReadTime', new Date().toISOString());
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+        }
+
+        // Load saved chapter
+        function loadSavedChapter() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    const savedChapter = localStorage.getItem('currentChapter');
+                    if (savedChapter) {
+                        const chapterNum = parseInt(savedChapter);
+                        if (chapterNum >= 1 && chapterNum <= storyData.chapters.length) {
+                            showChapter(chapterNum);
+                            showResumeNotification(chapterNum);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Storage not available, that's okay
+            }
+            return false;
+        }
+
+        // Show resume notification
+        function showResumeNotification(chapterNum) {
+            const notification = document.createElement('div');
+            notification.className = 'resume-notification';
+            notification.innerHTML = `
+                <div class="resume-content">
+                    <span>📖 Resumed from ${storyData.chapters[chapterNum - 1].title}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeStory);
+    </script>
+</body>
+</html>
