@@ -46,10 +46,14 @@
     .search-box {
       margin-bottom: 2rem;
       animation: slideDown 0.6s ease-out;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .search-input {
-      width: 100%;
+      flex: 1;
+      min-width: 200px;
       padding: 1rem 1.5rem;
       font-size: 1rem;
       border: none;
@@ -63,6 +67,30 @@
       outline: none;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       transform: translateY(-2px);
+    }
+
+    .surprise-btn {
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #764ba2;
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .surprise-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      background: white;
+    }
+
+    .surprise-btn:active {
+      transform: translateY(0);
     }
 
     .folder-grid {
@@ -176,6 +204,113 @@
       display: none;
     }
 
+    .surprise-result {
+      display: none;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .surprise-result.active {
+      display: block;
+    }
+
+    .surprise-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .surprise-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .close-surprise {
+      background: #f7fafc;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .close-surprise:hover {
+      background: #e2e8f0;
+      transform: rotate(90deg);
+    }
+
+    .surprise-file-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: #f7fafc;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .surprise-file-number {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      min-width: 60px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .surprise-file-number:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .surprise-file-details {
+      flex: 1;
+    }
+
+    .surprise-file-name {
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 0.25rem;
+    }
+
+    .surprise-folder-name {
+      color: #718096;
+      font-size: 0.9rem;
+    }
+
+    .surprise-open-btn {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .surprise-open-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -197,12 +332,57 @@
     }
 
     @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
+
+      .subtitle {
+        font-size: 0.9rem;
+      }
+
+      .search-box {
+        gap: 0.75rem;
+      }
+
+      .search-input {
+        min-width: 100%;
+        padding: 0.875rem 1.25rem;
+        font-size: 0.95rem;
+      }
+
+      .surprise-btn {
+        width: 100%;
+        padding: 0.875rem 1.5rem;
+        font-size: 0.95rem;
+      }
+
       .folder-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .folder-card {
+        padding: 1.25rem;
+      }
+
+      .folder-title {
+        font-size: 1.1rem;
       }
 
       .folder-card.expanded .file-list {
         grid-template-columns: 1fr;
+      }
+
+      .file-item {
+        padding: 0.625rem;
+      }
+
+      .file-name {
+        font-size: 0.875rem;
       }
     }
   </style>
@@ -215,7 +395,23 @@
     </header>
 
     <div class="search-box">
-      <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search folders or files...">
+      <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search folders, files, or enter a number...">
+      <button class="surprise-btn" id="surpriseBtn">🎲 Surprise Me!</button>
+    </div>
+
+    <div class="surprise-result" id="surpriseResult">
+      <div class="surprise-header">
+        <div class="surprise-title">🎲 Random Selection</div>
+        <button class="close-surprise" id="closeSurprise">×</button>
+      </div>
+      <div class="surprise-file-info">
+        <div class="surprise-file-number" id="surpriseNumber">#001</div>
+        <div class="surprise-file-details">
+          <div class="surprise-file-name" id="surpriseFileName">File Name</div>
+          <div class="surprise-folder-name" id="surpriseFolderName">📁 Folder Name</div>
+        </div>
+        <button class="surprise-open-btn" id="surpriseOpenBtn">Open File</button>
+      </div>
     </div>
 
     <div class="folder-grid" id="folderGrid"></div>
@@ -256,26 +452,113 @@
     const baseFolder = ".";
     const folderGrid = document.getElementById("folderGrid");
     const searchInput = document.getElementById("searchInput");
+    const surpriseBtn = document.getElementById("surpriseBtn");
     const noResults = document.getElementById("noResults");
+    const surpriseResult = document.getElementById("surpriseResult");
+    const closeSurprise = document.getElementById("closeSurprise");
+    const surpriseNumber = document.getElementById("surpriseNumber");
+    const surpriseFileName = document.getElementById("surpriseFileName");
+    const surpriseFolderName = document.getElementById("surpriseFolderName");
+    const surpriseOpenBtn = document.getElementById("surpriseOpenBtn");
+
+    let allFilesWithNumbers = [];
+    let currentSurpriseUrl = '';
 
     function formatName(name) {
       return name.replaceAll('_', ' ').replace('.html', '').replace('.pdf', '');
+    }
+
+    function getAllFilesWithNumbers() {
+      const allFiles = [];
+      let fileNumber = 1;
+      Object.entries(repository).forEach(([folderName, files]) => {
+        files.forEach(file => {
+          allFiles.push({ 
+            number: fileNumber++,
+            folder: folderName, 
+            file: file 
+          });
+        });
+      });
+      return allFiles;
+    }
+
+    function showRandomFile() {
+      if (allFilesWithNumbers.length === 0) return;
+      
+      const randomIndex = Math.floor(Math.random() * allFilesWithNumbers.length);
+      const randomItem = allFilesWithNumbers[randomIndex];
+      
+      // Update search to the random number
+      searchInput.value = String(randomItem.number);
+      renderFolders(String(randomItem.number));
+    }
+
+    function closeSurpriseResult() {
+      surpriseResult.classList.remove('active');
+    }
+
+    function openSurpriseFile() {
+      if (currentSurpriseUrl) {
+        window.open(currentSurpriseUrl, '_blank');
+      }
     }
 
     function renderFolders(filter = '') {
       folderGrid.innerHTML = '';
       let hasResults = false;
 
+      // Check if filter is a number
+      const isNumberSearch = /^\d+$/.test(filter);
+      const searchNumber = isNumberSearch ? parseInt(filter) : null;
+
+      // If searching by number, show in surprise card format
+      if (isNumberSearch && searchNumber) {
+        const foundFile = allFilesWithNumbers.find(f => f.number === searchNumber);
+        if (foundFile) {
+          surpriseNumber.textContent = `#${String(foundFile.number).padStart(3, '0')}`;
+          surpriseFileName.textContent = formatName(foundFile.file);
+          surpriseFolderName.textContent = `📁 ${formatName(foundFile.folder)}`;
+          currentSurpriseUrl = `${baseFolder}/${foundFile.folder}/${foundFile.file}`;
+          surpriseResult.classList.add('active');
+          
+          // Hide the grid when showing number result
+          folderGrid.style.display = 'none';
+          noResults.style.display = 'none';
+          return;
+        } else {
+          // Number not found
+          surpriseResult.classList.remove('active');
+          noResults.style.display = 'block';
+          folderGrid.style.display = 'none';
+          return;
+        }
+      }
+
+      // Text search - show grid as before
+      surpriseResult.classList.remove('active');
+
       Object.entries(repository).forEach(([folderName, files]) => {
         const folderNameFormatted = formatName(folderName);
-        const filteredFiles = filter 
-          ? files.filter(file => 
-              formatName(file).toLowerCase().includes(filter.toLowerCase()) ||
-              folderNameFormatted.toLowerCase().includes(filter.toLowerCase())
-            )
-          : files;
+        
+        let filteredFilesData = [];
+        
+        files.forEach(file => {
+          const fileData = allFilesWithNumbers.find(f => f.folder === folderName && f.file === file);
+          if (!fileData) return;
+          
+          const fileNameFormatted = formatName(file);
+          
+          const matchesText = !filter || 
+            fileNameFormatted.toLowerCase().includes(filter.toLowerCase()) ||
+            folderNameFormatted.toLowerCase().includes(filter.toLowerCase());
+          
+          if (matchesText) {
+            filteredFilesData.push({ file, fileData });
+          }
+        });
 
-        if (filteredFiles.length === 0 && filter) return;
+        if (filteredFilesData.length === 0) return;
         hasResults = true;
 
         const folderCard = document.createElement("div");
@@ -290,7 +573,7 @@
 
         const fileCount = document.createElement("span");
         fileCount.className = "file-count";
-        fileCount.textContent = `${filteredFiles.length} file${filteredFiles.length !== 1 ? 's' : ''}`;
+        fileCount.textContent = `${filteredFilesData.length} file${filteredFilesData.length !== 1 ? 's' : ''}`;
 
         folderHeader.appendChild(folderTitle);
         folderHeader.appendChild(fileCount);
@@ -298,14 +581,14 @@
         const fileList = document.createElement("div");
         fileList.className = "file-list";
 
-        filteredFiles.forEach(file => {
+        filteredFilesData.forEach(({ file, fileData }) => {
           const fileItem = document.createElement("a");
           fileItem.className = "file-item";
           fileItem.href = `${baseFolder}/${folderName}/${file}`;
           fileItem.target = "_blank";
           fileItem.innerHTML = `
             <span class="file-icon">📄</span>
-            <span class="file-name">${formatName(file)}</span>
+            <span class="file-name">#${String(fileData.number).padStart(3, '0')} - ${formatName(file)}</span>
           `;
           fileList.appendChild(fileItem);
         });
@@ -326,9 +609,24 @@
     }
 
     searchInput.addEventListener("input", (e) => {
-      renderFolders(e.target.value.trim());
+      const value = e.target.value.trim();
+      renderFolders(value);
     });
 
+    surpriseBtn.addEventListener("click", showRandomFile);
+    closeSurprise.addEventListener("click", closeSurpriseResult);
+    surpriseOpenBtn.addEventListener("click", openSurpriseFile);
+    
+    // Click on number to filter
+    surpriseNumber.addEventListener("click", () => {
+      const numberText = surpriseNumber.textContent.replace('#', '').replace(/^0+/, '') || '0';
+      searchInput.value = numberText;
+      renderFolders(numberText);
+      searchInput.focus();
+    });
+
+    // Initialize
+    allFilesWithNumbers = getAllFilesWithNumbers();
     renderFolders();
   </script>
 </body>
