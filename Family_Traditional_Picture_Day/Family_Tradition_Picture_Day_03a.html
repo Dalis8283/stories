@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>The Family Tradition: Picture Day</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #CD853F 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c1810;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 248, 240, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(to right, #8B4513, #A0522D);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '🍂';
+            position: absolute;
+            font-size: 100px;
+            opacity: 0.1;
+            top: -20px;
+            left: 20px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .header::after {
+            content: '🦃';
+            position: absolute;
+            font-size: 80px;
+            opacity: 0.1;
+            bottom: -10px;
+            right: 30px;
+            animation: float 5s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        h1 {
+            color: #fff8dc;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        .author {
+            color: #ffd89b;
+            font-style: italic;
+            font-size: 1.1em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .overview {
+            background: linear-gradient(to bottom, #fff8dc, #faebd7);
+            padding: 25px;
+            border-left: 5px solid #8B4513;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .overview h2 {
+            color: #8B4513;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .overview h2::before {
+            content: '🍁';
+            font-size: 1.2em;
+        }
+
+        .overview p {
+            line-height: 1.8;
+            color: #4a3728;
+            text-align: justify;
+        }
+
+        .story-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 20px rgba(139, 69, 19, 0.05);
+        }
+
+        .story-content h3 {
+            color: #8B4513;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #CD853F;
+            padding-bottom: 10px;
+        }
+
+        .story-content p {
+            line-height: 1.9;
+            margin-bottom: 20px;
+            text-align: justify;
+            color: #3a2a1f;
+        }
+
+        .decorative-divider {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 1.5em;
+            color: #CD853F;
+        }
+
+        .footer {
+            background: #8B4513;
+            padding: 20px;
+            text-align: center;
+            color: #fff8dc;
+            font-size: 0.9em;
+        }
+
+        /* Autumn leaves decoration */
+        .leaf {
+            position: fixed;
+            top: -50px;
+            animation: fall linear infinite;
+            pointer-events: none;
+            font-size: 30px;
+            z-index: 0;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .overview, .story-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Family Tradition Picture Day 03a</h1>
+            <p class="author">by SuperEvil</p>
+        </div>
+
+        <div class="content">
+            <div class="overview">
+                <h2>Overview</h2>
+                <p>
+                    After a heated argument where then 8-year-old Julie refuses to wear the
+                    new dress her mom bought for their family Christmas portrait, her mom
+                    makes her choose. Either she can wear the dress, or she can go naked
+                    for the picture, but if she goes naked, she'll have to go naked for
+                    every Christmas portrait from then on. Julie decides to go naked, a
+                    choice she will come to regret more and more as the years go on.
+                </p>
+            </div>
+
+            <div class="story-content">
+                <h3>Chapter One</h3>
+<p>"Good morning, daddy."</p>
+
+<p>"Morning, Julia, sweetheart. You're already naked?"</p>
+
+<p>I couldn't help feeling a little proud of myself. I had decided to wake up early, strip off my pajamas, and prepare myself for the day I knew I would be facing. This was the 6th picture day I knew I would be going through naked, and I had decided that I was going to face it head on. I was no longer going to be the shrinking, bashful girl they had once known. Instead, I had decided that I was going to embrace my nudity with the confidence and grace of my years, having already been through it. I couldn't help feeling a smug kind of confidence when my father had come into my room to wake me up and tell me to strip naked, only to already find me that way.</p>
+
+<p>I was seated on my bed, my back to my pillows, propping me upright. I had one leg stretched out in front of me, while I was using the other one bent at the knee as a tablet holder. I had been watching videos when I had heard the door start to creak open, and I had chosen to simply look up at whoever it was that was entering my space without even knocking, wearing a bright smile. The fact that it was my dad was a small surprise to me. Normally, my mom took it as her duty to make me ready for picture day, and my father simply took the pictures. Either that, or my mom would send one of my brothers to get me. That it was my father meant something had changed, but I wasn't sure what, as yet. Still, I didn't allow it to phase me, even as I saw his eyes roam from my face, down to my chest, and then in between my legs. I knew from experience that it was an automatic response for any male, even my own father, to look at those parts when they were exposed, and the way I was sitting left nothing to the imagination. I could feel my cheeks threatening to warm, but pushed that feeling aside as I held on to my confidence.</p>
+
+<p>"Yes, daddy. It's picture day, remember? I'm not allowed to wear clothes today." I grinned at him, showing him that I wasn't going to let the fact that I was naked phase me any longer. I took a little pleasure when he seemed to have to take a pause at my response. I'm sure he had expected to come in here, ready for a fight, and that I would be begging to keep my clothes on, but I had taken control of the situation by stripping myself.</p>
+
+<p>His pause only lasted a few moments, before he got one of his jubilant grins that grew to match mine. "And here, your mother and I were thinking about moving past your naked picture days, and finally letting you stay dressed. I guess if you want to go naked for picture day, then there's no reason we shouldn't let you."</p>
+
+<p>"Wait, what!?" What my father said hit me like a ton of bricks, and I scrambled off the bed to stand in front of him. "Wait, daddy, no! I don't have to be naked! I can wear clothes if you want! I didn't think you would let me!" I felt tears at the edges of my eyes, thinking I had trapped myself in yet another naked day with my plan to take control of the narrative.</p>
+
+<p>"I knew it!" Daddy laughed at me, one of those deep belly laughs. "Young lady, your mother and I have discussed this with you." He started patting and stroking the top of my head. "Until we decide otherwise, you're going to be naked for picture day. Now, I liked the confidence you were showing. I hope you get to a point where you don't have to fake it."</p>
+
+<p>I made a pouting face at him. "I wasn't faking it!" I grumbled up at him, even as he kept stroking my hair. "I stripped naked all on my own! I even shaved my pussy– uh, uh, my lady bits!" That blush that had been threatening my cheeks earlier came back in full force, and right when I was practically face to face with my father and unable to hide it.</p>
+
+<p>"You called it your pussy last year, Julia. I think it's appropriate for you to keep calling it that, even in front of me." He looked down, in between my legs again, and I could feel his eyes all over the outer part of my sex organ. This time it wasn't an automatic response. He was looking at it deliberately! "It's a beautiful pussy too, Julia. It's nice and neat, just like your mother's, with everything tucked inside. Just two lips, like the flower."</p>
+
+<p>I could feel the blush spreading throughout my whole body, and started to wriggle at his scrutiny of my private part. "Daddy!..."</p>
+
+<p>He chuckled, moving his hands to my shoulders, before pulling me into a hug. Then he pulled back to look me up and down a few times. "Don't think I haven't noticed how much you've grown up here, either." He lightly dragged his index finger up the swell of one of my breasts until he reached my nipple, letting it drop back down with gravity! I snapped my eyes shut and shivered at the sudden contact with one of my most sensitive bits. I'd had to upgrade to over a C cup within a year, and I knew that my boobs were the thing that most boys seemed to be paying attention to about me these days. Just like momma, I was going to be blessed up top when I was finished growing.</p>
+
+<p>"Dad, please, they're sensitive… I'm getting my period in a few days…" I whispered to him with some shame.</p>
+
+<p>He never lost his grin, but it seemed to get bigger at what I said. He leaned in a little, matching my whispered tone. "Don't tell your momma I mentioned this, but she gets most randy right before her time of the month." He gave me a little wink afterward.</p>
+
+<p>"Why are you telling me that?" I asked him, scrunching up my face with disgust.</p>
+
+<p>"‘Cause maybe you're the same way." He turned towards the door, "Have fun today, Julia," and took his leave.</p>
+
+<p>I didn't even get a minute to contemplate what had happened before I heard someone clearing their throat from out in the hall. "Alright, come on in." It was my brothers, both of them, and I could see their grins growing as they came in. "Let's get this over with."</p>
+
+<p>"Get what over with?" Toby asked. His eyes almost seemed to be bugging out of their sockets as he took his first look at my newer, bigger boobs.</p>
+
+<p>"I know you've both been waiting all year to see how my body has changed. Well, let's get it over with." I said. I even held my arms out in a T pose, and spread my legs open a bit for them. I had planned this out all year, and I wasn't about to let my dad ruin my plans. I was going to let them look, get it out of their systems, and then we could have a mostly normal day. Just one where I was naked.</p>
+
+<p>Both of my brothers took great appreciation of me, and being allowed to look at my body unobstructed. "Wow, look at her tits. I don't think I've ever seen ones this big yet perky before." Josh commented. He was a porn connoisseur, and my parents let him get away with that without question. He had taken to teasing me by sending me naked pictures of women and asking if I thought I was bigger than them. Sometimes he'd even send me pictures of girls from school instead, and I'd have to giggle, since it seemed like I was as big as most of the girls in his class. That was certainly an ego booster. At 14, I was as big as a lot of 17-year-olds!</p>
+
+<p>"Are they– are they really that perky and big? Nice?" I suddenly found myself asking, unable to hide my pride.</p>
+
+<p>"Jules, they're great! If you weren't my sister…" Big brother let out a low whistle, one which had my heart racing for some reason.</p>
+
+<p>"May I?" Toby moved closer, holding his palms only about an inch from my chest. He gave me puppy dog eyes, waiting for my answer.</p>
+
+<p>"I guess." I sighed, letting my younger brother have his first feel of my new breasts. "Might as well get it over with, since you'd both find some way of getting a feel anyway." I did my best to hold my pleasure in and act Stoic, even as Tony started stroking one of my nipples.</p>
+
+<p>"Here, let me." Josh pushed one of Toby’s hands aside, and took over, feeling my right breast.</p>
+
+<p>That's where I was, both my brothers standing on either side of me, each cupping one of my breasts underneath, as their fingers on their other hands played over my nipples. That's where I was when my mom walked in! "Good morning, Julie!" She said brightly, and I could see the smug joy in her eyes about what she had just walked in on. I made a little surprised jump, but my brothers weren't going to let me go any time soon. "Your father was just telling me all about your new attitude. I'm glad you're finally starting to learn your place in the family, Julia."</p>
+
+<p>"And what place is that?" I asked her, trying to be annoyed at her implication, even as my chest swelled with pleasure from the way my own brothers were touching me.</p>
+
+<p>"Why, to be admired for your beauty and grace, of course. It takes real grace to allow your brothers to touch your breasts. Allow them to really get to know them, explore them, and cherish their beauty."</p>
+
+<p>I was blushing deeply about what my mother was saying to me. To be told my naked body was to be admired and explored by my whole family! I only had one way I knew how to combat her when she got this way. One that I had only gained a year ago. "Will you be joining me again for picture day this year, mother?" I asked her, my voice hushed with lust as my brothers remembered the way I enjoyed my nipples being stroked from last year.</p>
+
+<p>"Well, I…" She stammered, and I could see the same blush forming on her cheeks as the one I had currently. "No, I don't think so…" she replied hastily. "Today is your day, Julie." She added, before quickly backing out of the room.</p>
+
+<p>Things had shifted between us because of last year, but not in a bad way. I think she had a better understanding of what I went through every picture day, and because of that we had grown closer. She no longer treated me like her little girl, but as almost an equal. Now whenever she would tease me as she had just done, I would tease her back by reminding her of her time spent naked during picture day last year, and I feel like we had grown to respect and love one another even more. "Let me know if you change your mind!" I called after her, with a slight giggle. I only had to hear her make a humph in order to know that she was taking it in good stride. It did make me ponder if I could convince her to get naked with me today, even for just a few minutes. It would feel like a victory to not have to be the only McNulty girl naked today.</p>
+
+<p>I didn't get to ponder much, as I suddenly felt the fingertips on my little brother's hand making a slight probing against the outer lips of my sex. "Toby!..."</p>
+
+<p>"You don't mind, do you?" My 13-year-old brother asked, like it should just be expected that he be allowed to touch my pussy!</p>
+
+<p>"I guess not…" My voice caught in the back of my throat as his index finger slipped in between my folds! I turned my head towards my big brother, feeling both incredulous and as if I should have seen this coming. "I suppose you're going to want to feel my pussy too."</p>
+
+<p>"Well, if you insist." Josh smiled and laughed, before he too started probing at my pussy!</p>
+
+<p>"That's not what I meant, and you know it!" I gave him a slightly pouting look, but that just caused him to kiss me on the cheek.</p>
+
+<p>Now I had both boys full concentration on my lower parts. I wrapped each of my arms around their shoulders, and they in turn wrapped their closest arms around my waist. And the whole time, they were feeling up the most private place on my body!</p>
+
+<p>"Did Katelyn shave your pussy?" Josh asked.</p>
+
+<p>"AGH! No!" I gasped, as they both dueled their fingers against my clit. "I did it all by myself!" I half complained and half moaned, though the real reason I was moaning was because I was getting so horny! Daddy had called it correctly earlier, just like momma, I always got really horny in the few days before I got my period. And now I had two very capable and interested boys willing to play with my private parts! Maybe even all day! I felt like I was just on the cusp of what would be my first of many orgasms today!</p>
+
+<p>It was not to be, as speaking of Daddy, he suddenly returned. "Have you boys thought of what poses you want to do with your sister today?" Not only had he returned, but he had brought along his camera! He held it up in front of him, shaking it slightly.</p>
+
+<p>"I know mine." Josh said, looking towards our brother. "Ready, Toby?"</p>
+
+<p>"Ready!" Toby responded, and I let out a squeal! Suddenly, I was lifted into the air by both boys, each of them holding one hand on my butt and another under my knees. They held me up, in a seated position, and then suddenly pulled my legs open as wide as they would go!</p>
+
+<p>"Wait! Wait a minute!" I struggled and flailed, unable to contain my giggling at their sudden actions. That is, until I saw the flash of the camera going off! "No, Daddy, no! My pussy’s aaaaaaall weeeeet!" I let out a whining moan, realizing my horny private parts were totally exposed to the camera. Just as I had been doing, my brothers laughed at my pained plea.</p>
+
+<p>"Aww, it looks cute, Julie jewel." Was the only response from my father besides snapping away more photos.</p>
+
+<p>"God, I swore I wasn't going to let you guys embarrass me this year, but here we are!" I couldn't hold back my laughter anymore, either. Here I was, completely embarrassed by them, but unable to contain my joy at it. "God! God! No fair!"</p>
+
+<p>"Julia," my mother came back in, folding her arms and leaning up against the door frame. "Stop pretending that you don't love it." She smirked at me, that knowing look we now shared because we had both been in the position I currently occupied. I couldn't deny what she was saying.</p>
+
+<p>"I do… I really, really do!" I responded. My brothers let me back down onto my feet, and I couldn't help looking at each of them, one at a time, and knowing that even though I was the only one naked, that I was fully loved and cared for. They didn't make me go naked and embarrass me to shame me. On the contrary, they made me go naked and embarrassed me to show me how much they loved me.</p>
+
+<p>"Great," momma stepped closer to me. "Then you are going to love where we're going today."</p>
+
+<p>"Where we're going?" I asked, confused. "Aren't the cousins coming over like last year?" She shook her head. "Where are we going then?"</p>
+
+<p>"That, Julia, is a big surprise." Daddy responded, his jubilant grin returning, at the sudden blush I made.</p>
+
+                <div class="decorative-divider">🍂 🍁 🍂</div>
+
+                
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Copyright 2024 by SuperEvil, all rights reserved</p>
+        </div>
+    </div>
+
+    <script>
+        // Create falling leaves animation
+        function createLeaf() {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf';
+            leaf.innerHTML = Math.random() > 0.5 ? '🍂' : '🍁';
+            leaf.style.left = Math.random() * 100 + '%';
+            leaf.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            leaf.style.opacity = Math.random() * 0.5 + 0.3;
+            document.body.appendChild(leaf);
+
+            setTimeout(() => {
+                leaf.remove();
+            }, 25000);
+        }
+
+        // Generate leaves periodically
+        setInterval(createLeaf, 3000);
+        
+        // Create initial leaves
+        for (let i = 0; i < 5; i++) {
+            setTimeout(createLeaf, i * 600);
+        }
+    </script>
+</body>
+</html>

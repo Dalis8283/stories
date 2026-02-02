@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>The Family Tradition: Picture Day</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #CD853F 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c1810;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 248, 240, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(to right, #8B4513, #A0522D);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '🍂';
+            position: absolute;
+            font-size: 100px;
+            opacity: 0.1;
+            top: -20px;
+            left: 20px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .header::after {
+            content: '🦃';
+            position: absolute;
+            font-size: 80px;
+            opacity: 0.1;
+            bottom: -10px;
+            right: 30px;
+            animation: float 5s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        h1 {
+            color: #fff8dc;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        .author {
+            color: #ffd89b;
+            font-style: italic;
+            font-size: 1.1em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .overview {
+            background: linear-gradient(to bottom, #fff8dc, #faebd7);
+            padding: 25px;
+            border-left: 5px solid #8B4513;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .overview h2 {
+            color: #8B4513;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .overview h2::before {
+            content: '🍁';
+            font-size: 1.2em;
+        }
+
+        .overview p {
+            line-height: 1.8;
+            color: #4a3728;
+            text-align: justify;
+        }
+
+        .story-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 20px rgba(139, 69, 19, 0.05);
+        }
+
+        .story-content h3 {
+            color: #8B4513;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #CD853F;
+            padding-bottom: 10px;
+        }
+
+        .story-content p {
+            line-height: 1.9;
+            margin-bottom: 20px;
+            text-align: justify;
+            color: #3a2a1f;
+        }
+
+        .decorative-divider {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 1.5em;
+            color: #CD853F;
+        }
+
+        .footer {
+            background: #8B4513;
+            padding: 20px;
+            text-align: center;
+            color: #fff8dc;
+            font-size: 0.9em;
+        }
+
+        /* Autumn leaves decoration */
+        .leaf {
+            position: fixed;
+            top: -50px;
+            animation: fall linear infinite;
+            pointer-events: none;
+            font-size: 30px;
+            z-index: 0;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .overview, .story-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Family Tradition Picture Day 03b-03c</h1>
+            <p class="author">by SuperEvil</p>
+        </div>
+
+        <div class="content">
+            <div class="overview">
+                <h2>Description</h2>
+                <p>
+                    After a heated argument where then 8-year-old Julie refuses to wear the
+                    new dress her mom bought for their family Christmas portrait, her mom
+                    makes her choose. Either she can wear the dress, or she can go naked
+                    for the picture, but if she goes naked, she'll have to go naked for
+                    every Christmas portrait from then on. Julie decides to go naked, a
+                    choice she will come to regret more and more as the years go on.
+                </p>
+                <p>
+                    You can add multiple paragraphs here to provide more context about the characters, 
+                    the setting, or any content warnings that readers should be aware of before diving into the story.
+                </p>
+            </div>
+
+            <div class="story-content">
+                <h3>Chapter 3b</h3>
+<p>“Ok, honey, arch your back a bit more. Yeah, just like that. Perfect.” My father's voice instructed me, as the flash of his camera went off again, blinding me for a moment.</p>
+
+<p>“Oh, god!” I moaned, letting my head fall forward, my hair cascading around my face. “I can't believe I'm doing this.” I was bent over, with my legs straight, as I pulled my butt cheeks apart with my hands, exposing not just my pussy from behind, but my butthole too! My father was behind me with his camera, taking pictures of me in the most lewd pose I'd probably ever been given!</p>
+
+<p>On each side of me stood my brothers, fully clothed in their day clothes, both with their fingers pointing at my most intimate areas. This was Toby's brainchild. My parents had actually given him the honor of choosing my next pose! And of course, his 12-year-old mind went straight for the most embarrassing option he could think of. I could feel my face getting hotter as they stood there, grinning down at me while I remained completely exposed. "Perfect angle, boys!" Dad called out from behind his camera, his enthusiasm for capturing my humiliation in vivid detail never failing to surprise me.</p>
+
+<p>"Boys, why don't you try holding Julie's cheeks for her." Momma's voice cut through my embarrassment like a knife, and I could already picture the smug look on her face without even turning to look. She had been watching this whole time from the doorway, and of course she would want to make it even more humiliating for me! I had only just gotten used to my brothers pointing at my private parts, but this was a whole new level of humiliation. I could feel myself getting even more flustered as my brothers took hold of my butt cheeks, each of them getting a firm grip on the soft flesh of my behind. "That's it, boys. Spread them nice and wide for daddy's camera." Her voice was like honey laced with poison, and I could feel my pussy getting even wetter at her words. I was so embarrassed, but at the same time, I couldn't help but feel a little thrill run through me at being so exposed and vulnerable in front of everyone.</p>
+
+<p>"Momma!" I whined, my voice muffled by my hair.</p>
+
+<p>"Don't you 'momma' me, young lady," she chided, a playful note in her voice. "You know it's your role in the family. We're all just making sure you remember your place."</p>
+
+<p>I was mortified! I had been trying so hard to hold myself together, but here I was, bent over, spreading my own butt cheeks for my dad's camera, and now my own brothers were holding my cheeks open for him! And my mother was encouraging them! I felt a fresh wave of shame wash over me, but I also couldn't help but feel a strange sense of pride that I was able to endure this for my family. I was a good girl. I was a good daughter.</p>
+
+<p>"Good, good. Hold that pose." My dad's voice was full of glee as he snapped away. "This one is going in the family album for sure."</p>
+
+<p>Finally, my brothers let go of my butt cheeks after my dad had taken what felt like an eternity of pictures. I quickly stood up, my face burning with embarrassment. "Ok, that's enough," I said, my voice trembling a little. "I think you got enough pictures of my...my butthole for one day."</p>
+
+<p>"You were showing a lot more than your butthole, Julie." Toby chuckled, his eyes roving over my naked body. "Your pussy was looking pretty good from that angle, too."</p>
+
+<p>"Toby!" I scolded, swatting at his arm.</p>
+
+<p>"What? It's true," he said, shrugging.</p>
+
+<p>I folded my arms and pouted. This topic was getting too humiliating to continue, so I decided to bring up what they had planned for me today. "So, what is this surprise you were talking about?"</p>
+
+<p>"Oh, that," my dad said, a wide grin spreading across his face. "Well, we have a very special activity planned for you today. It's a community service project that the whole family is going to be a part of."</p>
+
+<p>I felt a small sense of relief. A community service project? That didn't sound too bad. Maybe it wouldn't be as humiliating as I thought. "Ok, what kind of community service project?"</p>
+
+<p>"You'll be going door to door with your brothers," my mom said, a smirk playing on her lips. "Collecting cans for the church food drive."</p>
+
+<p>My heart sank. Going door to door! Naked! With my brothers! That was so much worse than I could have ever imagined! "But... but I can't go door to door naked!" I stammered, my eyes widening in horror. "What will people say?? What if they call the police???"</p>
+
+<p>"Don't be silly, Julia," my mom said, her voice dripping with condescension. "You're still too young to get into any trouble. Did you get in trouble last year, when you went on your little naked bike ride?" she asked, reminding me of the time last year when I'd been forced to ride my bike naked around the neighborhood, with Katelyn leading the way. I had been so embarrassed then, but this was a whole new level of humiliation!</p>
+
+<p>"No, but... that was just... and... and..." I struggled to find the words, my mind racing with the implications of what she was saying.</p>
+
+<p>"And what?" my mom pressed, raising an eyebrow. "And you didn't get in trouble. People will just think it's a cute, quirky thing your family is doing. No one will call the police on a naked 14-year-old girl and her brothers."</p>
+
+<p>"Are you coming with us?" I asked, a desperate hope rising in my chest. If she was there, maybe she could help me. Maybe she could... I don't know... explain things to people.</p>
+
+<p>"No, honey," she said, shaking her head. "This is a project for you and your brothers. Your dad and I will be at the church, receiving and sorting the donations. But don't worry, your brothers will take good care of you." She gave me a reassuring smile, but it did little to calm my nerves.</p>
+
+<p>I looked from my mom to my dad, then to my brothers. They all had the same look on their faces, a mix of amusement and expectation. They were all in on this. They were all going to make me do this.</p>
+
+<p>"Besides, with you there, looking so cute, all naked, we're sure to get more donations than anyone else!" Big brother said with a wink.</p>
+
+<p>"He's right, you know," Dad chimed in, finally putting his camera down. "A pretty girl like you, going door to door for a good cause? It's a win-win. You get to do your part for the community, and we get to show off our beautiful daughter."</p>
+
+<p>"But... but what if someone doesn't like it?" I tried to make my case, my voice trembling with worry. "What if they refuse to donate because I'm naked?" I looked from my mom to my dad, my eyes wide with fear. "People might not want to talk to us at all!"</p>
+
+<p>"Then we'll just go to the next house," Toby said, a little too cheerfully for my liking. "We're just asking for cans."</p>
+
+<p>"And if anyone asks, we'll just say that it's part of the church's 'Naked for a Cause' campaign," Josh said, as if it wasn't something he had just made up.</p>
+
+<p>"There is no 'Naked for a Cause' campaign," I said, my voice cracking.</p>
+
+<p>"There could be," Josh said with a shrug. "Who's to say there isn't?"</p>
+
+<p>I let out a frustrated sigh, knowing that I was fighting a losing battle. I could see the excitement in my brothers' eyes, the way they were practically bouncing on the balls of their feet. They were looking forward to this. They were looking forward to parading me around the neighborhood, naked as the day I was born, and making me beg for canned goods.</p>
+
+<p>"Ok," I said, my voice barely a whisper. "I'll do it." I looked down at my naked body, my skin flushing with shame. I couldn't believe that I was going to have to do this. I couldn't believe that I was going to have to go door to door, naked, with my brothers, and ask people for cans. It was the most humiliating thing I could imagine, and yet, I was going to do it. I was going to do it for my family. I was going to do it because I was a good girl.</p>
+
+<p>I watched as my parents loaded up their car, talking excitedly about their day ahead at the church. They didn't seem to care that I was about to be paraded around naked, or at least if they did, they hid it well. Meanwhile, my brothers got things ready for our journey. It was about four and a half miles to the church, so that meant we'd be doing a lot of walking. I wanted to be prepared, and found my most comfortable pair of sneakers. If I couldn't wear anything else, at least I was allowed to wear that. My brothers found an old red wagon for us to tow the donations in, and we were off. As we walked out the door, I felt a breeze on my bare skin, and I couldn't help but shiver. I was thankful that we at least lived in a part of the country that didn't get ridiculously cold this time of year. Imagine me walking around naked in below freezing weather!</p>
+
+<p>Immediately, I knew this was going to be embarrassing. We were heading to the house next door, the one where I knew old lady Peabody lived, and there was really no excuse I was going to be able to use. It was one thing to be naked at home, where I was used to it, and where everyone was used to seeing me naked. But out here, in the open, with the sun on my skin and the wind in my hair... it was a whole different ball game. I felt like everyone could see me, even though there was no one around. I felt like my nakedness was a beacon, calling attention to myself.</p>
+
+<p>"Ok, Jules, this is the first house," Josh said, a little too cheerfully for my liking. "Here's a notecard for what you're going to say. There's more on the back." He explained, handing it to me. "Toby and I will hang back, unless you need us." He added, with a wink.</p>
+
+<p>I took the card, my hands trembling slightly. I looked at the words written on it, and I felt my cheeks burn with shame. "Hello, my name is Julie," I read out loud, my voice cracking. "I'm collecting canned goods for First Methodist Church's food drive. Any donation you can provide would be greatly appreciated."</p>
+
+<p>"That's a good start," Josh said. "Now, let's go knock on the door."</p>
+
+<p>I took a deep breath and walked up to the door, my heart pounding in my chest. I could feel my brothers' eyes on me, watching my every move. I could feel the cool morning air on my skin. I was so exposed, so vulnerable. I raised my hand to knock, but I couldn't bring myself to do it. I was too scared. I was too humiliated.</p>
+
+<p>"Come on, Jules," Josh said, his voice a low whisper. "You can do it. Just knock on the door."</p>
+
+<p>I took another deep breath and finally knocked on the door. The sound echoed through the quiet street, and I held my breath, waiting for an answer. I heard a shuffling sound from inside, and then the lock clicked, and the door swung open.</p>
+
+<p>Standing in the doorway was a frail old woman with silver hair pulled back in a tight bun. She had on a flowery dress and a pair of old-fashioned glasses perched on her nose. She looked at me, her eyes wide with surprise, and then a slow smile spread across her face.</p>
+
+<p>"Well, hello there," she said, her voice as thin as her body. "Aren't you a brave little girl."</p>
+
+<p>"Hello, my name is Julie," I said, my voice trembling as I read from the card. "I'm collecting canned goods for First Methodist Church's food drive. Any donation you can provide would be greatly appreciated."</p>
+
+<p>"What a wonderful cause," she said, her eyes twinkling. "But I'm curious, my dear. Why are you... um... not wearing any clothes?"</p>
+
+<p>Before I could even stammer out an answer my parents had pre-approved, Josh piped up from behind me. "It's a new church youth initiative, ma'am," he said, stepping forward with a charming smile. "It's called 'Naked for the Cause.' Julie here is our first volunteer."</p>
+
+<p>The old woman's eyes lit up even more. "Oh, how wonderful! It's so important for the youth to get involved in charity work. And to be so... committed... to the cause." She gave me a warm, grandmotherly smile that did little to soothe my burning cheeks. "I'm afraid I don't have any cans to spare, though."</p>
+
+<p>"Oh, that's alright. We're taking cash or check donations too." Josh explained. "Jules, read what's on the back of the card."</p>
+
+<p>I flipped it over, my eyes growing wide. "Ummm..." I started, my voice a squeak. I read off the card, "For 5 cans, you can get your picture taken with me. For 15 cans, you can have me pose anyway in the picture you like. And for 50 a can donation, you're allowed to spank my cute butt 5 times." I made a gasp at my brother, "Wait, what?! Josh!"</p>
+
+<p>"Keep reading, Jules." He encouraged me, waving his arm palm up at me.</p>
+
+<p>I read the last bit written on the card. "These rewards are also redeemable via cash or check, at 5 times the amount listed." I looked up at the old lady with pleading eyes. "I am so, so sorry about this. Please don't be..."</p>
+
+<p>"Oh, how wonderful! I'll be right back!" The old woman said, before turning and hobbling back into her house. I wanted to die. Right there on her doorstep. I couldn't believe that my brothers had put this on my note card without telling me! And I couldn't believe my mom and dad were ok with it! It had been bad enough when they made me ride my bike naked, but this was a whole new level of humiliation!</p>
+
+<p>"I'm going to kill you." I whispered to my brothers, who were both smirking at me.</p>
+
+<p>"You love it." Josh winked at me. "And you know it."</p>
+
+<p>I didn't get to respond, as the old lady was coming back, holding out a check. "I hope this is enough to get a picture, dear."</p>
+
+<p>I wanted to melt into a puddle of shame. This couldn't be happening. The check was for fifty dollars, more than enough for a picture. "Of... of course, ma'am." I managed to stammer out.</p>
+
+<p>"Toby, get your camera ready." Josh said, looking over at our little brother. "Now Mrs. Peabody, can you step outside, where the light is better? Wrap your arm around Jules' shoulders, and both of you smile big!" He instructed.</p>
+
+<p>I had to force a smile for the picture. It was bad enough to be seen naked, but to have an old lady touch me, to be seen with me like this... I was mortified! Toby took a couple of pictures, and then turned to the old lady, "Do you have an email address I can send this to, ma'am?" He asked, all polite.</p>
+
+<p>"Oh, no. I'm not very good with technology." Mrs. Peabody said with a sigh. "Do you think you could print it out for me and drop it off later?"</p>
+
+<p>"Of course, ma'am. We'd be happy to." Toby said, and he and our brother both gave me a look that told me this going far better than either of them had hoped.</p>
+
+<p>"Alright, Jules, let's go." Josh said, putting his hand on my back and guiding me away from the door. I could feel the old woman's eyes on my bare butt as I walked away, and I just wanted to disappear.</p>
+
+<p>We went to the next few houses, offering the same deal. I had to pose for a picture with three more people, but at least they all took the lowest deal. So far, we'd only run into adults. No one had questioned us too much, and they all seemed to think it was a "cute" or "brave" thing for me to do. It was still humiliating, but it wasn't as bad as I had feared. At least, not yet.</p>
+
+<p>We were about to head to the next house when Josh stopped me. "Ok, Jules, I think we should make this more interesting. How about Toby or I give you a dare to do at each house?"</p>
+
+<p>"Dare?" I asked, my heart sinking. "What are you talking about?"</p>
+
+<p>"You know what we're talking about," Josh said, a mischievous glint in his eye. "Something fun. Something that will get us more donations."</p>
+
+<p>I shook my head. "No way. This is already humiliating enough."</p>
+
+<p>"Come on, Julie," Toby piped up. "It'll be fun! And it's for a good cause, right?"</p>
+
+<p>I looked from one brother to the other, my mind racing. I knew whatever they dared me to do would be humiliating. I also knew that I was in no position to argue. I was naked, and they were not. I was at their mercy.</p>
+
+<p>"Fine," I said, my voice barely a whisper. "What's the dare?"</p>
+
+<p>Josh's grin widened. "Ok, for this next house, the dare is... you have to let whoever answers the door find a secret mole on your body."</p>
+
+<p>I gasped. "A mole? Where?"</p>
+
+<p>"That's the secret part," he said, a smug look on his face. "I know where it is, but I bet you're not even aware of it." His eyes glinted in the sunlight as he leaned in. "Let's just say it's a place that the sun doesn't usually shine."</p>
+
+<p>I couldn't believe my ears. He wanted me to let a complete stranger explore my naked body, to find a secret mole that I didn't even know I had? And he wanted me to do it while I was asking for canned goods? This was beyond humiliating. This was pure torture.</p>
+
+<p>"Please, Josh," I begged, my eyes wide with desperation. "That sounds humiliating!"</p>
+
+<p>"It's for a good cause, Jules," he said, his voice dripping with amusement. "Now, go on. Knock on the door."</p>
+
+<p>I could feel my heart pounding in my chest as I walked up to the next door. I was a nervous wreck, my hands trembling so much that I could barely hold the notecard. I took a deep breath and knocked, my knuckles rapping against the wood with a force that surprised me.</p>
+
+<p>I waited, my breath held tight in my chest. I could hear my brothers' excited whispers behind me, their anticipation palpable. I felt like I was on a stage, about to perform the most degrading act of my life. The door swung open, and standing there was a girl that looked to be about the same age as my older brother. She had long brown hair tied back in a ponytail, and she was wearing a t-shirt and shorts. She looked at me, her eyes wide with shock.</p>
+
+<p>"Um... hi?" she said, her voice uncertain.</p>
+
+<p>"Hello," I said, my voice cracking as I tried to remember the words on the card. "My name is Julie, and I'm collecting for the church food drive."</p>
+
+<p>The girl's eyes flickered from my face, down to my chest, and then back up again. A small smile played on her lips, and I could feel my cheeks burning with shame. "A food drive? And you're... you're..."</p>
+
+<p>"Naked, yes," I said, my voice barely a whisper.</p>
+
+<p>"Is this a joke?" she asked, her eyes narrowing in suspicion.</p>
+
+<p>"No, it's for the 'Naked for the Cause' campaign," Josh said, stepping forward. "It's a new thing our church is doing. Julie here is our first volunteer. We're trying to raise money for the local food bank."</p>
+
+<p>The girl looked at my brothers, then back at me, a thoughtful expression on her face. "Huh," she said, a slow smile spreading across her face. "You seem to be enjoying yourself. Are you sure this is really for some church function?" I could see her eyes roaming down to check me out between my legs as I stood there. I knew my little slit was wet just by feel, but I didn't know that it was noticeable! I wanted to cover up, to run away, but I knew I couldn't. I had to see this through.</p>
+
+<p>"Oh yeah," Toby said with a confident grin. "Julie loves being naked, especially for a good cause. In fact, she has a special offer for you." He took the notecard from my trembling hand and showed it to her. "For a donation of 5 cans of food or 50 dollars, you can get a picture with her."</p>
+
+<p>The girl's eyes lit up. "A picture? Really? That's so cool! Let me go get brother! I know he'd kill me if he missed out on this opportunity." She disappeared before I could even respond, leaving my brothers snickering.</p>
+
+<p>"Looks like you're going to have your first boy fan, Jules," Josh teased, nudging me playfully. "Aren't you excited?"</p>
+
+<p>"I'm going to kill you both," I mumbled, my face burning with a mixture of shame and a weird, fluttery excitement. A few moments later, the girl returned, pulling a shorter, lanky boy with her. He had messy blond hair and a smug look on his face that I immediately disliked. Suddenly, I realized that I knew him! It was Ethan Miller, from my science class! We'd never really talked, but I'd always thought he was kind of cute. And now he was seeing me completely naked!</p>
+
+<p>"Whoa," Ethan said, his eyes widening as he took in the sight of me. "Dude, is this for real?"</p>
+
+<p>"Completely real," Josh said, taking charge. "For a small donation, you can get a picture with our lovely Julie."</p>
+
+<p>Ethan's eyes roamed over my body, and I had to fight the urge to cover myself. I felt a strange warmth spread through my chest as his gaze lingered on my breasts. "How much for a picture?"</p>
+
+<p>"50 dollars, or 5 cans of food," Toby piped up.</p>
+
+<p>"Awesome," Ethan said, a grin spreading across his face. "I'll be right back!"</p>
+
+<p>As Ethan disappeared back into his house, the girl, who I now realized was his older sister, gave me a sympathetic look. "Don't worry, he won't be too weird. He's just never seen a girl naked before."</p>
+
+<p>I could feel my cheeks getting even hotter. "Really? And you brought him to see me because of that?"</p>
+
+<p>She shrugged, a mischievous glint in her eye. "It's for charity, right? Plus, it's kind of fun to see him get so excited. I'm Kelsey, by the way."</p>
+
+<p>"Julie," I mumbled, my eyes cast down at the ground.</p>
+
+<p>"It's nice to meet you, Julie," Kelsey said, a small smile on her face. "You're really brave for doing this."</p>
+
+<p>I wanted to tell her that I wasn't brave, that I was being forced to do this, but I knew that wouldn't go over well. "Thanks," I said, my voice barely a whisper.</p>
+
+<p>Just then, Ethan came bounding back out of the house, clutching a collection of cans in his arms. "There's at least 20 here." he declared proudly.</p>
+
+<p>"Woah, bro, you know mom's gonna be pissed that all her vegetable cans are missing!" Kelsey chuckled at her brother's enthusiasm.</p>
+
+<p>"I know, but it's for a good cause. Mom'll understand." Ethan said, not taking his eyes off of me. "Plus, it's more than enough for the picture, right?" he asked, looking hopefully at Josh.</p>
+
+<p>Josh just grinned and nodded. "More than enough. You have a great eye for charity. Julie, you know the deal." He said, turning to me.</p>
+
+<p>I looked at my brother, my eyes pleading with him to reconsider, but I knew it was no use. I was trapped. "That's over 15 cans..." I mumbled.</p>
+
+<p>"That's right, Julie. That means he gets to have you pose however he wants for the picture. Go on, ask him how he wants to pose with you." Toby urged me, a wide grin plastered on his face.</p>
+
+<p>I took a deep breath and tried to steady my voice. "Ethan... how... how would you like me to pose for this photo?" I asked, my voice trembling.</p>
+
+<p>Ethan's face lit up, a triumphant grin spreading across his lips. "Ok, for this special picture... I want you to stand with your back to me, and then lean your head back on my shoulder." He instructed, his voice full of excitement.</p>
+
+<p>I felt a jolt of panic. A pose like that would put my entire front on display, from my breasts all the way down to my shoes. And with my head leaning back on his shoulder, it would look like we were in some kind of intimate relationship. It was the most embarrassing pose I could imagine, especially if he showed others from school! I looked over at my brothers, but they just shrugged, as if to say, "It's his choice." I knew I had to do it.</p>
+
+<p>"Ok," I said, my voice barely a whisper. I turned my back to Ethan, and he moved in close. I could feel the warmth of his body against mine, and I shivered as his arm wrapped around my waist. I leaned my head back, resting it on his shoulder, and I could feel his breath on my neck. It was so intimate, so close, and I felt a strange flutter in my stomach.</p>
+
+<p>Toby held up his phone to take the picture, but Ethan stopped him. "Wait. Spread your legs open more, Julia." He commanded, his voice low and husky in my ear. I could feel my face burning with shame as I did as he asked. I moved my feet apart, spreading my legs open until my pussy was completely exposed. I could feel the cool air on my wet slit, and I had to fight the urge to close my legs.</p>
+
+<p>"That's better," Ethan said, his voice a low whisper in my ear. "You have such a beautiful body, Julia." His hand on my waist started to wander, his fingers tracing a path along my side, and I gasped as they brushed against the swell of my breast.</p>
+
+<p>"Ok, smile for the camera, you two!" Toby said, trying to sound cheerful, but I could hear the amusement in his voice.</p>
+
+<p>I did my best smile. I was mortified, humiliated, but I was also a little bit turned on. I couldn't believe that I was letting a boy from my school, a boy I barely knew, touch me like this, and in front of his sister and my brothers! It was the most degrading, thrilling experience of my life.</p>
+
+<p>Ethan's hand slid down and tickled my tummy, still holding me in his lewd embrace. I couldn't help but let out a little squeal of surprise and squirm a little bit. "Ticklish, eh?" He whispered, as his hand went lower, heading for the top of my slit!</p>
+
+<p>"Ethan, what are you doing?" I whispered in shock.</p>
+
+<p>"I'm getting my money's worth." He whispered back, as his fingers slid between my lips.</p>
+
+<p>"Ethan!" I gasped out loud, his sister and my brothers were all watching! My hips started moving all on their own as his fingers found my little button.</p>
+
+<p>"Wait, no, Toby!" I pleaded.</p>
+
+<p>My little brother started snapping photos of me with my hips wiggling in this boy's arms! "Smile for the camera, Julie jewel!" He called me by my nickname.</p>
+
+<p>"I can't! Ah! It's too... ahh!" My hips were bucking against his hand as his fingers played me like an instrument. "That's enough pictures!" I said with a squeal, before finally pushing myself away from Ethan. I could feel his wet fingers sliding out of me, and I shuddered. I turned to face him, my face burning with shame, and I could see the triumphant look on his face.</p>
+
+<p>"Hey, I gave you more than 15 cans. Don't I get something else?" He asked with a sly smile.</p>
+
+<p>"Well, there is the scavenger hunt. If someone finds the hidden mole on Jules' body, then they win a kiss." Josh made up on the spot.</p>
+
+<p>"Oh God! The mole!" I whined, remembering. I was so mortified by the fact that Ethan had touched me, I had completely forgotten!</p>
+
+<p>"Where is it? Can I see?" Kelsey asked.</p>
+
+<p>"Sure, but you have to find it. It's hidden." Josh explained. "I'll give you a minute to look for it."</p>
+
+<p>Ethan and Kelsey started looking over my body. It was beyond embarrassing to have a classmate of mine, and his older sister, inspecting my body for a mole I didn't even know I had. They looked at my arms, my legs, my chest, and even the back of my neck, but they couldn't find it. They seemed to be about to give up, but that's when Ethan told me to spread my legs!</p>
+
+<p>I did as he asked, and he actually got down on the ground, lying on his back, in between my legs! "We haven't checked down here, sis." He said, reaching his fingers up to spread open my butt cheeks! I couldn't believe it. This boy from my science class was spreading my butt cheeks wide open to look for a mole on my butt hole!</p>
+
+<p>"Oh! Oh!" I moaned as he spread my cheeks apart. It was so humiliating! There's something so deeply personal and intimate about having a boy look up at you from in between your own legs.</p>
+
+<p>He didn't find the mole in between my cheeks, so he moved on to check my pussy! "Spread your lips open for me, Julia." He instructed me. "Let me see that mole."</p>
+
+<p>I was trembling, my heart racing in my chest. I reached down and spread my own pussy lips open for him, showing him the pink, wet folds of my most intimate area. And he didn't take his eyes off of it.</p>
+
+<p>"There it is! There it is!" He reached up, resting his finger on it! I could feel him pressing on the inner part of my outer lip on the right side. "It's right here!" I couldn't believe that I didn't realize that I had a mole there. It was impossible for me to see, at least not without a mirror, so I had to take his word for it. "I've got it, so that means I get my kiss." He said with a wide grin, staring at my pussy.</p>
+
+<p>"Alright, fine..." I said, resigning myself.</p>
+
+<p>I was waiting for him to get up, but he didn't. Instead, he hooked his arms around my thighs and sat up, and then he kissed me right on my pussy lips! I felt his lips on my pussy, and the sudden sensation made me gasp out loud! I couldn't believe it! I could hear my brothers laughing their heads off! This boy from my science class was actually kissing my private parts! I moaned loudly, and then Ethan stuck his tongue out, flicking and teasing my little lips down there! I couldn't help but giggle and moan as he did so, his tongue eventually finding my little clit!</p>
+
+<p>"Oh! Oh my gosh!" My hips were bouncing like crazy, and I grabbed his hands, trying to push him away. I couldn't believe this was happening! A boy I barely knew from science class was licking my private parts! No matter how hard I tried to push him off, his arms were wrapped too tight around my legs, and I couldn't get away. All I could do was stand there, bent over a little, while Ethan's tongue was wiggling all over my clit! It felt so good and so embarrassing at the same time!</p>
+
+<p>"Hey! Hey, stop it!" I whispered, but honestly it didn't sound very convincing. "We're supposed to be raising money for cans, not... not doing this!" My voice trembled as his tongue kept going, making my whole body feel like it was on fire!</p>
+
+<p>Ethan just smiled against my pussy and kept going. His tongue was moving in little circles that made my knees weak. I could hear my brothers cracking up behind me, which made me blush even more, if that was even possible.</p>
+
+<p>"Oh! Oh my God! Ethan, stop!" I moaned, but my hips were pushing against his mouth instead of away. I was so confused! My body wanted this even though my brain was screaming that this was so humiliating! I could see Kelsey just standing there with her mouth open, watching her brother lick my private parts!</p>
+
+<p>"ETHAN, STOP!" Finally, it was his sister's voice that cut through my moaning. She sounded like she was shocked, but also trying way too hard not to laugh.</p>
+
+<p>Ethan pulled his face away from my... from down there, wiping his mouth with the back of his hand. I almost fell over! My legs felt like noodles and I had to stumble back a step to catch my balance. I could feel my cheeks burning, I swear they felt hot enough to cook an egg on. I looked down, and I could see Ethan's chin was all shiny and wet from... you know. My juices. I just wanted to die right there. I wanted the ground to open up and swallow me whole.</p>
+
+<p>"I... I can't believe you did that!" I stammered, my heart racing in my chest.</p>
+
+<p>"Hey, I won a kiss." He said smugly, the little shit! I could tell he was enjoying the fact that he had embarrassed me.</p>
+
+<p>"I can't believe you actually did that." Josh said, looking at both of us with a wide grin. "I was only talking about a kiss on the lips at the most."</p>
+
+<p>"But he did kiss Julie's lips, Josh!" Toby laughed, pointing down to my privates. "Right on them!"</p>
+
+<p>I could feel my cheeks burning with embarrassment and anger. I glared at my brothers, but they just continued laughing, enjoying my humiliation.</p>
+
+<p>"Anyway, that was a lot of fun, but we've got to keep going," Josh said, turning to Ethan and his sister. "I'll email the pictures of you and Julie to you, if you just want to write your email address down here." He handed Ethan a notebook and pen.</p>
+
+<p>"No problem," Ethan said, taking the notebook and jotting down his email. "Thanks for the fun, Julia."</p>
+
+<p>"Yeah, thanks," Kelsey chimed in, looking a little flushed herself.</p>
+
+<p>"Y-you're welcome," I stammered, feeling completely exposed under their gazes.</p>
+
+<p>"Come on, Julia, we gotta keep going," Toby said, grabbing me by the arm and pulling me away. "We have a lot more houses to go."</p>
+
+<p>My legs were still all wobbly after what Ethan did, and I could still feel this tingly feeling down there where he'd licked me. I couldn't believe he really did that! Right in front of everyone, and out in public! I kept thinking about what might happen at the next house. Would someone else try to do that to me? Would they go even farther? My stomach felt like it was doing cartwheels just thinking about it. I was worried that by the time we finished going to all these houses, I'd be too embarrassed to even show my face at church, let alone help sort cans.</p>
+
+                <div class="decorative-divider">🍂 🍁 🍂</div>
+
+                <h3>Chapter 3c</h3>
+<p>"Alright, Julie, ready for your next dare?" Toby asked, a mischievous glint in his eyes.</p>
+
+<p>"Please, no! You're not seriously going to make me do another dare!" I whined, my voice shaking a little as I looked at my brothers. I mean, come on! I was already completely naked, except for my sneakers of course, and we had been going door to door all morning. I was basically their naked little spokeswoman for the food drive, and that was embarrassing enough! I had already been touched and licked by a boy from my science class! What more could they possibly want to do to me? My brothers just grinned at me, enjoying my discomfort. They were having way too much fun with this, and I was starting to regret ever going along with this stupid tradition. But then again, I didn't really have a choice, did I? It was picture day, and I had to do whatever they wanted. I just hoped this next dare wouldn't be as bad as the last one. I wasn't sure I could handle another round of public humiliation like that. My heart was already pounding in my chest, and I could feel my cheeks getting hot just thinking about it. I took a deep breath and braced myself for whatever they had in store for me next.</p>
+
+<p>"This one is super easy," Toby said. "When you get to the door, all you have to do is turn around and bend over, and then spread your butt cheeks for while making your pitch. Show them what a cute butt you've got."</p>
+
+<p>"Wait, what?!" I squeaked, my face turning a bright shade of red. "That doesn't sound easy!" I said, horrified at the thought of doing that. "That's super embarrassing!"</p>
+
+<p>Toby just grinned at me. "Come on, it's not that bad. Plus, it's for charity, remember?"</p>
+
+<p>I wanted to argue, to tell him that there were plenty of other ways to raise money for charity, but I knew it would be pointless. The whole point of this was to put me in as humiliating a situation as possible. I sighed, resigned to my fate. "Ok, fine. But please, can we just get this over with?" I asked, my whole body burning with humiliation, despite the cool breeze. The only part of me that felt cool was in between my legs, where most of my juices had pooled.</p>
+
+<p>"Of course, sis. Let's go." Toby said, grabbing me by the hand and leading me to the next house. As we approached the front door, I could feel my heart pounding in my chest, my body trembling with anticipation. Toby gave me one last smirk before knocking on the door. I could hear footsteps approaching, and I took a deep breath, and got myself into the shameful position Toby had told me to take. The door swung open, revealing an older man in his 50s.</p>
+
+<p>"What the hell!" He exclaimed angrily, his face turning red with rage. "What's going on here?" He demanded, glaring at me and Toby.</p>
+
+<p>"Hi sir!" I said cheerfully, trying to ignore the fact that I was bent over, completely naked, with my butt cheeks spread. "My name is Julie, and I'm collecting..."</p>
+
+<p>The man cut me off. "Young lady, what is the meaning of this!?" He demanded, his voice booming. With swiftness, I wasn't expecting from someone so old, he reached down and delivered a swift smack on my exposed butt! "Do your parents know what you're doing? This is inappropriate and disgusting! You should be ashamed of yourself!" He scolded, spanking me a second time!</p>
+
+<p>"OW!" I gasped out, my hands flying to my butt to rub the sting away. I completely stood up, forgetting all about my pose! That actually hurt! He had actually spanked me! Hard! And in front of my brothers! I could feel my cheeks burning with shame and indignation. I couldn't believe this was happening.</p>
+
+<p>"Hey, stop that!" Josh shouted, stepping forward to intervene, always my protector. "She's not doing anything wrong!"</p>
+
+<p>"She is completely nude! Displaying herself like... Like!... I think she is doing something VERY wrong!" The man said, getting flustered as his eyes never left me.</p>
+
+<p>"Yeah, but it's for charity," Toby argued.</p>
+
+<p>The man just shook his head, clearly not convinced. "Look, if you two are trying to earn money, why don't you go do some honest work, instead of putting your sister on display like a piece of meat."</p>
+
+<p>Josh, always the smooth talker, stepped in. "Sir, I know this looks bad, but it's for a wonderful cause. Our church is running a food drive, and we're trying to raise as much money as we can." He explained, his tone sincere. "And Julie agreed to do this to help out."</p>
+
+<p>The man sighed, looking at me with a mixture of pity and annoyance. "Well, that's very noble of her, but it's not right. I don't approve of this kind of thing."</p>
+
+<p>"I get it, sir," Josh said, putting his arm around my shoulder protectively. "But you can't just go around spanking girls without paying for it. It's actually one of our special deals." Josh explained with a straight face, as if this was totally normal. "For $250, or fifty cans, you get to spank her cute butt five times. Since you've already done it twice without paying, you owe us a hundred dollars now." He gave the man a confident smile, like he had him cornered.</p>
+
+<p>"Are you kidding me!?" The man sputtered, his face turning even redder. "You're charging people to spank your sister!?"</p>
+
+<p>"It's for a good cause," Toby chimed in, holding up the donation tin like it proved his point.</p>
+
+<p>The man looked from me to my brothers, his expression changing from anger to disbelief, then finally thoughtful. He stared at my naked body, then at my butt cheeks, which I'd instinctively covered with my hands after the spanking. I could feel my whole body blushing, and I wished I could just disappear.</p>
+
+<p>"$250?" He tilted his head, his eyes fixed on my butt, as if considering the offer.</p>
+
+<p>I couldn't believe it. Was he seriously considering paying to spank me? I felt my heart pounding in my chest, and I wanted to run away. I really thought about it, but I knew I couldn't. Not only because Josh wouldn't let me, but because I knew that I would be letting everyone at the church down.</p>
+
+<p>"Yes, $250 or 50 cans." Josh nodded with a smirk.</p>
+
+<p>The man didn't say anything for a second, he just stared at my butt like he was actually thinking about it! Then he turned around and went back inside his house. I stood there, completely naked, holding my butt with my hands, wondering what was happening. A few seconds later, he came back out, holding a check.</p>
+
+<p>"Here." He said, handing the check to Josh. "I wrote it for 500 dollars." He explained, not even looking at my brothers. He was looking right at me, and it made me super nervous. "I can't believe I'm actually doing this. My wife won't let me spank our daughters anymore. She says it's not right for them now that they're teenagers. I used to do it all the time when they were little, and it was... Well, effective." He had this look on his face, like he was remembering the good old days. "Now turn around and bend over, young lady!" He ordered, his voice all stern and commanding. I couldn't believe this was actually happening to me!</p>
+
+<p>My stomach twisted in knots as I slowly turned around, feeling completely exposed. I couldn't believe this was happening. I was actually going to let this man spank me, and not only that, he had paid to do it! It was humiliating and degrading! My whole body was shaking as I bent over, wrapping my arms around my knees, and displayed my bare butt to him.</p>
+
+<p>"Good. Now hold still, and I'll make this quick." He said, his tone commanding. I could feel his eyes on me, and it made me feel even more vulnerable. I wanted to cry, to beg him not to do this, but I knew it was too late. I had agreed to do this for charity, and I had to see it through. He spanked me, hard! I could feel the sting of his palm on my bare ass, and it was so embarrassing!</p>
+
+<p>"Jules, why don't you count them out loud?" Josh suggested. "That's three so far." He added.</p>
+
+<p>"Th-three!" I whimpered, my voice cracking. My whole body was on fire, and I could feel the tears welling up in my eyes. I wanted to just curl up and die, but I knew I had to tough it out. This was for charity, after all. So the next time he spanked me, I managed to squeak out a, "Four."</p>
+
+<p>"Good girl," the man said, his voice a little gentler. "Just six more to go."</p>
+
+<p>I braced myself for the next spank, my body tensing up. The fifth one was even harder, and I couldn't help but let out a little cry of pain. My whole body was shaking, and I felt like I was going to collapse, but I had to keep going. This was for charity, and I had to see it through.</p>
+
+<p>"Daddy!?" I heard a gasp from inside. Two gasps, actually, as two teenage girls came into view. I couldn't see them very well from my position, bent over with my butt cheeks spread, but I could see them walking towards us from between my own bare legs. One of the girls was taller than the other, with long, blonde hair, while the other was shorter, with dark hair tied into pigtails. The shorter one looked to be about my age, maybe a year younger, and they were both staring at me with wide, shocked eyes. I could feel my cheeks burning with shame, and I wanted to curl up into a ball and disappear, but I couldn't. I was trapped in this humiliating position, and there was nothing I could do to escape.</p>
+
+<p>"What's going on here?" the taller girl asked, her voice trembling with a mix of confusion and amusement.</p>
+
+<p>"Just a little charity work," Josh said, his voice dripping with sarcasm. "Julie's collecting for the food drive."</p>
+
+<p>The shorter girl giggled, her eyes roving over my naked body. "And she's doing it... like this?"</p>
+
+<p>I could feel my whole body blushing, and I wished I could just disappear. This was so humiliating! To be seen like this by girls I didn't even know! I wanted to scream, to cry, to do anything to escape this nightmare. But I knew I couldn't. I was trapped, and there was nothing I could do to change that.</p>
+
+<p>"Yep," Toby said, his voice practically bubbling with excitement as he pointed at the wagon. A huge, smug grin spread across his face. "Look at how much stuff we've already got! She's doing amazing!" His eyes darted from the growing pile of cans in the wagon back to my naked body, and I couldn't help but feel a strange mix of pride and humiliation. I was doing a good job, I guess, but at what cost?</p>
+
+<p>"One of the rewards for donating is getting to spank her." Their dad explained to the girls, showing them my reddened behind.</p>
+
+<p>"You're joking!" the taller girl exclaimed, her eyes wide. "That's so weird! Who'd want to do that?"</p>
+
+<p>"Our father, apparently." the shorter girl giggled, elbowing her sister.</p>
+
+<p>"Hey, don't judge me. You two aren't too old to be put in the same position, you know." The father warned.</p>
+
+<p>"You wouldn't spank us anymore, daddy." The taller girl said, rolling her eyes. "We're your princesses, remember? We're too old for that. Besides, it's not like we'd ever let anyone see us naked like that."</p>
+
+<p>"Oh yeah?" the man said, raising an eyebrow. "I'm glad to hear that. I want you two to stay chaste until you're married."</p>
+
+<p>"Ha! That's so old-fashioned." the shorter girl laughed. "Hey, daddy, can I try spanking her?"</p>
+
+<p>"Me too!" the taller girl said, her voice suddenly full of eagerness. "Please, dad? We've never spanked anyone before!"</p>
+
+<p>The man sighed and shook his head. "Alright, fine. Just make sure you do it gently, ok? She has five more coming to her."</p>
+
+<p>"Yay!" The girls giggled and clapped their hands, their eyes lighting up with excitement. I couldn't believe this was happening! I was bent over in front of these people, my legs spread, and now his daughters were going to spank me? This felt so unfair! It was one thing for their father to spank me, but these girls were the reason I was being spanked by him in the first place! All because his wife thought they were too old for a spanking!</p>
+
+<p>"Oh, this is gonna be so fun!" The taller one said, rubbing her hands together.</p>
+
+<p>"I get to go first!" The shorter one squealed, pushing her sister aside.</p>
+
+<p>I wanted to protest, to tell them that this wasn't right, that they couldn't just spank me like I was some kind of toy, but I knew it was useless. I was trapped, and there was nothing I could do but endure the humiliation. I felt a hand on my butt, and I braced myself for the impact. It wasn't as hard as her father's, but it was still embarrassing, especially when she giggled after she did it.</p>
+
+<p>"One," I whimpered, my voice cracking with shame.</p>
+
+<p>The second one was harder, and I couldn't help but let out a little yelp. The girls laughed, and I could feel my cheeks burning with embarrassment. This was so humiliating! I was being spanked by two girls I didn't even know, in front of my brothers and their father!</p>
+
+<p>"Two," I managed to say, my voice barely a whisper.</p>
+
+<p>The third and fourth ones were just as bad, and I could feel the tears welling up in my eyes. I had never been so humiliated in my entire life! I just wanted it to be over, but I knew I had to endure it. This was for charity, after all.</p>
+
+<p>"Three... four," I whimpered, my body shaking.</p>
+
+<p>The last one was the hardest of all, and I couldn't help but let out a sob. I felt so used, so degraded, so completely and utterly humiliated. I couldn't believe this was happening to me, that I was allowing myself to be treated like this.</p>
+
+<p>"Five," I cried, my voice breaking.</p>
+
+<p>"There, all done," the taller girl said, her voice full of satisfaction. "That wasn't so bad, was it?"</p>
+
+<p>I didn't answer. I couldn't. I just stood there, my butt stinging, my body trembling, my face burning up! I wanted to just disappear.</p>
+
+<p>"Thank you so much, sir," Josh said, his voice sincere. "Your donation will really help the church."</p>
+
+<p>"I know," the man said, his voice full of pride. "And I hope the church can put that money to good use."</p>
+
+<p>While Josh was talking to the man, I suddenly felt something tickling me between my legs! My eyes went wide, and I let out a little squeal! One of the daughters had reached in to tickle my pussy lips! No one had said anything to me, so I was still bent over, showing off everything God had given me.</p>
+
+<p>"Oh my God! Oh my God!" I gasped, my hips bucking involuntarily. Ethan had left me in a heightened aroused state, and I was still really sensitive down there. Then, I felt more fingers doing the same higher up, this on my butthole!!! "Hey! Wait! Stop!" I yelped, trying to wriggle away, but the girls had taken a firm grip on me, and I couldn't escape.</p>
+
+<p>"What's going on?" the man asked, looking over at us with alarm.</p>
+
+<p>"Just having a little fun with the new toy, Daddy," the taller girl said. I could see it was her fingers dancing along my back door. "She's got such a cute butt, don't you think?"</p>
+
+<p>"And the most ticklish and smooth kitty I've ever felt!" The younger one said, three of her fingers strumming along my folds! I could feel my hips wiggling all on their own, just like they did with Ethan earlier! The girls both giggled at my reaction.</p>
+
+<p>"Just what do you think I am!" I complained, wiggling my butt back and forth to get their fingers off of me. "I'm not some toy!"</p>
+
+<p>The man suddenly made a growl. "Just what in the hell are you doing!?" He demanded from his girls.</p>
+
+<p>"Oh, don't worry, Daddy. We were just having a little fun with her. She's so cute and naked, we couldn't resist."</p>
+
+<p>"Get your hands off her this instant, Alicia!" the man snapped, his voice filled with anger. I could hear his shoes stomping on the wooden porch as he marched right up to us. I was still bent over, so I couldn't really see his face, but I could totally hear how mad he was in his voice. "You're not supposed to touch her like that! You too, Melissa!" </p>
+
+<p>Next thing I knew, he'd grabbed both of them by the ears! I heard them both let out this little "Ow!" sound, but I was too stunned to do much. His hands looked super big compared to their ears, and he was actually pulling them away from me! I could feel the cool air on my butt and between my legs again where their fingers had just been, and it made me shiver a little bit.</p>
+
+<p>"I cannot believe you two!" he said, still holding their ears like they were little kids who'd gotten into trouble. "I told you, you could spank her! That does not mean you get to... to... do... whatever that was!" He was gesturing toward me with his hand, and I could feel my face getting even redder than it already was. I was still bent over, completely naked, with my butt on display, and now his girls were looking at me like I was some kind of weird plaything.</p>
+
+<p>I finally straightened up, my hands instinctively covering my private parts. My butt was still stinging from all the spankings, and my pussy was all tingly from where they'd been touching me. I looked over at my brothers, who were just standing there with these goofy looks on their faces, like they couldn't decide whether to be shocked or amused by this whole situation.</p>
+
+<p>"I think it's time I taught you both a lesson," the man said sternly, his eyes narrowed. "The old-fashioned way!" </p>
+
+<p>"Wait, daddy, please!" The tall one begged, as he started undoing her skirt. She looked over at me, and her eyes were so wide, and she had this look on her face that was like a mix of panic and embarrassment.</p>
+
+<p>"You're not gonna... you're not gonna do this in front of her, are you?" She asked, her voice quivering a little bit. "WHAT ABOUT THE BOYS!" Her voice went up an octave on the word 'boys' as if she had just realized my brothers were there.</p>
+
+<p>"I don't care who sees it. Maybe it'll do you both some good to learn a little decency." He snapped. "Now, both of you, get your clothes off!! If this is the way you're going to treat a strange girl you just met, then that's the way you're going to be treated!"</p>
+
+<p>Alicia, the taller one, looked back at me again, and I could see the panic in her eyes. She looked like she wanted to bolt, but her father's grip on her was too strong. I didn't know what to do, so I just stood there, trying to act like I didn't think they deserved it. It was hard not to think that. They had just been feeling me up, and they should be punished for it. It was embarrassing for them to be punished in front of strangers, sure, but it was what they deserved. I didn't want to watch, exactly, but I couldn't peel my eyes away.</p>
+
+<p>"Daddy, please!" The shorter one begged, as he pulled off her blouse. "Not on the front porch! Let us go inside!"</p>
+
+<p>"I think this is exactly where it should happen." The man said, grabbing his younger daughter's blouse away from her. "Now hurry up and take the rest off, or I'll do it for you!"</p>
+
+<p>I felt a hand on my shoulder. It was Josh. He led me and Toby off the porch and onto the grass. We were still close enough to see everything happening. I was super embarrassed. I mean, I was still completely naked, but in a few moments there would be two other girls naked with me. The tall one, Alicia, had all her clothes taken off her by her father, and was standing there, her hands covering her breasts and her crotch. The younger one was still fighting her father, trying to keep her panties from being taken off, but he was determined. She was squirming and kicking, and it was clear she didn't want her naked body on display. Finally, the man managed to yank her panties down her legs. He was red in the face from the struggle. He held her panties in his hand, looking at them with a satisfied smirk. The younger one covered her breasts and pussy with her hands, just like her sister, her face red with embarrassment, but not before I was able to see her nipples were as pink as mine.</p>
+
+<p>"Both of you turn and bend over, like the other girl!" He commanded. I couldn't believe what I was hearing! These girls were about to get spanked! In front of us! After being stripped naked too! This was crazy! My brothers were loving it! They were grinning from ear to ear, enjoying the show. They were both staring at the girls as they slowly obeyed their father's command.</p>
+
+<p>Their father didn't give them a choice, making their bare butts and everything in between face out towards the street. Then he delivered two hard smacks to their bottoms, "OW!" alternating between each cheek on one girl, and then doing the same to the next. They both let out a pained squeal from each smack. My heart was pounding in my chest. I couldn't believe this was actually happening! It had to be so embarrassing for them! My brothers, on the other hand, were relishing the show!</p>
+
+<p>"Alicia is in my math class." Josh whispered to me and Toby. "She sits in the front row. Damn, she's got a cute pussy!"</p>
+
+<p>Josh was always making comments like that about girls, but I had to admit, he was right. Alicia had a super cute pussy. Her lips were small and pink, and her hair down there was trimmed short. It was a stark contrast to her sister, Melissa's. Her lips were more flowered open. There was some pink peeking out from between her lips. I didn't know if that was normal or not. My brother's comment had made me look. Melissa had a thick bush of black hair about her slit. It was so wild that you could barely see her lips, even when she was bent over like that, her butt cheeks spread for her daddy. I was kind of jealous that they both had hair down there, that I was not allowed to keep.</p>
+
+<p>Their dad kept spanking them, and the sound of the smacks, along with the girls' cries, was starting to draw in a crowd. Some of the other kids and teens from around the neighborhood were gathering near the edge of the lawn, with us halfway in the middle. They were all staring at the two naked girls, their eyes wide with curiosity. Some of the boys were even smirking and nudging each other, and I could hear them whispering and giggling as the man continued to spank his daughters. I felt embarrassed for them, but I also had my own nakedness to consider. Some of the boys were staring at me, too, their eyes lingering on my bare breasts and between my legs. I felt compelled to cover myself with my hands, but Josh gave me a look like I better not, so I reluctantly dropped them.</p>
+
+<p>One of the boys, a little older than me, came over and stood beside me, his eyes glued to Alicia and Melissa's exposed bottoms. I recognized him from church. His name was Chris. I think he was sixteen or seventeen, Josh's age. He was a huge hunk, I had to admit. He was really tall and muscular, with short brown hair and piercing green eyes. He was wearing a red t-shirt that showed off his strong arms, and a pair of shorts that did nothing to hide the bulge in his pants.</p>
+
+<p>"Hey there, Julie." He said in a low, hushed voice that sent a shiver down my spine. "Hey, Josh, Toby. What's up with that?" He pointed at the two naked girls getting spanked. His voice was a little too casual for the situation. It was like he was talking about the weather or something. "Are they... like that because of you?" He asked, gesturing to my naked body.</p>
+
+<p>"No. We're just collecting cans for the food drive." I explained, trying to sound nonchalant, watching with bated breath as his eyes roamed up and down my naked body. "They're being punished by their father for feeling me up."</p>
+
+<p>"Really?" Chris asked, his eyebrows shooting up in surprise. He looked back over at the girls, his gaze lingering on their exposed bodies. "That's pretty crazy." He turned back to me, his eyes scanning me up and down again. "So, why are you naked? Did Josh have to spank you?" He was looking at me like I was a piece of meat, and it made me feel a little self-conscious. At the same time, I was kind of enjoying his attention.</p>
+
+<p>"Um, no." I stammered, feeling my cheeks burn. I couldn't believe I was actually talking to him while naked, my breasts and pussy on full display. "I'm doing it for charity. My brothers have me doing it to help raise money for the food drive."</p>
+
+<p>"Ah, it's a picture day thing." He nodded. He had been over to our house, and been shown the photo album with my naked pictures by my brothers many times. This was, however, the first time I had ever been naked in front of him in person. I could feel my heart racing in my chest as he stared at me. "I'm not sure if I could do that." He laughed. "I mean, you have to walk around the neighborhood naked in front of everyone, and then knock on random doors and know everyone's looking at your cute little butt." He shook his head, his eyes still roaming over my body. "That's a lot of pressure, but you seem to be doing just fine." He smiled at me, and I felt my cheeks grow even hotter.</p>
+
+<p>"Uh, thanks." I said, not sure what else to say. I couldn't believe I was actually talking to him like this. I was totally naked, and he was still looking at me like I was the most beautiful girl in the world. It made me feel a little weird, but also kind of good.</p>
+
+<p>"So what's up with them, then?" Chris asked, nodding toward the porch. The girls' dad seemed to be done with the spankings, but he wasn't letting them cover up. Instead, he was making them face the road with their hands clasped behind their heads. Alicia and Melissa were both crying now, their faces all blotchy and red. It had to be super embarrassing for them, standing there completely naked in front of all these people. I felt a little bad for them, but I also felt kind of relieved that the attention wasn't all on me anymore.</p>
+
+<p>I looked over at Chris, who was staring at the girls with a thoughtful expression on his face. I couldn't help but wonder what he was thinking. Was he enjoying the show? Or was he just shocked?</p>
+
+<p>"I think their dad is making them stand there like that as a punishment," I said, my voice barely a whisper. "They took advantage and touched me..." I trailed off, not sure if I should say more. I could feel my heart racing in my chest.</p>
+
+<p>Chris's eyes snapped over to mine, his gaze intense. "They touched you?" he asked, his voice low and possessive. I couldn't help but shiver, his voice sending a tingle down my spine. "That's not right." He glanced over at the girls, his eyes narrowed. "You should have the right to touch them back." He said, matter-of-factly.</p>
+
+<p>I swallowed hard, not sure what to say. I hadn't expected him to react like that. I thought he'd be grossed out or something, but instead, he was offering me a chance to get even.</p>
+
+<p>"Oh man, it'd be fun to see Julie touching them the way they were touching her." Toby commented, still watching the girls on the porch. "I mean, they're pretty hot, and they're completely naked. It'd be fun to see Julie's fingers dancing on their pussies, or maybe even in them."</p>
+
+<p>My face got super hot thinking about Chris watching me mess with those girls. "Oh my god, Toby, you can't be serious! That's totally messed up! And their dad looks like he'd kill us if we even tried!" I looked over at their dad on the porch, and he was staring right at us with this super mean look on his face. There was no way he'd let me touch his daughters, especially not like that. I was kind of scared he might come over and yell at us or something, but he didn't say anything. He just kept glaring, and I don't think he could hear what we were saying anyway.</p>
+
+<p>"I'm just teasing you, Julie." Chris winked at me, a mischievous grin on his face. I could feel my cheeks getting hot again. He was right, though. My heart was pounding like crazy, and I was breathing all fast and heavy just thinking about touching those girls back. "Though I noticed you started breathing harder when I brought it up." He said, his voice dropping to a low whisper. He leaned in closer, his warm breath tickling my ear. "You can't lie to me, Julie. I know you want to."</p>
+
+<p>My heart skipped a beat, and I felt a tingling sensation between my legs. I couldn't believe Chris was actually saying these things to me! And in front of my brothers too! It was so embarrassing, but at the same time, I couldn't deny the way his words were making me feel. My knees were getting weak again, just like they did earlier. I couldn't believe this was happening!</p>
+
+<p>"Uh, I don't... I'm not... I'm not going to do that." I stammered, trying to sound like I wasn't interested. But my voice was all shaky, and I knew I wasn't fooling anyone.</p>
+
+<p>"Hey! So what's the deal? Why are there three naked chicks out here?" One of the guys at the edge of the lawn yelled out, and honestly, I was so thankful he said that. It saved me from having to dodge anymore of Chris' questions. Now all eyes were on the guy who yelled, and it gave me a second to breathe.</p>
+
+<p>Chris just laughed, like this was totally normal. "Don't worry about it, guys. Just some church charity stuff going on." He said it all casual, like naked girls on a porch was an everyday thing.</p>
+
+<p>"Charity stuff? What, like they're being auctioned off?" Another guy chimed in, and I could hear a bunch of guys laughing. My face was getting so red, I swear it felt like it was on fire. I wasn't being auctioned off! This was supposed to be for a good cause!</p>
+
+<p>"No, nothing like that," Chris said, shaking his head. He put his arm around my shoulders, and I could feel his fingers brush against my bare skin. It sent this shiver down my spine, even though I was trying to act all cool. "Julie here is just helping out with the food drive. The other two... well, they got themselves in a little trouble."</p>
+
+<p>I could hear some guys whistling, and my brothers were just grinning like a couple of idiots. They were totally loving this. I wanted the ground to open up and swallow me whole, but Chris's arm was still around my shoulders, and it felt kind of comforting, even though I was still super embarrassed.</p>
+
+<p>"You guys should make some donations!" Josh called to them, waving them to come over. He pointed at the wagon, showing off the cans that were already inside. "Come on, you've already seen Julie. It's only fair that you make a donation."</p>
+
+<p>I noticed more neighborhood kids and teens drifting closer, their whispers turning to snickers as I stood on display. My whole body felt hot and tingly, and my breathing grew shaky. I spotted Thomas from my history class making a beeline for me, his eyes scanning my naked body. My face grew hotter as he approached, and I couldn't help wondering what he was thinking. My brothers grinned like idiots, enjoying the show. I wanted to cover myself, but Josh's look warned me not to, so I just stood there, pretending this was normal.</p>
+
+<p>"Hey, Julie," Thomas said, his voice all casual like we weren't in the middle of a naked girl parade. "Crazy day, huh?"</p>
+
+<p>I just nodded, not trusting my voice to work right. I was too busy trying not to freak out about the fact that he was standing right next to me, checking me out like I was some kind of naked statue at a museum. I could feel my heart going a mile a minute, and I was super aware of every little breeze that hit my skin.</p>
+
+<p>Josh poked me in the back. "Jules, read your card," He prompted me with a whisper.</p>
+
+<p>I cleared my throat and tried to act all normal. "My name's Julie," I read, trying to speak loudly enough for everybody to hear. "And I'm going door to door, completely naked, to collect cans for the food drive." I could feel my face getting so hot, I swear it felt like I was going to burst into flames. But I kept going, reading the rest of the card. "For 5 cans, you can get a picture with me. For 15, you can have me pose any way you want for the picture, and..." I paused, coming to the most embarrassing reward. I took a deep breath and continued, "... for 50 cans, you get to spank my naked butt five times."</p>
+
+<p>Thomas laughed. "Oh man, that's hilarious! Are you really doing that for charity?" He reached down to pick up a can out of the wagon. "Here, one can."</p>
+
+<p>"You can't do that!" Toby complained, stepping in front of him. "You can't just take a can from the wagon! It doesn't count!"</p>
+
+<p>"Yeah, come on man," Josh chimed in, trying to be serious. "You can't donate a can that's already been donated."</p>
+
+<p>Thomas shrugged, like he didn't care. "Ok, fine. Then I'll just have to get my own cans." He turned and walked away, heading towards his house across the street.</p>
+
+<p>Chris nudged me with his shoulder. "Well, well, well, looks like you've got yourself a little fan club." he teased. "Would you like me to make a donation too?" He winked at me, and I felt my stomach do this little flip. "I don't have any cans on me, though."</p>
+
+<p>"Um, if you don't have cans, we'll take cash." Josh piped up, holding out his hand. "It's 5 times the can rate. So 25 dollars to get a photo with her, and so on."</p>
+
+<p>"Alright then," Chris said, reaching into his pocket. He pulled out his wallet and took out a couple of bills. He handed them to Josh and then turned to me. "So, Julie, want to take a photo with me?" He asked, his eyes all bright and playful.</p>
+
+<p>I nodded, not really knowing what else to do. Chris was one of the hottest guys I knew, and I couldn't believe I was standing here naked with him. I was trying not to think about the fact that he was looking at my naked body this whole time.</p>
+
+<p>We stood together, with Toby using his phone to take the photo. My heart was racing, and I felt like everyone was staring at us. Chris put his arm around me, and I tried to smile like nothing was weird. I mean, I was standing there completely naked with Chris, and he was fully dressed. It was super embarrassing, but at the same time, I couldn't help but feel a little flattered that he was paying attention to me.</p>
+
+<p>"Alright, I got a bunch of cans!" I heard Thomas yelling from across the street, and I turned my head to see him running toward us with a big plastic bag in his hands. The cans were clanking together as he ran, making this super loud noise that drew even more attention to us. He was totally out of breath by the time he reached me, bending over with his hands on his knees, panting like a dog. I could feel my heart pounding as I watched him, wondering what he was going to do next.</p>
+
+<p>"I... I think this should be enough for the picture, right?" Thomas managed to say between breaths, holding up the bag for us to see. He was staring right at my boobs, and I could feel my face getting all hot and tingly. I couldn't believe how many people were staring at me now, and I just wished I could disappear.</p>
+
+<p>Toby took the bag from him, counting out the cans as he put them in the wagon. "Yep, that's fifteen. Good job, man. That means you get to make her pose however you want in the pics!"</p>
+
+<p>Thomas grinned, his eyes never leaving my naked body. "Alright, Julie, let's get that picture!"</p>
+
+<p>Thomas started pulling me closer, his hands sliding down my bare sides, and my heart started hammering like crazy in my chest. I could feel his fingers getting closer to my boobs, and I was getting super nervous. Ethan had already done that earlier, and now another boy from my class was trying to feel me up too? "Um, what are you doing?" I asked, trying to pull away without making a big deal out of it.</p>
+
+<p>"Just getting you into position," Thomas said with a grin. His hands moved lower, brushing against my hips, and I shivered. I felt like I was going to melt right there on the lawn. Everyone was watching us, including Chris and my brothers, and my cheeks were burning. "How about you spread your legs a little more, Julie? That way, everyone can see you better in the picture."</p>
+
+<p>"Spread my legs?" I squeaked, my voice cracking. "But... why?"</p>
+
+<p>"Because it'll be a great shot!" Thomas said, his voice full of excitement. "Come on, it's for charity, right?"</p>
+
+<p>I couldn't believe this was happening. I was standing there, completely naked, in front of a bunch of people, and now Thomas wanted me to spread my legs wider for a picture. I could feel everyone's eyes on me, and my whole body was tingling with embarrassment and excitement. Without really thinking about it, I started inching my legs apart.</p>
+
+<p>"Perfect, Julie, just like that." Thomas encouraged me, his voice full of enthusiasm. I could feel my pussy lips getting wetter and wetter as he guided my legs further and further apart. I couldn't believe I was doing this, but I couldn't stop myself either. I was starting to feel like a total slut, but I was also feeling a strange mix of pride. I was doing something good for the community by exposing myself like this, right?</p>
+
+<p>"Uhh, hang on," Thomas said, his eyes scanning up and down my body like he was trying to decide what he wanted to do next. His side was pressing right up against mine, and I could feel the heat from his body through my skin. It made me shiver a little. "That's good, but I think you need to look like you're doing something in the photo." He wrapped his arm around my waist, pulling me even closer to him. I could feel his fingers digging into my skin, and I couldn't help but let out a little gasp. My heart was beating so fast, and I could feel my face getting all red and hot. I was super aware of the fact that I was completely naked, and he was fully dressed, and everyone was watching us.</p>
+
+<p>"What do you mean? What do you want me to do?" I asked, my voice sounding all shaky and nervous.</p>
+
+<p>"Maybe you could do something with your hands. Like, maybe play with yourself a bit?" Thomas suggested, his eyes flicking down to my exposed pussy. He reached down and grabbed my hand, pulling it down to my crotch. I couldn't believe he was actually suggesting that! I could feel my cheeks getting even redder, and my heart was racing like crazy! I couldn't believe he wanted me to touch myself in front of everyone!</p>
+
+<p>"You want me to what!?!?!" I gasped, my voice cracking as I tried to wrap my head around what he was suggesting. I couldn't believe he was actually asking me to touch myself in front of everyone!</p>
+
+<p>Thomas shrugged, his eyes never leaving mine. "Just to make the photo more interesting." His hand was still on mine, and I could feel his fingers pressing against mine and into the crease at the top of my slit. I couldn't believe this was happening, and I could feel my nipples aching, and my whole body tingling!</p>
+
+<p>I took a deep breath, trying to steady myself, and that's when the flash on Toby's camera started going off. I was so surprised by the sudden flash that I almost forgot to move my hand. I was actually touching myself, in public, in front of an audience, with a boy from school directing me how to do it! My pussy was soaking wet, and I could feel the cool air on my exposed clit. I couldn't help but let out a little whimper, and I knew my face was probably beet red.</p>
+
+<p>I could hear the other kids laughing and cheering. They were clearly enjoying the show! "Wow, Julie, you're so sexy!" one of the girls called out. I couldn't tell who it was, because I was too busy trying to focus on what I was doing.</p>
+
+<p>After a couple of minutes, the camera stopped flashing. I took my hand away from my pussy, even though I really wanted to keep going, but I couldn't risk looking like a total slut in front of all these people.</p>
+
+<p>"Whoa, that was a good one!" Toby said, practically bouncing on the balls of his feet with excitement. He showed me the phone, and I almost died right there. There I was, totally naked with my legs spread, touching myself in front of everyone! I couldn't believe how... hot I looked. My face got super red, but I couldn't stop smiling. All the kids were cheering, which was embarrassing but also kind of made me feel proud.</p>
+
+<p>"Alright, anyone else want to make a donation?" Josh asked, his voice cutting through the chaos. Everyone started reaching into their pockets, pulling out bills. It was so surreal, like we were at a concert or something, and everyone was trying to get the performer's attention.</p>
+
+<p>"Alright, I've got 25 bucks!" a boy from my class called out. I couldn't remember his name, but he was kind of cute.</p>
+
+<p>"I've got 10!" A younger girl called out. I was pretty sure she was in Toby's class.</p>
+
+<p>"Alright, awesome!" Josh said, practically glowing. He was loving all this attention I was getting, and I could tell he was thinking about how many donations we were going to get. "Hey, how about you all pool your money together? Then we can get a group shot of everyone with Julie!" he suggested, his voice full of excitement.</p>
+
+<p>Everyone started talking at once, excitedly pulling out their wallets and cash. It was a blur of activity as they all tried to figure out how much they had. I could feel my face getting all red and hot, but I also kind of liked being the center of attention. I just hoped I could keep my cool and not embarrass myself too much!</p>
+
+<p>While everyone was busy counting their cash and coins, I saw Alicia and Melissa coming off the porch. They were still totally naked, like me, and I could see their dad pointing them over to us. They looked super embarrassed, and I could tell whatever their dad had just told them to do wasn't something they wanted to do at all. Their faces were all red, and they kept their hands pressed against their boobs and their crotches as they walked toward us. I could feel my face get super hot, and I couldn't stop staring at them as they got closer.</p>
+
+<p>"Looks like our friends are going to join us," Chris said, his voice full of excitement.</p>
+
+<p>"Hey, Alicia, nice to see you outside of class," Josh teased, his voice all goofy. "And see all of ya."</p>
+
+<p>She shot him a glare, her cheeks burning red. "Shut up, Josh."</p>
+
+<p>"Girls! Arms down!" Their father shouted from the porch.</p>
+
+<p>"Come on, Dad!" The girls complained together, but he just shook his head and pointed. They both sighed and dropped their arms, revealing their bodies to everyone. I could feel my face getting hotter, and my nipples were practically aching. It was like I was on fire, and I couldn't stop staring at their naked bodies. Was this how I looked to everyone today, so naked and vulnerable?</p>
+
+<p>"What's up with your dad? I thought he didn't like public nudity?" I whispered to Melissa, as we waited for the boys to finish counting the cash.</p>
+
+<p>"He changed his mind," she whispered back, her cheeks pink. "He said it was a chance for us to show that we're not pervs. He wants us to learn to respect the female body and not be gross, so he's making us pose with you." She looked at me with a look of desperation, like she wanted to flee.</p>
+
+<p>"Wow, that's pretty harsh," I said, my heart going out to her. "But at least you're not doing it alone. I'll be right here with you, and so will your sister." I smiled at her, trying to offer some support, even though I was feeling pretty nervous myself. We both turned to watch as Toby and Josh finished counting the cash and coins that everyone had handed them. It was a lot of money, and I couldn't help but feel like we were going to be posing for a lot of photos.</p>
+
+<p>"Alright, let's get this show on the road!" Josh called out, clapping his hands together. "Julie, you're going to be in the middle, Alicia and Melissa on either side of her, and everyone else can gather around them." He gestured to the three of us, and we stepped into place, trying not to look too nervous.</p>
+
+<p>Oh my god, I could feel everyone staring at us as we got into position for the pictures! I was standing right in between Alicia and Melissa, their bare skin brushing against mine, and my brother Toby was already snapping pics with his phone. I was totally exposed to his camera, and I knew these photos were going to live forever in our photo album! I tried to smile, but my face felt like it was on fire, and I could see Alicia and Melissa looking super nervous too. "Come on, guys, smile for the camera!" I whispered, trying to sound encouraging, even though my heart was pounding like crazy. I couldn't believe I was standing there, totally naked, sandwiched between two other naked girls, with a crowd of our classmates and neighbors all around us. I had a feeling my life was never going to be the same again, and these photos were probably going to become the stuff of legend.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Copyright 2024 by SuperEvil, all rights reserved</p>
+        </div>
+    </div>
+
+    <script>
+        // Create falling leaves animation
+        function createLeaf() {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf';
+            leaf.innerHTML = Math.random() > 0.5 ? '🍂' : '🍁';
+            leaf.style.left = Math.random() * 100 + '%';
+            leaf.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            leaf.style.opacity = Math.random() * 0.5 + 0.3;
+            document.body.appendChild(leaf);
+
+            setTimeout(() => {
+                leaf.remove();
+            }, 25000);
+        }
+
+        // Generate leaves periodically
+        setInterval(createLeaf, 3000);
+        
+        // Create initial leaves
+        for (let i = 0; i < 5; i++) {
+            setTimeout(createLeaf, i * 600);
+        }
+    </script>
+</body>
+</html>

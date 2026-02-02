@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="book.png">
+    <title>The Family Tradition: Picture Day</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #CD853F 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c1810;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 248, 240, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(to right, #8B4513, #A0522D);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '🍂';
+            position: absolute;
+            font-size: 100px;
+            opacity: 0.1;
+            top: -20px;
+            left: 20px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .header::after {
+            content: '🦃';
+            position: absolute;
+            font-size: 80px;
+            opacity: 0.1;
+            bottom: -10px;
+            right: 30px;
+            animation: float 5s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        h1 {
+            color: #fff8dc;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        .author {
+            color: #ffd89b;
+            font-style: italic;
+            font-size: 1.1em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .overview {
+            background: linear-gradient(to bottom, #fff8dc, #faebd7);
+            padding: 25px;
+            border-left: 5px solid #8B4513;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .overview h2 {
+            color: #8B4513;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .overview h2::before {
+            content: '🍁';
+            font-size: 1.2em;
+        }
+
+        .overview p {
+            line-height: 1.8;
+            color: #4a3728;
+            text-align: justify;
+        }
+
+        .story-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 20px rgba(139, 69, 19, 0.05);
+        }
+
+        .story-content h3 {
+            color: #8B4513;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #CD853F;
+            padding-bottom: 10px;
+        }
+
+        .story-content p {
+            line-height: 1.9;
+            margin-bottom: 20px;
+            text-align: justify;
+            color: #3a2a1f;
+        }
+
+        .decorative-divider {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 1.5em;
+            color: #CD853F;
+        }
+
+        .footer {
+            background: #8B4513;
+            padding: 20px;
+            text-align: center;
+            color: #fff8dc;
+            font-size: 0.9em;
+        }
+
+        /* Autumn leaves decoration */
+        .leaf {
+            position: fixed;
+            top: -50px;
+            animation: fall linear infinite;
+            pointer-events: none;
+            font-size: 30px;
+            z-index: 0;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .overview, .story-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Family Tradition Picture Day 02f</h1>
+            <p class="author">by SuperEvil</p>
+        </div>
+
+        <div class="content">
+            <div class="overview">
+                <h2>Overview</h2>
+                <p>
+                    After a heated argument where then 8-year-old Julie refuses to wear the
+                    new dress her mom bought for their family Christmas portrait, her mom
+                    makes her choose. Either she can wear the dress, or she can go naked
+                    for the picture, but if she goes naked, she'll have to go naked for
+                    every Christmas portrait from then on. Julie decides to go naked, a
+                    choice she will come to regret more and more as the years go on.
+                </p>
+            </div>
+
+            <div class="story-content">
+                <h3><strong>Chapter 2f</strong></h3>
+<p>So there I was at thirteen years old, completely naked with my ankles and wrists bound tight! The shame of my whole body was exposed, as the rope that secured my hands kept them behind my back. My clothes were currently being held by a group of boys, with them taunting and teasing me about my nakedness, while my own father snapped photo after photo of me in this degrading, humiliating, predicament! My big brother had come up with a series of the most diabolical, embarrassing, and demeaning photos of me I could imagine!</p>
+
+<p>It had started innocently enough, with him telling me to dress again. I was surprised by this, but I was even more surprised when he told the boys to start stripping me as soon as I was dressed again! He and the other boys shed my clothes faster than I had gotten dressed in front of them! Then he produced a bundle of twine and secured my wrists behind my back, and around my ankles so that I wouldn't dare move, with the threat of falling if I did! They then proceeded to dance around me, each one waving one of my articles of clothing in my face while they did! And the whole time my cousin Katelyn and my mom just laughed and laughed, enjoying my misery! I had the worst blush of my life while they all continued to taunt me, as I could feel, and even see it, from head to toe! I'm not even exaggerating! My face was glowing, and most of my chest had turned a pink shade of shame, while the upper part above my boobs was a bright red! The rest of my body below my chest seemed to be blushing pink too, and the worst part of it was that I knew my dad was capturing every single moment of it with his camera! I know, because I saw the pictures later!</p>
+
+<p>My other cousin present at the moment, my rival, Luke, had been the first boy to pick up my panties. Ever since picture day had begun, he had always had a thing about my panties. Whenever I wore a skirt, he liked to flip it up at the most inopportune times, and point and laugh at my panties! In school, in church, at the store, it didn't matter! If we were in public, he'd flip it up to show everyone and anyone! I'd try to complain about it, but most of the time he was never caught, and if I did get an adult to catch him in the act, they would just laugh it off, saying that I was wearing panties anyway, and he was just fooling around. Besides, they had seen me wearing much less over the years. It was like, once my naked pictures were out there, nobody had any respect for my modesty. Luke had said one time, after I had complained exceptionally hard to him about flipping my skirt, that he would stop the first time he flipped up my skirt and found no panties. I remember blushing at him like mad about that, but despite his promise that he would keep his word and stop if I went without panties just one time, I didn't have the guts to go through with it. I knew if I did, I'd be showing off my bare pussy in public to who knows how many people, and I know he'd wait to do it when I would be exposed to the most amount of eyeballs!</p>
+
+<p>There was a consequence for putting my clothes back on that I hadn't even realized. With my pussy still horny as ever, and leaking like a faucet, in the short amount of time I was wearing them, my panties had gotten soaked again! I'm sure you realize that this was not lost on cousin Luke. “Julia,” He taunted, having turned my little panties inside out. “Look at how wet your panties got! How long were you wearing them? A minute? You must be extra horny for how much you're leaking!”</p>
+
+<p>“Shut up!” I pouted back at him, but that just earned me more taunting.</p>
+
+<p>He held the crotch of my panties up to his nose and took a whiff! Then he held his nose like he had smelled something bad. “Whew! That's strong! Here, you smell!” I was forced to just stand there, as he held my wet panties up to my nose! They were so soaked that they left behind my juices on my nose, chin, and lips! My tongue darted out, and I was even able to taste myself! Something I was doing for the first time! For the rest of the time I was tied up, I was smelling my own horniness directly, and the worst part was that it was making me feel even more excited! Luke looked my naked body up and down once more, before smirking at my face, and resuming the taunting dance with the other boys. It left me with the question of if he could tell I was getting more turned on by the smell of my own wetness.</p>
+
+<p>The boys seemed to trade off who was holding what at any given time. They all seemed to be interested in having a turn with my panties, and my bra seemed to be a big hit with them too, especially the younger boys. Eventually, even my mom and Katelyn joined in, taking an item of my wardrobe to tease me just like the boys, and daddy had a turn too, trading his camera with cousin Luke for my blouse! Watching them all tease me with the clothes I wasn't allowed to wear today was infuriating, but at the same time, I had never felt as horny in my life as I did at that moment. I could feel myself reaching the point where I felt like I was going to go over the edge again! All I would need is a quick brush on my clit, or even my nipples!</p>
+
+<p>Thankfully, the pictures were over. It would seem like I had escaped another shameful public orgasm for now. Mom went over to collect my discarded clothes from everyone, explaining to Katelyn to get the scissors from the kitchen and free me. She folded them neatly, and left them right on the coffee table in the living room. It was bad enough that I had to be naked, but did she need to leave them right where I could see them all day?! It felt like she was still taunting me!</p>
+
+<p>Katelyn cut my wrists free in the meantime, and bent down to free my feet too. It was while she was down there, but before she cut the twine, that her hand snuck up to give my clit a little tweak! I was thrown over the edge!! She just started giggling as I toppled down to the carpet, with my ankles still bound, the throes of another orgasm overtaking me! Only this one was hardly satisfying. Wanting to feel more pleasure, I brought my hand to try and complete the orgasm, but it already felt over, and with my ankles still bound, I couldn't get my legs spread open enough to get my hand in between! I was just left frustrated and annoyed as I stared up at my wicked older cousin!</p>
+
+<p>I didn't realize it at first, but my other cousin had taken advantage of the situation too. Luke still had Daddy's camera, and the second I started toppling over, he started snapping more pictures of me! If I had to guess, those two probably planned this together!</p>
+
+<p>“Careful, cousin Julia, I'm holding scissors!” Katelyn scolded me, like I was the one at fault for falling over! She snipped the binding holding my legs, so at least I was free. “You wouldn't want to get a nasty cut on all your bare, vulnerable skin.”</p>
+
+<p>She held a hand out to me, but I just scowled at her, refusing her help and getting up on my own. “No, I wouldn't.” I said, squinting my eyes at her. I suddenly heard everyone laughing behind me, and spun around to look. They all seemed to have amused looks on their faces as they observed me, and that's when I remembered that I was naked, and gave them another blush. “What?”</p>
+
+<p>“On, nothing, Julie.” My mom smiled at me, looking like she was trying to suppress a giggle. “We're just all admiring your naked beauty.”</p>
+
+<p>“Mo-ooom! Do you have to keep reminding me that I'm naked???” After all this time naked in front of them, I still desperately felt the need to cover up my naked body, and I hunched over a little. My hands were just inches from covering up my naked private parts, but then I could see the look of annoyance growing on mom's face, so I quickly dropped my hands again. “I already know that I'm naked! You don't have to keep bringing it up!”</p>
+
+<p>“How else are we going to get you to blush as cutely as you are right now?” Mom smiled and gave me another few head pats. “Face it, Julie, we all like seeing you naked, and we all enjoy seeing you get so flustered about it.”</p>
+
+<p>“But that's not fair!” I pouted at her hard.</p>
+
+<p>“Who said anything about life being fair? We all enjoy watching you get flustered to get naked in front of us and have your picture taken, so tough. It's going to continue happening until you are old enough to live on your own. Besides,” she pinched my cheek, “you look just adorable pouting naked like that, little girl!” I gasped at her, and then folded my arms, pouting at her even harder, but I'm afraid to say, it wasn't having the desired effect. She, and even the boys, all seemed to coo at me for looking so cute.</p>
+
+<p>“Come on, everyone! Let's go review the pictures we got of Julia this year!” Daddy said, waving everyone towards the family room.</p>
+
+<p>I waited for the boys to go first, not eager to see my nakedness second hand, but my older cousin told me to go in front of her. I took a few steps, but then she suddenly let out a loud, sharp, snorting laugh. I could tell that it was directed at me! “What?” I looked back at her over my shoulder, seeing her staring down at my butt. I peeked down, and there I found a bunch of tinsel from the Christmas tree stuck to it! It must have become stuck to me when I had fallen over, as a bunch of it was still all over the living room floor. My wet pussy juices were providing the glue for it to stick to me!</p>
+
+<p>“Aw, Katelyn,” now it was mom who was pouting. “I wanted to see how long she would go before she noticed!”</p>
+
+<p>“Mom! You mean, you knew and weren't going to tell me!?” I started picking it off my butt, but it was difficult. This tinsel seemed to have the consistency of tissue paper! “You were just going to let me walk around all day like this, making a fool out of myself?!” I was starting to get pissed at her. After everything she'd put me through, I was really starting to get angry!</p>
+
+<p>“Oh, don't look at me like that. It was just a little harmless fun.” She smirked at me, then came over and started picking the paper off my butt too.</p>
+
+<p>“That isn't the point! You-you humiliate me, make Katelyn shave my privates, let strange boys in the house to see me naked and give me a bath, let Josh embarrass me like I've never been embarrassed in my life with those pictures, and even tell them when I'm horny! It's enough!”</p>
+
+<p>“Julia, calm down…”</p>
+
+<p>“No, I will not calm down! You listen to me, I've had enough! I'm going to get dressed and there's nothing you can do to stop me!”</p>
+
+<p>Not the smartest thing to say, with my bare bottom right there in her reach. Smack! “Julia!” Smack! “You!” Smack! “Listen!” Smack! “To me!” Smack! “The choice is not yours!” Smack! “If you complain one more time to me, I'm going to start making you go naked monthly, you hear!”</p>
+
+<p>“Yes, momma!” I blubbered, reaching out for something to hold onto. My hands ended up on Katelyn's waist, and grabbed her skirt. Not realizing what I was doing, as my mom landed another smack to my aching bottom, somehow, my grip on Katelyn's skirt tugged downwards! Her skirt and, remarkably, her panties, fell down to her ankles!</p>
+
+<p>“What's all the hubbub?” Daddy came back into the room, right at that moment, discovering that I was getting a spanking from momma, and that his niece had lost her skirt and panties! Hardly paying any attention to my being punished, he simply stated, “Well, you really do shave, Katelyn.” Eyeing her now exposed, bald pussy!</p>
+
+<p>“Uncle Markus!” Katelyn gasped, quickly bending over to pull up her skirt and hide her recently revealed private part.</p>
+
+<p>“I got the laptop hooked to the big TV, Dana. As soon as you're done there, you girls should come join us.” Daddy said, before heading back into the other room, just chuckling to himself as he went.</p>
+
+<p>Momma spun me around, and looked me square in the eye. “Did you bare your cousin on purpose just now?”</p>
+
+<p>“What? No momma! I promise I didn't!” I said, still hiccuping and sniffling from my spanking.</p>
+
+<p>“Fine, I believe you, then.”</p>
+
+<p>“But Auntie Dana! Uncle Markus just saw my privates!” Katelyn complained. “And it's! All! Her! Fault!”</p>
+
+<p>“Katelyn, if she says she didn't do it on purpose, then I believe her! If my daughter is anything, she isn't a liar!”</p>
+
+<p>“But!...” Katelyn let out a wail of anguish.</p>
+
+<p>“For Christ’s sake, Katelyn. So your uncle saw your pussy. Big deal! He's seen Julia's, he's seen mine, and now he's seen yours! Are you saying that yours is more special than mine?” Mom was starting to give her the stink eye, and this was getting interesting.</p>
+
+<p>“No, but…”</p>
+
+<p>Mom cut her off, and just when it looked like she was about to start digging her own grave too! “You're not too old for me to strip your bottoms and put over my knee, Katelyn! Maybe the boys would be interested in watching that. I'm sure your brother and cousin Josh would especially like to see what you have under that skirt.”</p>
+
+<p>Katelyn clutched her hands in between her legs, over her skirt, like she was trying to hide her naked pussy from us. I couldn't help letting out a small giggle at her. “No, I'll be good, Aunt Dana.”</p>
+
+<p>“I expect you to be. I hope we only need to have one naked girl in this house today, but there's always room for another…” Mom left it at that, heading to the family room.</p>
+
+<p>Before I could follow, Katelyn spun me around, and got right in my face. “You're going to pay for that, you naked little imp, hard!”</p>
+
+<p>“Naked imp?”</p>
+
+<p>“Look it up!” She squinted her eyes at me. “You want to embarrass me!? You can't even begin to imagine the ways I can embarrass you, miss has to be naked all day! I was going easy on you until now!” I couldn't respond to her, as the ringing noise in my ears was getting too loud! What had I done?!? I could only watch her as she stormed into the next room, feeling like my head was spinning!</p>
+
+<p>I didn't get much time alone, as daddy was calling me into the other room too. I'd have to worry about Katelyn's threat later. Right now, I had the naked pictures of myself to worry about.</p>
+
+<p>Coming into the room, I could see that every seat was taken. The boys had all crowded onto the couch, momma had her easy chair, and daddy had the chair closest to the TV. Katelyn was standing next to the couch, near her brother. As I came in, the eyes of the boys all seemed to perk up, as they were greeted by the sight of my nakedness once again. I could tell that they were happy to have me close by like this. I blushed a little at that, but then thought, maybe being naked is not so bad. If I can bring such joy to these boys by just walking into a room naked, maybe I was making a bigger fuss about all of this than I should?</p>
+
+<p>Leave it to momma to break my accepting mood, and bring me right back to feeling embarrassed again! “Boys, would you like to help clean the tinsel stuck on Julia's butt?” The boys all eagerly nodded, not taking their eyes off me! “Good, then Julia, come stand over here and face your behind at the boys!” Mom commanded. After the short spanking I had received from her in the living room, I wasn't going to dare to disobey her now. I positioned myself near the middle, which meant I was standing in front of Simon and Dewey, and slowly turned around, which meant I was facing the TV. I could feel their grubby little hands starting to pick off the wet tissue paper from my sore bottom, and couldn't help squirming and wincing, as it was still stinging from the spanking!</p>
+
+<p>Daddy was already queuing up the naked pictures of me, and all I could do was watch him prepare the slideshow, while the boys worked. “Wow, we got a lot of good ones this year.” He commented. Then he looked at me with a loving smile. “Julia, you get more beautiful as each year passes. You're going to make some lucky guy very happy one day. Maybe he's even in this room right now.” He chuckled, winking at Dewey and then Simon.</p>
+
+<p>“I doubt it…” I retorted under my breath, but I must have been loud enough for him to hear.</p>
+
+<p>“Then one lucky girl!” He replied, grabbing his belly and laughing hard.</p>
+
+<p>“Daaaaa-ddy!” I complained, but everyone broke out into laughter. Even I couldn't help blushing and giggling a little.</p>
+
+<p>Finally, he started the slideshow, and everybody got to see what the naked pictures of me looked like this year. Even I had to admit, they told a good story. I started out clothed, but then the group of boys surrounded me, stripped me, and tied me up. Yes, daddy had even captured photos of Josh binding my wrists and ankles. Then the boys all danced around me, celebrating their conquest of stripping the girl of her clothes. It was cute, I had to admit, even if I was feeling so ashamed of how much I was blushing in the photos. Daddy seemed to think my blush added something to it, though, as he kept commenting on how cute it was! He had me blushing both up on screen and in real life from his comments!</p>
+
+<p>“Boys, you've missed several spots.” Mom commented on their progress cleaning my butt.</p>
+
+<p>“The tinsel keeps ripping because it's trapped in between her legs, miss.” Simon explained.</p>
+
+<p>“I see. Julia, spread your legs open for the boys.” Momma demanded. I looked back at her over my shoulder with wide eyes, but the look she was giving me made me comply. I was still on thin ice with her after my outburst in the living room, apparently. I tried spreading my legs open slowly, watching her until she seemed satisfied, but by the time she was, my legs were spread open more than my shoulders were wide! My little pussy was totally open and vulnerable now! And the boys had the perfect excuse to touch it while they cleaned me!</p>
+
+<p>“Miss, can you have her bend over a little, so that we can see better?” Dewey asked, and I could hear the smirk in his voice!</p>
+
+<p>“So you can see her kitt- pussy better?” Momma asked him.</p>
+
+<p>“Yes, miss, there could be tinsel stuck in there too.” Dewey replied smoothly, and I could tell, I was about to have to display my entire pussy to them again! Momma was taking too long to respond to not go along with them.</p>
+
+<p>“Julia, bend over more. The boys need to check if any tinsel got inside your pussy.” Just as I expected!</p>
+
+<p>“For how long?” I whimpered as I bent at the waist, displaying my full sex right in the boys' faces. My most private of privates was now theirs to ogle and enjoy once again!</p>
+
+<p>“Until I say you can move, little lady!” I could tell momma was still annoyed with me, so I shut my mouth after that. Or, I at least tried to, as suddenly the boys’ fingers were poking all around my sensitive and aroused skin down there, and it was making me squirm and coo with pleasure! One finger was tickling my outer labia, while another stroked my inner ones! My privates lit up with pleasure just like they had when they bathed me, and I was starting to lose myself in the feeling, forgetting the shameful position I was in.</p>
+
+<p>While the boys teased my pussy with their incredibly pleasant fingers, daddy continued going through the other pictures. Most of these had been taken by Luke. As the boys stroked my arousal, I couldn't help finding the sight of my naked body up on the big screen pleasing and exciting! Everyone was getting to see my naked body in such detail, and a part of me couldn't help loving it!</p>
+
+<p>“Luke, did you take this one?” Daddy asked, and suddenly it was like the room had just stopped. Even the boys stopped stroking my pussy lips for a moment. Up on the big screen was a picture of me, just as I had started to go into orgasm! It was unmistakable! It must have been right after Katelyn had tweaked my clit, but she was nowhere to be seen in the shot. It was just me, and my full naked body, with my face in the throes of pleasure, starting to fall over!</p>
+
+<p>“Yeah, I think I did, Uncle Mark.” Luke was very pleased with himself, I could tell.</p>
+
+<p>Mom let out a giggle. “Oh, that one's cute! Markus, save that for the photo album!”</p>
+
+<p>“Sure, ma!” Daddy smiled, moving on to the next picture. I didn't get much time to think about the picture, as the boys resumed stroking my arousal.</p>
+
+<p>“Now which photo are we gonna use for the card this year? There are too many good ones!” Daddy asked with a belly laugh. “The story of the boys stripping and dancing around poor Julia would get my vote, only there are too many pictures to include in one card in order to tell the whole story.”</p>
+
+<p>“Uncle Markus,” Katelyn spoke up, “this is the 21st century. Why don't you send all the pictures as a Christmas card email this year?”</p>
+
+<p>Daddy rubbed his chin for a moment as he considered Katelyn's suggestion, while I humped my pussy into one of the boy's hands! I was getting to the point where I was starting to go crazy with desire to get off! All I really wanted was for one of them to stroke my clit a little! I knew that would be all it would take to get me off, but they seemed to have been purposely avoiding it this whole time! “I've always liked the personalness of a real life paper card, but I guess your idea would solve that problem, Katelyn.” Daddy said to her. “Let's vote on it. All in favor of the cute story of Julia getting stripped by the boys, and sending out the card electronically this year, say I.”</p>
+
+<p>“I!” Pretty much everyone said around the room.</p>
+
+<p>“I-Ohummmmm!!” Even I said “I”! Though it came out as a moan in the end. Why couldn't those infernal boys just get me off!? It had been decided, though, the picture story of the boys stripping me and tieing me up would be the Christmas card this year!</p>
+
+<p>For a while, the boys just continued slowly stroking my agony, while they all chatted pleasantly. The entire time, I was just going crazy, tempted to touch myself to get myself off! That’s how horny I was! The only thing stopping me from doing it, was just how shameful the thought of touching myself in front of the others was to me. Plus, I wouldn’t put it past my mom to reprimand me for interrupting the boys’ fun by taking away their new toy, my horny pussy! It was getting to the point that every little touch and stroke they made was forcing me to shudder and shake, and I could hardly keep my eyes open!</p>
+
+<p>“Hey, Toby, are we still gonna go bike riding?” Here I was, soaking the carpet below me with my pussy juices, and Dewey was asking my brother about bike riding?!? The least he could do was pay attention to me while he was touching me!</p>
+
+<p>“I still have to ask my mom. Hey momma, would it be alright if I went biking with the guys for a bit?” I heard my younger brother asking.</p>
+
+<p>“As long as you're back in time to take a shower before the guests start arriving, it's fine. They will be here by 3, so don't be late!” Mom warned him.</p>
+
+<p>“Hey, Josh, why don't we join them? I rode my bike over.” Cousin Luke asked my big brother.</p>
+
+<p>“I don't know. I kinda wanna stay and spend more time with Jules.” He explained. If he'd just stroke my pussy so that I got off, he'd be the best big brother in the world as far as I was concerned! I'd spend every day naked for him if it meant he got me off!</p>
+
+<p>Even in the fog of passion, I still noticed Katelyn bumping her elbow into Luke's arm. “Why doesn't she just come with us?” He asked at her prompting.</p>
+
+<p>“What!?-Ahhhhhh!” Any time I opened my mouth, I was forced to let out a loud moan. Those infernal fingers were teasing me perfectly, but I could still not get off! One was even swirling the outer rim of the entrance to my vagina! I just wanted him to stick it inside as hard and as fast as he could, and pump it in and out of me until I went silly, but instead he just kept torturing me!</p>
+
+<p>“Julia isn't allowed to get dressed today, Luke.” Mom explained.</p>
+
+<p>“I know, Aunt Dana. I thought she could come biking with us just as she is now.” Despite the ache in my pussy, I was starting to get worried. Katelyn did say she was going to get me back good. Had she cooked up another way to embarrass me with her brother, while I was distracted by the boys stroking my pussy?</p>
+
+<p>“I don't know. Letting Julia out of the house naked without my supervision might be a step too far.” Momma said, but I could hear from the way she was speaking, she wasn't closed off to the idea. She just needed to be convinced!</p>
+
+<p>“You did say today was all about showing off Jules' naked beauty to as many people as possible.” Josh spoke up, with a dagger to my back! Was I the only one that thought bringing a thirteen-year-old girl out in public naked, without any adult supervision, was a horrible idea!??</p>
+
+<p>Apparently I was, as even Daddy joined in. “As long as you keep her safe, Josh. If anything happens to our precious Julia, it'll be your head that rolls, got it?”</p>
+
+<p>“Yes sir.” Big brother nodded, and I could see that he was a little wide-eyed. At least I knew he was taking his job of protecting me seriously.</p>
+
+<p>“Don't I-oh God!-get a say?!” I complained, though I wasn't expecting anyone to listen.</p>
+
+<p>“Sure, Julie, we'll let you pick. Do you want to bike to the park, or just around the neighborhood?” Luke asked me with a smarmy grin.</p>
+
+<p>“The neighborhood.” If I had to pick, I feel like it was the best choice. There would be fewer people around in the neighborhood, I figured.</p>
+
+<p>Katelyn came over and took my hand, pulling me away from the boys playing with my pussy! I guess I wasn't going to get off now! “Let's get going then, cousin Julia! We're wasting daylight!” She pulled me towards the garage, where my bike was kept, grabbing my shoes on the way. As she kept a strong hold on me, she leaned down to whisper in my ear. “If we're lucky, we'll run into some of your classmates out there. Doesn't Peter Michaels live close to you?” She just had to bring up the most popular boy in school, and the boy I'd had a crush on since the second grade!</p>
+
+<p>“Please, Katelyn, don't let Peter see me naked!” I begged, realizing that my cousin was even more wicked than I thought!</p>
+
+<p>“You shouldn't have pulled down my skirt in front of Uncle Markus then, you little skank!”</p>
+
+<p>“But that was an accident!” I tried to plead with her.</p>
+
+<p>“I guess we'll just have to see if we bump into Peter Michaels accidentally.” She smiled at me smugly, before hitting the button to open the garage door! I'd never felt more exposed in my life than when I was watching that door slowly open! The boys soon joined us, excitedly grabbing their bikes, while I just stood there in the middle of the garage, contemplating how much my life would be over if Peter were to see me this way! Katelyn came over and placed a helmet on my head, one that I hadn't worn for years now! It had cute little cartoon ducks all over it, and looked like it was made for a 5-year-old girl. Unfortunately, it still fit! “Safety first!” She giggled at the sight of me wearing nothing but a bike helmet, before leaning closer to snap the chin strap closed. “I wonder if Peter will notice how wet your pussy has gotten. Those boys sure did a number on it back inside!” She said, before she helped me to slip my tennis shoes on my feet.</p>
+
+<p>I took a look down at my aching pussy after her comment, seeing my wetness had spread all the way down to my knees! Anyone who saw me was going to think I was a little skank, just like Katelyn called me! Big brother beckoned me over, and helped me to get on my bike. Then he strapped some elbow and knee pads he had lying around from skateboarding onto me. I felt like I must have looked ridiculous, naked except for some safety equipment! I lowered my wet pussy onto my bike seat and let out a little moan. With my natural lubricant seeping out onto the bike seat, it was soon a slippery mess down there, and my pussy was the beneficiary! I could hardly sit still as I was filled with pleasure from the seat sliding back and forth in between my legs! Really, it was me moving, and the bike seat was stationary relative to me, but either way I was still being stimulated down there! </p>
+
+<p>With my pussy still aching, and the threat of running into some of my classmates, Peter most worrying of all, on my mind, we set off for our biking adventure! My naked bike riding adventure!</p>
+
+                <div class="decorative-divider">🍂 🍁 🍂</div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Copyright 2024 by SuperEvil, all rights reserved</p>
+        </div>
+    </div>
+
+    <script>
+        // Create falling leaves animation
+        function createLeaf() {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf';
+            leaf.innerHTML = Math.random() > 0.5 ? '🍂' : '🍁';
+            leaf.style.left = Math.random() * 100 + '%';
+            leaf.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            leaf.style.opacity = Math.random() * 0.5 + 0.3;
+            document.body.appendChild(leaf);
+
+            setTimeout(() => {
+                leaf.remove();
+            }, 25000);
+        }
+
+        // Generate leaves periodically
+        setInterval(createLeaf, 3000);
+        
+        // Create initial leaves
+        for (let i = 0; i < 5; i++) {
+            setTimeout(createLeaf, i * 600);
+        }
+    </script>
+</body>
+</html>
