@@ -1,474 +1,209 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" href="icon.ico">
   <title>Story Repository</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
+  <script>
+    (function(){
+      var t; try { t = localStorage.getItem("story-theme"); } catch(e) {}
+      if (!t) t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+:root{
+  --bg:#E9ECE7; --surface:#F7F8F5; --surface-2:#EEF0EB; --ink:#1D2521; --muted:#66716A;
+  --line:#D3D9D1; --accent:#2F5D50; --accent-ink:#F7F8F5; --accent-soft:#DCE8E1; --mark:#F3E2A0;
+  --c0:#2F5D50; --c1:#7A3B4E; --c2:#345A86; --c3:#9A6B1E; --c4:#5B4A86; --c5:#8A4B34;
+  --shadow:0 1px 1px rgba(29,37,33,.05),0 10px 26px -16px rgba(29,37,33,.28);
+  --radius:10px;
+  --serif:"Literata",Charter,"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+:root[data-theme="dark"]{
+  --bg:#14171A; --surface:#1B1F23; --surface-2:#21262B; --ink:#E8E3D6; --muted:#A0A398;
+  --line:#2D3339; --accent:#8FC5AE; --accent-ink:#13201B; --accent-soft:#233229; --mark:#5B4B14;
+  --c0:#7FBFA5; --c1:#D28AA0; --c2:#86AEDD; --c3:#DBAA5C; --c4:#B3A1E0; --c5:#DB9A7E;
+  --shadow:0 1px 1px rgba(0,0,0,.4),0 12px 28px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
+body{
+  font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.5;min-height:100vh;
+  padding:clamp(1rem,4vw,3rem) clamp(.9rem,4vw,2rem) 4rem;-webkit-font-smoothing:antialiased
+}
+.wrap{max-width:820px;margin:0 auto}
+button,input,a{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+svg{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 2rem;
-    }
+.masthead{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.6rem;padding-bottom:1.3rem;border-bottom:1px solid var(--line)}
+h1{font-family:var(--serif);font-size:clamp(2rem,7vw,3.1rem);font-weight:600;letter-spacing:-.02em;line-height:1.08}
+.tagline{font-family:var(--serif);font-style:italic;color:var(--muted);margin-top:.5rem;font-size:1.02rem}
+.icon-btn{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--muted);flex:none;transition:color .15s,border-color .15s}
+.icon-btn:hover{color:var(--ink);border-color:var(--muted)}
+.icon-btn .moon{display:none}
+:root[data-theme="dark"] .icon-btn .sun{display:none}
+:root[data-theme="dark"] .icon-btn .moon{display:block}
 
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+.toolbar{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem}
+.search{flex:1 1 280px;display:flex;align-items:center;gap:.6rem;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:0 .5rem 0 .9rem;height:48px;color:var(--muted);transition:border-color .15s}
+.search:focus-within{border-color:var(--accent);color:var(--accent)}
+.search input{flex:1;min-width:0;height:100%;background:none;border:0;outline:0;color:var(--ink);font-size:1rem}
+.search input::placeholder{color:var(--muted)}
+.search input::-webkit-outer-spin-button,.search input::-webkit-inner-spin-button{-webkit-appearance:none}
+.search input[type=number]{-moz-appearance:textfield}
+kbd{font:600 .75rem/1 var(--sans);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:.28rem .45rem;color:var(--muted);background:var(--surface-2)}
+.search:focus-within kbd,.search.has-value kbd{display:none}
+.clear{display:none;width:32px;height:32px;border-radius:8px;place-items:center;color:var(--muted)}
+.clear:hover{background:var(--surface-2);color:var(--ink)}
+.search.has-value .clear{display:grid}
+.segmented{display:inline-flex;height:48px;padding:4px;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.segmented button{padding:0 .95rem;border-radius:7px;color:var(--muted);font-weight:600;font-size:.92rem}
+.segmented button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.btn{height:48px;padding:0 1.1rem;border-radius:var(--radius);display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-weight:600;background:var(--accent);color:var(--accent-ink);text-decoration:none;transition:filter .15s,transform .1s;white-space:nowrap}
+.btn:hover{filter:brightness(1.1)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--muted);filter:none}
+.btn.small{height:40px;padding:0 .95rem;font-size:.92rem}
 
-    header {
-      text-align: center;
-      color: white;
-      margin-bottom: 3rem;
-      animation: fadeIn 0.8s ease-in;
-    }
+.continue{display:none;align-items:center;gap:.7rem;padding:.75rem 1rem;margin-bottom:1rem;background:var(--accent-soft);border-radius:var(--radius);text-decoration:none;color:var(--ink)}
+.continue.show{display:flex}
+.continue:hover .ct{text-decoration:underline}
+.continue small{display:block;color:var(--muted);font-size:.8rem}
+.continue .ct{font-family:var(--serif);font-weight:600;overflow-wrap:anywhere}
+.continue svg{color:var(--accent)}
 
-    h1 {
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
+.status{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin:.4rem .1rem .8rem;color:var(--muted);font-size:.92rem}
+.status .tools{display:flex;gap:.9rem;align-items:center}
+.link-btn{color:var(--accent);font-weight:600;font-size:.92rem;padding:.2rem .3rem;border-radius:6px}
+.link-btn:hover{text-decoration:underline}
+.link-btn[aria-pressed="true"]{text-decoration:underline}
 
-    .subtitle {
-      font-size: clamp(1rem, 2vw, 1.2rem);
-      opacity: 0.9;
-    }
+.pick{display:none;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.3rem 1.3rem 1.2rem;margin-bottom:1.2rem;box-shadow:var(--shadow);position:relative;border-left:6px solid var(--spine,var(--accent))}
+.pick.open{display:block;animation:pop .28s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.pick .label{color:var(--muted);font-size:.85rem;margin-bottom:.35rem}
+.pick .ptitle{font-family:var(--serif);font-size:clamp(1.3rem,4.5vw,1.7rem);font-weight:600;line-height:1.25;letter-spacing:-.01em;overflow-wrap:anywhere;padding-right:2.6rem}
+.pick .pmeta{color:var(--muted);margin-top:.3rem;font-size:.95rem}
+.pick .actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.pick .x{position:absolute;top:.7rem;right:.7rem;width:36px;height:36px}
 
-    .search-box {
-      margin-bottom: 2rem;
-      animation: slideDown 0.6s ease-out;
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
+.collections{display:grid;gap:.9rem}
+.collection{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--spine);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.collection-head{width:100%;display:flex;align-items:center;gap:.85rem;padding:1rem 1.1rem;text-align:left;transition:background .15s}
+.collection-head:hover{background:var(--surface-2)}
+.glyph{font-size:1.35rem;line-height:1;flex:none}
+.head-text{flex:1;min-width:0}
+.collection-name{display:block;font-family:var(--serif);font-weight:600;font-size:1.2rem;letter-spacing:-.01em;line-height:1.25;overflow-wrap:anywhere}
+.count{display:block;color:var(--muted);font-size:.88rem;margin-top:.1rem;font-variant-numeric:tabular-nums}
+.chev{color:var(--muted);transition:transform .2s}
+.collection.open .chev{transform:rotate(90deg)}
+.story-list{display:none;list-style:none;border-top:1px solid var(--line)}
+.collection.open .story-list{display:block}
+.story-list li+li{border-top:1px solid var(--line)}
+.story{display:grid;grid-template-columns:3.4rem 1fr auto;align-items:baseline;gap:.5rem;padding:.75rem 1.1rem;text-decoration:none;transition:background .12s}
+.story:hover{background:var(--accent-soft)}
+.story .n{font-variant-numeric:tabular-nums;font-weight:600;color:var(--muted);font-size:.9rem}
+.story .t{font-family:var(--serif);font-size:1.03rem;line-height:1.35;overflow-wrap:anywhere}
+.story.read .t{color:var(--muted)}
+.story .tag{font-size:.78rem;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:.05rem .4rem;display:inline-flex;align-items:center;gap:.25rem}
+.story.read .tag.done{color:var(--accent);border-color:transparent;padding:0}
+mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 .1em}
 
-    .search-wrapper {
-      flex: 1;
-      min-width: 200px;
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted);display:none}
+.empty.show{display:block}
+.empty p{margin-bottom:1rem;font-family:var(--serif);font-size:1.1rem}
 
-    .search-input {
-      flex: 1;
-      padding: 1rem 1.5rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 50px;
-      background: rgba(255, 255, 255, 0.95);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
-    }
-
-    .search-input:focus {
-      outline: none;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      transform: translateY(-2px);
-    }
-
-    .toggle-mode-btn {
-      padding: 1rem;
-      font-size: 1.2rem;
-      border: none;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.95);
-      color: #764ba2;
-      cursor: pointer;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .toggle-mode-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      background: white;
-    }
-
-    .toggle-mode-btn:active {
-      transform: scale(0.95);
-    }
-
-    .search-input:focus {
-      outline: none;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      transform: translateY(-2px);
-    }
-
-    .surprise-btn {
-      padding: 1rem 2rem;
-      font-size: 1rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 50px;
-      background: rgba(255, 255, 255, 0.95);
-      color: #764ba2;
-      cursor: pointer;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
-      white-space: nowrap;
-    }
-
-    .surprise-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      background: white;
-    }
-
-    .surprise-btn:active {
-      transform: translateY(0);
-    }
-
-    .folder-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
-      animation: fadeIn 1s ease-in;
-    }
-
-    .folder-card {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
-      cursor: pointer;
-      backdrop-filter: blur(10px);
-    }
-
-    .folder-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 48px rgba(0,0,0,0.2);
-    }
-
-    .folder-card.expanded {
-      grid-column: 1 / -1;
-    }
-
-    .folder-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-
-    .folder-title {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #2d3748;
-    }
-
-    .folder-icon {
-      font-size: 1.5rem;
-      transition: transform 0.3s ease;
-    }
-
-    .folder-card.expanded .folder-icon {
-      transform: rotate(90deg);
-    }
-
-    .file-count {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 600;
-    }
-
-    .file-list {
-      display: none;
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 2px solid #e2e8f0;
-    }
-
-    .folder-card.expanded .file-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 0.75rem;
-    }
-
-    .file-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.75rem;
-      background: #f7fafc;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      color: #2d3748;
-    }
-
-    .file-item:hover {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      transform: translateX(5px);
-    }
-
-    .file-icon {
-      font-size: 1.2rem;
-      flex-shrink: 0;
-    }
-
-    .file-name {
-      font-size: 0.95rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .no-results {
-      text-align: center;
-      color: white;
-      font-size: 1.5rem;
-      padding: 3rem;
-      display: none;
-    }
-
-    .surprise-result {
-      display: none;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 16px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-      animation: fadeIn 0.5s ease-in;
-    }
-
-    .surprise-result.active {
-      display: block;
-    }
-
-    .surprise-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid #e2e8f0;
-    }
-
-    .surprise-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #2d3748;
-    }
-
-    .close-surprise {
-      background: #f7fafc;
-      border: none;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      cursor: pointer;
-      font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-    }
-
-    .close-surprise:hover {
-      background: #e2e8f0;
-      transform: rotate(90deg);
-    }
-
-    .surprise-file-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: #f7fafc;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-    }
-
-    .surprise-file-number {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      min-width: 60px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .surprise-file-number:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-
-    .surprise-file-details {
-      flex: 1;
-    }
-
-    .surprise-file-name {
-      font-weight: 600;
-      color: #2d3748;
-      margin-bottom: 0.25rem;
-    }
-
-    .surprise-folder-name {
-      color: #718096;
-      font-size: 0.9rem;
-    }
-
-    .surprise-open-btn {
-      padding: 0.75rem 1.5rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .surprise-open-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding: 1rem;
-      }
-
-      h1 {
-        font-size: 1.75rem;
-      }
-
-      .subtitle {
-        font-size: 0.9rem;
-      }
-
-      .search-box {
-        gap: 0.75rem;
-      }
-
-      .search-wrapper {
-        min-width: 100%;
-      }
-
-      .search-input {
-        padding: 0.875rem 1.25rem;
-        font-size: 0.95rem;
-      }
-
-      .toggle-mode-btn {
-        width: 46px;
-        height: 46px;
-        font-size: 1.1rem;
-      }
-
-      .surprise-btn {
-        width: 100%;
-        padding: 0.875rem 1.5rem;
-        font-size: 0.95rem;
-      }
-
-      .folder-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-
-      .folder-card {
-        padding: 1.25rem;
-      }
-
-      .folder-title {
-        font-size: 1.1rem;
-      }
-
-      .folder-card.expanded .file-list {
-        grid-template-columns: 1fr;
-      }
-
-      .file-item {
-        padding: 0.625rem;
-      }
-
-      .file-name {
-        font-size: 0.875rem;
-      }
-    }
-  </style>
+@media (max-width:560px){
+  .segmented,.toolbar .btn{flex:1}
+  .segmented button{flex:1}
+  .story{grid-template-columns:2.9rem 1fr auto;padding:.85rem 1rem}
+  .story .tag.pdf{display:none}
+  .pick .actions .btn{flex:1 1 100%}
+  .pick .actions .btn.ghost{flex:1 1 calc(50% - .25rem)}
+  kbd{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>📚 Story Repository</h1>
-      <p class="subtitle">Browse and explore the collection</p>
+  <div class="wrap">
+    <header class="masthead">
+      <div>
+        <h1>Story Repository</h1>
+        <p class="tagline">Pick a shelf, find a title, or let chance choose your next read.</p>
+      </div>
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch light or dark theme" title="Switch theme">
+        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
     </header>
 
-    <div class="search-box">
-      <div class="search-wrapper">
-        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search folders, files, or enter a number...">
-        <button class="toggle-mode-btn" id="toggleModeBtn" title="Toggle number/text mode">🔢</button>
+    <div class="toolbar" role="search">
+      <label class="search" id="searchBox">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <span class="sr-only">Search stories</span>
+        <input type="text" id="searchInput" placeholder="Search titles and collections" autocomplete="off" spellcheck="false">
+        <kbd aria-hidden="true">/</kbd>
+        <button class="clear" id="clearBtn" type="button" aria-label="Clear search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </label>
+      <div class="segmented" role="group" aria-label="Search mode">
+        <button type="button" id="modeText" aria-pressed="true">Title</button>
+        <button type="button" id="modeNum" aria-pressed="false">Number</button>
       </div>
-      <button class="surprise-btn" id="surpriseBtn">🎲 Surprise Me!</button>
+      <button class="btn" id="surpriseBtn" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg>
+        Surprise me
+      </button>
     </div>
 
-    <div class="surprise-result" id="surpriseResult">
-      <div class="surprise-header">
-        <div class="surprise-title">🎲 Random Selection</div>
-        <button class="close-surprise" id="closeSurprise">×</button>
+    <a class="continue" id="continue" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16l6-4 6 4V4z"/></svg>
+      <span><small>Continue where you left off</small><span class="ct" id="contTitle"></span></span>
+    </a>
+
+    <section class="pick" id="pick" aria-live="polite" aria-label="Random story">
+      <div class="label">Your random pick</div>
+      <div class="ptitle" id="pickTitle"></div>
+      <div class="pmeta" id="pickMeta"></div>
+      <div class="actions">
+        <a class="btn small" id="pickOpen" href="#" target="_blank" rel="noopener">Open story</a>
+        <button class="btn small ghost" id="pickAgain" type="button">Pick another</button>
+        <button class="btn small ghost" id="pickFind" type="button">Find in list</button>
       </div>
-      <div class="surprise-file-info">
-        <div class="surprise-file-number" id="surpriseNumber">#001</div>
-        <div class="surprise-file-details">
-          <div class="surprise-file-name" id="surpriseFileName">File Name</div>
-          <div class="surprise-folder-name" id="surpriseFolderName">📁 Folder Name</div>
-        </div>
-        <button class="surprise-open-btn" id="surpriseOpenBtn">Open File</button>
-      </div>
+      <button class="icon-btn x" id="pickClose" type="button" aria-label="Close random pick">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </section>
+
+    <div class="status">
+      <span id="statusText" aria-live="polite"></span>
+      <span class="tools">
+        <button class="link-btn" id="unreadBtn" type="button" aria-pressed="false" style="display:none">Unread only</button>
+        <button class="link-btn" id="toggleAll" type="button">Expand all</button>
+      </span>
     </div>
 
-    <div class="folder-grid" id="folderGrid"></div>
-    <div class="no-results" id="noResults">No results found</div>
+    <main class="collections" id="collections"></main>
+
+    <div class="empty" id="empty">
+      <p>Nothing matches “<span id="emptyQuery"></span>”.</p>
+      <button class="btn ghost small" id="emptyClear" type="button">Clear filters</button>
+    </div>
   </div>
 
   <script>
@@ -504,201 +239,200 @@
     };
 
     const baseFolder = ".";
-    const folderGrid = document.getElementById("folderGrid");
-    const searchInput = document.getElementById("searchInput");
-    const surpriseBtn = document.getElementById("surpriseBtn");
-    const toggleModeBtn = document.getElementById("toggleModeBtn");
-    const noResults = document.getElementById("noResults");
-    const surpriseResult = document.getElementById("surpriseResult");
-    const closeSurprise = document.getElementById("closeSurprise");
-    const surpriseNumber = document.getElementById("surpriseNumber");
-    const surpriseFileName = document.getElementById("surpriseFileName");
-    const surpriseFolderName = document.getElementById("surpriseFolderName");
-    const surpriseOpenBtn = document.getElementById("surpriseOpenBtn");
 
-    let allFilesWithNumbers = [];
-    let currentSurpriseUrl = '';
-    let isNumericMode = false;
+(function(){
+  const $ = id => document.getElementById(id);
+  const els = {
+    input:$("searchInput"), search:$("searchBox"), clear:$("clearBtn"), modeText:$("modeText"), modeNum:$("modeNum"),
+    surprise:$("surpriseBtn"), list:$("collections"), status:$("statusText"), toggleAll:$("toggleAll"), unread:$("unreadBtn"),
+    empty:$("empty"), emptyQuery:$("emptyQuery"), emptyClear:$("emptyClear"), theme:$("themeBtn"),
+    cont:$("continue"), contTitle:$("contTitle"),
+    pick:$("pick"), pickTitle:$("pickTitle"), pickMeta:$("pickMeta"),
+    pickOpen:$("pickOpen"), pickAgain:$("pickAgain"), pickFind:$("pickFind"), pickClose:$("pickClose")
+  };
 
-    function getActualFolderName(folderName) {
-      // Extract folder name up to first space (before emojis/descriptions)
-      return folderName.split(' ')[0];
-    }
+  const emojiRe = /\p{Extended_Pictographic}[\p{Extended_Pictographic}\u200d\ufe0f\u{1F3FB}-\u{1F3FF}]*/gu;
+  const prettify = s => s.replaceAll("_"," ").replace(/\.(html|pdf)$/i,"").replace(/\s+/g," ").trim();
+  const actualFolder = name => name.split(" ")[0];
+  const displayFolder = name => prettify(name.replace(emojiRe,""));
+  const folderGlyph = name => (name.match(emojiRe) || ["📖"])[0];
+  const urlFor = (folder,file) => baseFolder + "/" + encodeURIComponent(actualFolder(folder)) + "/" + encodeURIComponent(file);
+  const pad = n => String(n).padStart(3,"0");
 
-    function toggleSearchMode() {
-      isNumericMode = !isNumericMode;
-      
-      if (isNumericMode) {
-        searchInput.type = 'number';
-        searchInput.setAttribute('inputmode', 'numeric');
-        searchInput.setAttribute('pattern', '[0-9]*');
-        searchInput.placeholder = '🔢 Enter a number...';
-        toggleModeBtn.textContent = '🔤';
-        toggleModeBtn.title = 'Switch to text search';
-      } else {
-        searchInput.type = 'text';
-        searchInput.removeAttribute('inputmode');
-        searchInput.removeAttribute('pattern');
-        searchInput.placeholder = '🔍 Search folders, files, or enter a number...';
-        toggleModeBtn.textContent = '🔢';
-        toggleModeBtn.title = 'Switch to number search';
-      }
-      
-      searchInput.value = '';
-      searchInput.focus();
-      renderFolders('');
-    }
+  // localStorage that never throws (private mode / file:// quirks)
+  const store = {
+    get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+    set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  };
 
-    function formatName(name) {
-      return name.replaceAll('_', ' ').replace('.html', '').replace('.pdf', '');
-    }
+  let n = 1;
+  const collections = Object.entries(repository).map(([key, files], idx) => ({
+    key, name: displayFolder(key), glyph: folderGlyph(key), spine: "var(--c" + (idx % 6) + ")",
+    items: files.map(file => ({ number: n++, file, title: prettify(file), pdf: /\.pdf$/i.test(file), url: urlFor(key,file) }))
+  }));
+  collections.forEach(c => c.items.forEach(i => i.folder = c));
+  const all = collections.flatMap(c => c.items);
+  const byUrl = new Map(all.map(i => [i.url, i]));
 
-    function getAllFilesWithNumbers() {
-      const allFiles = [];
-      let fileNumber = 1;
-      Object.entries(repository).forEach(([folderName, files]) => {
-        files.forEach(file => {
-          allFiles.push({ 
-            number: fileNumber++,
-            folder: folderName, 
-            file: file 
-          });
-        });
-      });
-      return allFiles;
-    }
+  const readSet = new Set(store.get("story-read", []));
+  let lastUrl = store.get("story-last", null);
+  const openSet = new Set(collections.length <= 4 ? collections.map(c => c.key) : []);
+  let mode = "text", pick = null, unreadOnly = false;
 
-    function showRandomFile() {
-      if (allFilesWithNumbers.length === 0) return;
-      
-      const randomIndex = Math.floor(Math.random() * allFilesWithNumbers.length);
-      const randomItem = allFilesWithNumbers[randomIndex];
-      
-      // Show in surprise card instead of search
-      surpriseNumber.textContent = `#${String(randomItem.number).padStart(3, '0')}`;
-      surpriseFileName.textContent = formatName(randomItem.file);
-      surpriseFolderName.textContent = `📁 ${formatName(randomItem.folder)}`;
-      currentSurpriseUrl = `${baseFolder}/${getActualFolderName(randomItem.folder)}/${randomItem.file}`;
-      surpriseResult.classList.add('active');
-      
-      // Clear search and hide grid
-      searchInput.value = '';
-      folderGrid.style.display = 'none';
-      noResults.style.display = 'none';
-    }
+  function markRead(item){
+    readSet.add(item.url); lastUrl = item.url;
+    store.set("story-read", [...readSet]); store.set("story-last", lastUrl);
+    render();
+  }
 
-    function closeSurpriseResult() {
-      surpriseResult.classList.remove('active');
-    }
+  function highlight(node, text, q){
+    const i = q ? text.toLowerCase().indexOf(q) : -1;
+    if (i < 0){ node.textContent = text; return; }
+    node.append(text.slice(0,i));
+    const m = document.createElement("mark"); m.textContent = text.slice(i, i+q.length); node.append(m);
+    node.append(text.slice(i+q.length));
+  }
 
-    function openSurpriseFile() {
-      if (currentSurpriseUrl) {
-        window.open(currentSurpriseUrl, '_blank');
-      }
-    }
+  function matches(item, q){
+    if (unreadOnly && readSet.has(item.url)) return false;
+    if (!q) return true;
+    if (mode === "number") return String(item.number).startsWith(q.replace(/\D/g,""));
+    return item.title.toLowerCase().includes(q) || item.folder.name.toLowerCase().includes(q) ||
+           String(item.number).includes(q.replace(/^#0*/,""));
+  }
 
-    function renderFolders(filter = '') {
-      folderGrid.innerHTML = '';
-      let hasResults = false;
+  const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
 
-      // Always hide surprise result when doing regular search
-      surpriseResult.classList.remove('active');
+  function render(){
+    const raw = els.input.value.trim();
+    const q = mode === "number" ? raw.replace(/\D/g,"") : raw.toLowerCase();
+    const filtering = !!q;
+    els.list.textContent = "";
+    let shown = 0, groups = 0;
 
-      Object.entries(repository).forEach(([folderName, files]) => {
-        const folderNameFormatted = formatName(folderName);
-        
-        let filteredFilesData = [];
-        
-        files.forEach(file => {
-          const fileData = allFilesWithNumbers.find(f => f.folder === folderName && f.file === file);
-          if (!fileData) return;
-          
-          const fileNameFormatted = formatName(file);
-          const fileNumberStr = String(fileData.number);
-          
-          // Match against: file name, folder name, OR file number
-          const matchesText = !filter || 
-            fileNameFormatted.toLowerCase().includes(filter.toLowerCase()) ||
-            folderNameFormatted.toLowerCase().includes(filter.toLowerCase()) ||
-            fileNumberStr.includes(filter);
-          
-          if (matchesText) {
-            filteredFilesData.push({ file, fileData });
-          }
-        });
+    collections.forEach(c => {
+      const hits = c.items.filter(i => matches(i,q));
+      if (!hits.length) return;
+      shown += hits.length; groups++;
+      const isOpen = filtering || openSet.has(c.key);
+      const readCount = c.items.filter(i => readSet.has(i.url)).length;
 
-        if (filteredFilesData.length === 0) return;
-        hasResults = true;
+      const sec = document.createElement("section");
+      sec.className = "collection" + (isOpen ? " open" : "");
+      sec.style.setProperty("--spine", c.spine);
 
-        const folderCard = document.createElement("div");
-        folderCard.className = "folder-card";
-
-        const folderHeader = document.createElement("div");
-        folderHeader.className = "folder-header";
-
-        const folderTitle = document.createElement("div");
-        folderTitle.className = "folder-title";
-        folderTitle.innerHTML = `<span class="folder-icon">📁</span><span>${folderNameFormatted}</span>`;
-
-        const fileCount = document.createElement("span");
-        fileCount.className = "file-count";
-        fileCount.textContent = `${filteredFilesData.length} file${filteredFilesData.length !== 1 ? 's' : ''}`;
-
-        folderHeader.appendChild(folderTitle);
-        folderHeader.appendChild(fileCount);
-
-        const fileList = document.createElement("div");
-        fileList.className = "file-list";
-
-        filteredFilesData.forEach(({ file, fileData }) => {
-          const fileItem = document.createElement("a");
-          fileItem.className = "file-item";
-          fileItem.href = `${baseFolder}/${getActualFolderName(folderName)}/${file}`;
-          fileItem.target = "_blank";
-          fileItem.innerHTML = `
-            <span class="file-icon">📄</span>
-            <span class="file-name">#${String(fileData.number).padStart(3, '0')} - ${formatName(file)}</span>
-          `;
-          fileList.appendChild(fileItem);
-        });
-
-        folderCard.appendChild(folderHeader);
-        folderCard.appendChild(fileList);
-
-        folderCard.addEventListener("click", (e) => {
-          if (e.target.closest('.file-item')) return;
-          folderCard.classList.toggle("expanded");
-        });
-
-        folderGrid.appendChild(folderCard);
+      const head = document.createElement("button");
+      head.className = "collection-head"; head.type = "button";
+      head.setAttribute("aria-expanded", String(isOpen));
+      head.innerHTML = '<span class="glyph" aria-hidden="true"></span><span class="head-text"><span class="collection-name"></span><span class="count"></span></span>' +
+        '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+      head.querySelector(".glyph").textContent = c.glyph;
+      highlight(head.querySelector(".collection-name"), c.name, mode==="text" ? q : "");
+      const total = c.items.length;
+      head.querySelector(".count").textContent = (filtering || unreadOnly ? hits.length + " of " + total : total) +
+        (total === 1 ? " story" : " stories") + (readCount ? " · " + readCount + " read" : "");
+      head.addEventListener("click", () => {
+        if (openSet.has(c.key)) openSet.delete(c.key); else openSet.add(c.key);
+        const open = sec.classList.toggle("open");
+        head.setAttribute("aria-expanded", String(open));
+        updateToggleAll();
       });
 
-      noResults.style.display = hasResults ? 'none' : 'block';
-      folderGrid.style.display = hasResults ? 'grid' : 'none';
-    }
-
-    searchInput.addEventListener("input", (e) => {
-      let value = e.target.value.trim();
-      renderFolders(value);
+      const ul = document.createElement("ul"); ul.className = "story-list";
+      hits.forEach(i => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        const isRead = readSet.has(i.url);
+        a.className = "story" + (isRead ? " read" : ""); a.href = i.url; a.target = "_blank"; a.rel = "noopener";
+        const num = document.createElement("span"); num.className = "n"; num.textContent = "#" + pad(i.number);
+        const t = document.createElement("span"); t.className = "t"; highlight(t, i.title, mode==="text" ? q : "");
+        a.append(num, t);
+        if (isRead){ const d = document.createElement("span"); d.className = "tag done"; d.innerHTML = CHECK + '<span class="sr-only">Read</span>'; a.append(d); }
+        else if (i.pdf){ const k = document.createElement("span"); k.className = "tag pdf"; k.textContent = "PDF"; a.append(k); }
+        a.addEventListener("click", () => setTimeout(() => markRead(i), 0));
+        li.append(a); ul.append(li);
+      });
+      sec.append(head, ul); els.list.append(sec);
     });
 
-    toggleModeBtn.addEventListener("click", toggleSearchMode);
+    const readTotal = all.filter(i => readSet.has(i.url)).length;
+    els.status.textContent = (filtering || unreadOnly)
+      ? shown + " of " + all.length + " stories" + (filtering ? " match" : " unread")
+      : all.length + " stories in " + collections.length + (collections.length === 1 ? " collection" : " collections") + (readTotal ? " · " + readTotal + " read" : "");
+    els.empty.classList.toggle("show", shown === 0);
+    els.emptyQuery.textContent = raw || (unreadOnly ? "unread" : "");
+    els.toggleAll.style.display = filtering || groups < 2 ? "none" : "";
+    els.unread.style.display = readTotal || unreadOnly ? "" : "none";
+    els.search.classList.toggle("has-value", !!raw);
 
-    surpriseBtn.addEventListener("click", showRandomFile);
-    closeSurprise.addEventListener("click", closeSurpriseResult);
-    surpriseOpenBtn.addEventListener("click", openSurpriseFile);
-    
-    // Click on number to filter
-    surpriseNumber.addEventListener("click", () => {
-      const numberText = surpriseNumber.textContent.replace('#', '').replace(/^0+/, '') || '0';
-      searchInput.value = numberText;
-      renderFolders(numberText);
-      searchInput.focus();
-    });
+    const last = lastUrl && byUrl.get(lastUrl);
+    els.cont.classList.toggle("show", !!last && !filtering);
+    if (last){ els.cont.href = last.url; els.contTitle.textContent = last.title; }
+    updateToggleAll();
+  }
 
-    // Initialize
-    allFilesWithNumbers = getAllFilesWithNumbers();
-    renderFolders();
+  function updateToggleAll(){ els.toggleAll.textContent = openSet.size >= collections.length ? "Collapse all" : "Expand all"; }
+
+  function setMode(m, keepValue){
+    mode = m;
+    const num = m === "number";
+    els.modeText.setAttribute("aria-pressed", String(!num));
+    els.modeNum.setAttribute("aria-pressed", String(num));
+    els.input.type = num ? "number" : "text";
+    els.input.inputMode = num ? "numeric" : "text";
+    els.input.placeholder = num ? "Enter a story number" : "Search titles and collections";
+    if (!keepValue) els.input.value = "";
+    els.input.focus(); render();
+  }
+
+  function showPick(){
+    const pool = all.filter(i => !unreadOnly || !readSet.has(i.url));
+    if (!pool.length) return;
+    let next; do { next = pool[Math.floor(Math.random()*pool.length)]; } while (pool.length > 1 && pick && next.number === pick.number);
+    pick = next;
+    els.pickTitle.textContent = pick.title;
+    els.pickMeta.textContent = "#" + pad(pick.number) + " · " + pick.folder.name;
+    els.pick.style.setProperty("--spine", pick.folder.spine);
+    els.pickOpen.href = pick.url;
+    els.pick.classList.remove("open"); void els.pick.offsetWidth; els.pick.classList.add("open");
+  }
+
+  els.input.addEventListener("input", render);
+  const clearSearch = () => { els.input.value = ""; render(); els.input.focus(); };
+  els.clear.addEventListener("click", clearSearch);
+  els.emptyClear.addEventListener("click", () => { unreadOnly = false; els.unread.setAttribute("aria-pressed","false"); els.unread.textContent = "Unread only"; clearSearch(); });
+  els.modeText.addEventListener("click", () => setMode("text"));
+  els.modeNum.addEventListener("click", () => setMode("number"));
+  els.surprise.addEventListener("click", showPick);
+  els.pickAgain.addEventListener("click", showPick);
+  els.pickClose.addEventListener("click", () => els.pick.classList.remove("open"));
+  els.pickOpen.addEventListener("click", () => { if (pick) { const p = pick; setTimeout(() => markRead(p), 0); } });
+  els.pickFind.addEventListener("click", () => { els.input.value = String(pick.number); setMode("number", true); });
+  els.cont.addEventListener("click", () => { const l = byUrl.get(lastUrl); if (l) setTimeout(() => markRead(l), 0); });
+  els.toggleAll.addEventListener("click", () => {
+    if (openSet.size >= collections.length) openSet.clear(); else collections.forEach(c => openSet.add(c.key));
+    render();
+  });
+  els.unread.addEventListener("click", () => {
+    unreadOnly = !unreadOnly;
+    els.unread.setAttribute("aria-pressed", String(unreadOnly));
+    els.unread.textContent = unreadOnly ? "Show all" : "Unread only";
+    render();
+  });
+  els.theme.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("story-theme", next); } catch(e){}
+  });
+  document.addEventListener("keydown", e => {
+    const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    if (e.key === "/" && !typing){ e.preventDefault(); els.input.focus(); }
+    if (e.key === "Escape" && document.activeElement === els.input){ els.input.value = ""; render(); }
+  });
+
+  render();
+})();
+
   </script>
 </body>
 </html>
